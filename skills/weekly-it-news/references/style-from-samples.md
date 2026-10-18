@@ -1,41 +1,53 @@
-# Style study — user-provided example presentations
+# Style lineage — four user-provided presentations
 
-Source material is two uploaded decks, **20260913.pptx** (53 slides, 2026-09-13) and **20261012.pptx** (34 slides, 2026-10-12). They are style references, not evidence for current factual assertions, and are not redistributed in this repository because they contain third-party press and product/event imagery.
+**Structure outranks decoration.** The owner explicitly states that **2026-01-25** and **2026-04-12** represent the intended composition; irregular pre-AI layout should be improved, not cloned. The **2026-09-13** and **2026-10-12** decks provide later experiments in polished section dividers, comparison tables and authored technical diagrams. Consult `editorial-structure.md` for the canonical topic-by-topic ordering.
 
-## Quantified observations
+## Measured PPTX observations
 
-| Observation | 2026-09-13 | 2026-10-12 |
-| --- | ---: | ---: |
-| Pages | 53 | 34 |
-| Page size | 13.333 × 7.5 in (16:9) | 13.333 × 7.5 in (16:9) |
-| Slides containing picture shapes | 32 | 13 |
-| Native chart shapes | 0 | 0 |
-| Slides containing native tables | 3 | 1 |
-| Main Japanese fonts | Noto Sans JP | Noto Sans CJK JP |
-| Main accent | #C00000 | #C00000 |
-| Body colors | #464646 / #1E1E1E | #333333 / #1E1E1E |
+| Source PPTX | Slides | Slides with picture shapes | Native chart objects | Native table objects | Editorial role |
+| --- | ---: | ---: | ---: | ---: | --- |
+| 20260125 | 21 | 19 | 0 | 0 | **Canonical structure**, 4-item agenda, explainer→source material |
+| 20260412 | 27 | 25 | 0 | 0 | **Canonical structure**, 3-item agenda, explainer→source material |
+| 20260913 | 53 | 32 | 0 | 3 | Later explanation/diagram/layout refinements |
+| 20261012 | 34 | 13 | 0 | 1 | Later editorial polish, thematic synthesis and comparison refinements |
 
-*Counts are from PPTX shape inspection, not a claim about every visual's origin. Some diagrams are made from editable shapes and some embedded images are screenshots containing tables or charts.*
+Each deck uses 16:9 (13.333 × 7.5 in). Picture counts refer to image *shapes*, not independent citations; screenshots frequently contain charts/diagrams/tables themselves. The early counts include covers and speaker-avatar or logo shapes. Native chart scarcity is a potential **enhancement opportunity**, not a defect of the canonical editorial form.
 
-## Layout families to preserve
-1. **Cover** — date + “Weekly IT News！” and three topics, white base/red headings; Sept slide 1 and Oct slide 1. The presenter avatar exists in the references; don't reuse/reproduce the avatar without permission.
-2. **Agenda** — three topic cards, red numbered markers; both slide 2. Oct slide 3 expands to a more detailed chapter roadmap; use when the presentation is genuinely long.
-3. **Section divider** — left red rule, sparse title and giant pale chapter numeral; Sept slides 3, 22, 34; Oct slides 10, 16, 19, 23, 29. This pacing gives dense material breathing room.
-4. **Investigative evidence** — headline, primary content and first-party screenshot/image. Sept slides 5–9, 17–21 and Oct slides 4–8 show external material and event/product evidence.
-5. **Comparative technical illustration** — authored native shapes and balanced multi-column boxes. Sept slides 10–11 (LLVM vs MLIR), 26 (HBM/NVHBM), Oct slides 27–28 (compute hierarchy), 32–33 (vendor/OS comparison and roadmap).
-6. **Spec trade-offs** — aligned tables and structured two-column explanation. Oct slide 11 compares XR products; Sept slide 36 provides tabular news comparison.
-7. **Synthesis** — multi-column summary with red framing; Sept slide 53 and Oct slide 34.
+## Priority order
 
-## What to improve rather than imitate
-- **Legibility**: Sept relies heavily on compact body text, and Oct has several dense multi-column screens. The skill should split slides and enlarge information hierarchy where a presenter will project slides.
-- **Purposeful imagery**: Sept contains clusters of large event screenshots; every screenshot needs a documented explanatory point. Use “image shows X” captions or short annotations when factual interpretation is non-obvious.
-- **More editable charts**: Both decks contain comparison illustrations and tables but no native chart shapes. Promote numeric data to native charts only when measures share definitions, units and methodology.
-- **Evidence metadata**: Use explicit source URL/publication date and uncertain-versus-confirmed labels for high-volatility technology claims; don't silently copy sample statements into new decks.
-- **Avoid filler**: The use of images should follow an informational purpose, never a quota.
+1. Preserve the **early decks' news-driven sequence** (cover → short news agenda → news explanation → topical evidence sequence → next news explanation).
+2. Improve slides' readability, balance, margins, source captions and image crops while keeping the same editorial rhythm.
+3. Borrow from later decks **selectively**, especially editable technical diagrams and structured comparisons, when they demonstrably reduce explanation cost.
+4. Introduce native numerical charts **only** for real comparable values; no mandatory chart, decorative media quota, or slide count.
 
-## Design implementation notes
-- Emphasize hierarchy: 3–4 major topical sections per weekly edition is typical, but allow more or fewer based on meaningful subject clusters.
-- Wide 16:9 decks; thin red vertical bars as section markers; red comparison/table headers; white or lightly tinted cards with generous padding.
-- Headlines in Japanese with English product and technical terms left unmodified; ensure line breaks preserve readability.
-- Bold red for established category names or contrast, not for every claim. Keep audience-facing definitions for specialized acronyms.
-- Use editable diagrams for architecture and roadmaps; keep authentic first-party screenshots/photographs where identity is essential.
+## Slide-family references
+
+| Family | Source | How to interpret it |
+| --- | --- | --- |
+| Dated cover with avatar / title | Jan p1, Apr p1, Sep p1, Oct p1 | Date + “Weekly IT News！”; a personal/avatar asset may be reused only with permission |
+| Agenda of weekly news headlines | Jan p2 (4 topics), Apr p2 (3 topics) | **Default: simple text bullets**. Sep/Oct p2's numbered cards are optional variants |
+| Anchoring news commentary | Jan pp3/6/7/14; Apr pp3/9/15 | **Default: red headline plus compact bullet-led explanation and editorial point of view** |
+| Source screenshots / evidence sequence | Jan pp4–5, 8–13, 15–21; Apr pp4–8, 10–14, 16–27 | **Default: preserve authentic external visual evidence, often one large image per slide** |
+| Official-site, product, code/PR evidence | Jan pp4/5/9; Apr pp4/7/8 | Original material can be more useful than a synthetic illustration |
+| Technical diagrams & comparisons | Jan pp11–13, 16–19; Apr pp10–14; Sep pp10–11/26, Oct pp27–28 | Choose native editable shapes if explaining a relationship; retain screenshots when faithfully reproducing an external source |
+| Chapter divider | Sep pp3/22/34, Oct pp10/16/19/23/29 | Optional pacing device **for very long multipart features**, not a required slide |
+| Long-form thesis / conclusion | Sep p53, Oct p34 | Optional for user-requested deep dives; **not** a required weekly ending |
+
+## Stable visual identity
+
+- Wide 16:9, predominantly white background with editorial red headings/accent (`#C00000`) and black/charcoal body text.
+- Simple sans Japanese text, big topic titles, and understated supporting diagrams. Later decks use `Noto Sans JP` / `Noto Sans CJK JP`. Do not misrepresent these fonts as necessarily installed on every target.
+- Quoted real screenshots may legitimately dominate a slide; crop to highlight relevant parts, keep provenance and context, and test projection readability.
+- Bring consistency to heading baseline, image margins and line breaks rather than flattening all material into standardized text boxes.
+- Preserve Japanese narrative energy and technical precision. Personal assessments or caveats should appear as explicitly editorial perspectives, not falsely verified declarations.
+
+## What not to copy from the samples
+
+- Pre-AI uneven alignment, occasional very small body or screenshot text, giant web UI chrome, or unrelated embedded advertisements.
+- Older source facts as up-to-date assertions: sample slides demonstrate **composition**, not proof of factual accuracy.
+- Unnecessary repeated full-screen screenshots, unsourced numbers or unsupported links across unrelated articles.
+- Later decks' mandatory-looking chapter systems and extensive summaries. These are options rather than the authentic default editorial structure.
+
+## Distribution and rights
+
+None of the four PPTX examples or extracted embedded screenshots are included in the public GitHub repository or distributable plugin. They contain third-party images, screen captures, social posts and article screenshots with their own copyright/permissions. This skill references only observed structure and safe metadata. For close visual matching, the user can supply an original as an attachment to an authorized presentation host.

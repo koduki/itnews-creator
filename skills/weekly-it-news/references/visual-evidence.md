@@ -21,6 +21,13 @@ For each slide, write internally: “The audience should understand/compare/veri
 
 Collect: claim; source title; canonical URL; author or publisher; publication/date of event; checked date; asset URL or capture provenance; whether source directly supports the claim; permissions/licensing state (verified / restricted / unknown); proposed amount of material to reproduce; whether permission or a quotation exception is needed. Always separate factual applicability from copyright applicability.
 
+## Evidence-only slide sequences (canonical early-deck pattern)
+- It is legitimate to place **one large authentic screenshot** on a slide after a news explainer, with no additional prominent commentary text. The storyboard or notes must specify its parent topic, original URL, capture/source date, and *what to point out verbally*.
+- Repeated screenshot pages need **different informational jobs** (e.g., vendor announcement → product specs → GitHub implementation → architectural comparison), not duplicated pictures of the same headline.
+- The visual can be a first-party document, external technical illustration, vendor interface, social post as a labeled primary claim, or article illustration where reuse is lawful. Its existence alone is not proof its claims are true.
+- Preserve a genuine slide/image screenshot if the source's layout, statement or appearance **is the evidence**. Recreate with editable shapes only when an authored explanation is more useful and does not misrepresent source fidelity.
+- A narrated flow allows a source-only page to inherit the topic's headline. Do **not** invent independent conclusions for every such slide, or omit the evidence sequence in favor of wholly generated infographic illustrations.
+
 ## Image acquisition / screenshot constraints
 - Prefer capture or download directly from original source when tools allow. Never silently substitute an unrelated image if the source is inaccessible.
 - Screenshot the **specific claim-bearing portion** of a page, keep context enough to avoid misrepresenting it, and preserve essential labels.

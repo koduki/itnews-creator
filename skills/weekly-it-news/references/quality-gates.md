@@ -8,6 +8,13 @@ Run as a staged review, not a self-congratulatory checklist. Record pass, fail o
 - Avoid stale news presented as fresh. The date of a presentation is not the publication date of a source.
 - External visuals are correctly attributed and reuse conditions assessed; unknown permissions cannot be treated as approval.
 
+## Gate B0 — Faithfulness to the intended news format
+- The deck contains a dated Weekly IT News cover and a concise agenda of the real selected topics, except when the user explicitly requests another format.
+- Each selected news item has an authored explanation before its evidence sequence; adjacent screenshots/technical charts remain connected to that news item. It must be possible to trace every evidence slide to its anchor topic.
+- Speaker analysis, skepticism and firsthand impressions remain clearly different from sourced claims.
+- There is no forced three-topic limit, standalone thesis on every evidence slide, section-divider quota, mandatory end summary, or fixed length per news item.
+- The new deck improves pre-AI legibility without replacing early-deck structure with later-deck layout conventions.
+
 ## Gate B — Choice of medium
 - Each image/diagram/chart/table has a slide-specific informational purpose.
 - Charts use comparable values; tables are chosen for exact numbers; arrows accurately indicate relationships; screenshots are authentic if framed as evidence.
