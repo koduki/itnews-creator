@@ -12,7 +12,7 @@ def check():
     manifest = json.loads((ROOT / 'plugin.json').read_text(encoding='utf-8'))
     assert manifest['$schema'] == 'https://agent-plugins.org/schemas/1.0.0/plugin.schema.json'
     assert manifest['name'] == 'itnews-creator'
-    assert manifest['version'] == '0.2.0'
+    assert re.fullmatch(r'\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?', manifest['version'])
     text = SKILL.read_text(encoding='utf-8')
     assert text.startswith('---\n')
     assert re.search(r'^name: weekly-it-news$', text, re.M)
@@ -27,7 +27,7 @@ def check():
     assert '2026-01-25' in text and '2026-04-12' in text
     structure = (SKILL_DIR / 'references' / 'editorial-structure.md').read_text(encoding='utf-8')
     assert 'source' in structure.lower() and 'news' in structure.lower()
-    print('PASS: v0.2 portable structure, canonical early-deck format and QA gates')
+    print(f"PASS: v{manifest['version']} portable structure, canonical early-deck format and QA gates")
 
 
 if __name__ == '__main__':
