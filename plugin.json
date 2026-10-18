@@ -1,0 +1,21 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "itnews-creator",
+  "version": "0.1.0",
+  "description": "A source-first technical news and PowerPoint presentation authoring skill with visual quality gates.",
+  "author": {"name": "koduki"},
+  "repository": "https://github.com/koduki/itnews-creator",
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "IT News Slide Creator",
+        "shortDescription": "Evidence-led technical slides",
+        "longDescription": "Create and critique evidence-based technical presentations with meaningful diagrams, editable charts, authentic sources and consistent Japanese presentation design.",
+        "developerName": "koduki",
+        "category": "Productivity",
+        "capabilities": [],
+        "defaultPrompt": "Weekly IT Newsのスキルを使って、一次情報に基づいた編集可能な技術プレゼンテーションを作成して。図表・画像は情報価値を検証し、出典を残してください。"
+      }
+    }
+  }
+}
