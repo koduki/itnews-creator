@@ -11,6 +11,38 @@ The skill is not a new PowerPoint engine. It tells the available native ChatGPT 
 - Uses a style family derived from the examples: 16:9, white, `#C00000` red, charcoal Japanese sans, simple agenda headlines, source-backed technical news explanations; optional numbered cards, chapter dividers and comparisons.
 - Enforces a two-part review: source/rights validation plus slide-rendering/design QA when tools are available.
 
+## Why the skill is designed this way
+
+The four supplied PPTX examples represent **two different purposes**, not four equally authoritative templates. The January/April pre-AI decks express the author's intended *editorial form*: a dated cover, a short agenda, then **news explanation → multiple real-source slides → next news**, with technical context and presenter commentary. Their uneven layout is **not** a design requirement. The September/October AI-era decks offer optional technical diagrams, side-by-side comparisons and stronger visual organization; they must **not** displace that underlying news-first cadence.
+
+Research and visuals have an **evidence role**: each table, chart, drawing, real screenshot or retrieved image must clarify a specific claim or technical mechanism. Native editable visuals are preferred for original explanation, whereas screenshots preserve the authentic state of external sources. Reject impressive-looking but irrelevant art, invented UI shots, numeric comparisons without compatible data, and unattributed or impermissibly reused content. "No image" is a valid decision. Confirm source accuracy and rights separately from the final layout review; do not report checks that the host cannot perform.
+
+**Cross-host strategy:** one shared `SKILL.md` specifies storytelling, research, media choice and quality gates; ChatGPT Work and Microsoft 365 Copilot use their own **native** presentation engines subject to host-specific capabilities. We do not implement a separate PPTX generation engine or claim pixel-identical output. This is not a custom override of either product's built-in PowerPoint skill.
+
+For the full reasoning, including slide archetypes, validation criteria, rights and deliberate non-goals, see **[Design philosophy](docs/design-philosophy.md)**. For the original-deck page references, see [Editorial structure](skills/weekly-it-news/references/editorial-structure.md).
+
+## Build, CI and distribution
+
+Two packages are **built automatically from exactly the same skill source**:
+
+- **ChatGPT:** `itnews-creator-chatgpt-plugin-vX.Y.Z.zip`, with `plugin.json` and `skills/weekly-it-news/SKILL.md`.
+- **Microsoft 365 Copilot:** `itnews-creator-copilot-skill-vX.Y.Z.zip`, with `SKILL.md` at ZIP root.
+
+GitHub Actions workflow [`.github/workflows/package.yml`](.github/workflows/package.yml) runs on **pull requests**, **pushes to `main`**, and manual dispatch. It runs validation and packaging tests, creates both ZIPs, writes `SHA256SUMS`, and saves them as **GitHub Actions Artifacts (30-day retention)**. On a push of a `vX.Y.Z` tag it additionally publishes the same ZIPs and checksums as **GitHub Release assets**, requiring the tag to match `plugin.json`'s `version`. A release run for a mismatched tag fails rather than publishing misversioned archives. The build uses Python's standard library and fixed ZIP member metadata for reproducibility.
+
+To build and verify locally:
+
+```bash
+python tests/test_package.py
+python -m unittest discover -s tests -p 'test_build_packages.py' -v
+python scripts/build_packages.py --out-dir dist
+# For a tagged release: python scripts/build_packages.py --out-dir dist --tag v0.2.0
+```
+
+To retrieve an ordinary build, open **[Actions → Build skill packages](https://github.com/koduki/itnews-creator/actions/workflows/package.yml)**, choose a successful run, and download `itnews-creator-packages-<run ID>` under Artifacts. For durable, versioned downloads, use **[Releases](https://github.com/koduki/itnews-creator/releases)** after pushing the corresponding tag.
+
+**Building and publishing archives is not installation or deployment.** It does not automatically update the existing private ChatGPT plugin, nor upload a skill into a Microsoft 365 tenant; those are separate host-specific steps.
+
 ## Repository layout
 
 ```text
@@ -18,6 +50,10 @@ plugin.json                           # ChatGPT plugin manifest
 skills/weekly-it-news/SKILL.md        # Portable core instructions
 skills/weekly-it-news/references/     # Design, visual rights, QA, platform nuances
 skills/weekly-it-news/templates/      # Slide storyboard
+scripts/build_packages.py            # Reproducible dual ZIP builder
+tests/                             # Skill and distribution tests
+.github/workflows/package.yml      # Build + Artifacts + tag Release
+docs/design-philosophy.md          # Editorial and validation rationale
 README.md
 ```
 
@@ -47,6 +83,7 @@ The four originals `20260125.pptx`, `20260412.pptx`, `20260913.pptx`, and `20261
 - OpenAI: [Working with presentations in ChatGPT Work](https://help.openai.com/en/articles/20001278-creating-and-editing-documents-spreadsheets-and-presentations-with-chatgpt-work).
 
 ## Release notes
+- **CI/CD:** dual-package reproducible build, PR/main Artifacts and tag-based GitHub Releases; documented editorial/design rationale.
 - **0.2.0**: original pre-AI narrative structure takes precedence over later polished layouts.
 
 ## Known limits
