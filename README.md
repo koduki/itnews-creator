@@ -1,5 +1,9 @@
 # itnews-creator
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+> Evidence-first IT news PowerPoint skill for ChatGPT Work and Microsoft 365 Copilot, with meaningful diagrams, authentic screenshots and slide QA.
+
 A portable, evidence-led Japanese PowerPoint authoring skill, based on four user-supplied **Weekly IT News！** decks, with **2026-01-25 and 2026-04-12 as structural originals** and **2026-09-13 and 2026-10-12 as later optional visual refinements**.
 
 The skill is not a new PowerPoint engine. It tells the available native ChatGPT / Microsoft 365 Copilot presentation tools **what to research, how to choose meaningful visuals, and what to validate**. Its core is shared across both hosts.
@@ -74,6 +78,17 @@ Add `skills/weekly-it-news/SKILL.md` and its support folder through PowerPoint C
 > 「このPPTXをレビューし、意味のない画像、比較条件が異なるグラフ、文字はみ出しを修正して。公式資料スクショには出典を付けて。」
 
 > 「ニュース記事の画面を引用するなら、その画像が示す具体的な根拠を説明して。適切な画面を取得できないなら無理に貼らないで。」
+
+## License
+
+The original source code, portable agent-skill instructions, build scripts, and
+repository documentation are released under the **MIT License**. See [LICENSE](LICENSE).
+
+**Scope:** MIT covers content owned by this repository's author only. The four
+reference PowerPoint decks are **not distributed or relicensed** here. External
+product imagery, news/article screenshots, logos, third-party technical figures,
+and other cited material retain their respective rights and reuse requirements.
+A citation alone is not permission to redistribute someone else's work.
 
 ## Reference decks and rights
 The four originals `20260125.pptx`, `20260412.pptx`, `20260913.pptx`, and `20261012.pptx` **are not committed** because they include external product, press and keynote images. See [canonical editorial structure](skills/weekly-it-news/references/editorial-structure.md) and [style lineage](skills/weekly-it-news/references/style-from-samples.md) for source-slide indices. Slides and graphics aren't automatically free to redistribute merely because sources are attributed. Reuse original private deck as a template by attaching it in the target assistant, when permissions allow.
