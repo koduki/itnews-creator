@@ -2,7 +2,7 @@
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "itnews-creator",
   "version": "0.2.0",
-  "description": "A news-first, evidence-backed Japanese IT presentation skill based on canonical 2026 early-deck editorial structure.",
+  "description": "Portable, evidence-led PowerPoint authoring skill for ChatGPT Work and Microsoft 365 Copilot with source-aware visuals and QA.",
   "author": {
     "name": "koduki"
   },
@@ -19,5 +19,6 @@
         "defaultPrompt": "Weekly IT Newsスキルを使い、日付・トピック一覧→各ニュースの解説→公式発表・技術図解の根拠資料、の順でプレゼンを作成してください。図表・引用には情報価値と出典の検証を適用してください。"
       }
     }
-  }
+  },
+  "license": "MIT"
 }
