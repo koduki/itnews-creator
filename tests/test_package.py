@@ -12,6 +12,10 @@ def check():
     manifest = json.loads((ROOT / 'plugin.json').read_text(encoding='utf-8'))
     assert manifest['$schema'] == 'https://agent-plugins.org/schemas/1.0.0/plugin.schema.json'
     assert manifest['name'] == 'itnews-creator'
+    assert manifest['license'] == 'MIT'
+    license_text = (ROOT / 'LICENSE').read_text(encoding='utf-8')
+    assert license_text.startswith('MIT License\n')
+    assert 'Copyright (c) 2026 koduki' in license_text
     assert re.fullmatch(r'\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?', manifest['version'])
     text = SKILL.read_text(encoding='utf-8')
     assert text.startswith('---\n')
