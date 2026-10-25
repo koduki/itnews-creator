@@ -6,6 +6,8 @@ Plan **news items first, slides second**. The canonical early-deck structure is 
 - Edition date and presenter/audience:
 - Weekly news items (headline + why selected; count need not be 3):
 - Source list and freshness checks:
+- Required deliverable: actual .pptx (or verified PowerPoint-native presentation), no silent Word substitution:
+- Host capability check: PPTX export/creation available? yes/no/unverified:
 - PPTX reference for cover/color only, if permitted:
 - Explicitly requested depth (ordinary weekly talk vs extended deep dive):
 
@@ -17,8 +19,11 @@ Plan **news items first, slides second**. The canonical early-deck structure is 
 - **Supporting evidence slide(s), 0..n**:
   - Purpose: what the audience should notice in this original source:
   - Source: publisher, URL, page/date and checked date:
-  - Asset: authentic screenshot, press photo, official diagram, GitHub PR, relevant table, etc.:
-  - Rights/provenance: permission, attribution, necessity and amount:
+  - Asset: real news-article photo, credited reporting image, article figure, authentic webpage capture, keynote screenshot, official diagram, GitHub PR, relevant table, etc.:
+  - Article title/publisher/date/URL; photo credit and source asset URL when known:
+  - Why this image instead of a whole-page screenshot:
+  - Rights/provenance: license/quotation basis, attribution, necessity, crop/amount:
+  - Actual embedded in PPTX (yes/no/unverified):
   - Link back to anchor claim:
   - Caption/notes: may carry context while visible slide remains source-only:
 - **Technical expansion slide(s), 0..n**:
@@ -34,6 +39,8 @@ Plan **news items first, slides second**. The canonical early-deck structure is 
 - Value of visual; could it be removed without losing understanding?
 - Attribution/right to reuse; exact source URL, access time and editorial crop:
 - Native editable elements vs authentic raster asset:
+- Actual generated file type and PPTX-slide validation (pass/fail/unverified):
+- Requested documentary images actually embedded (count and shortfall):
 - Viewability/cropping/legibility/overflow; verified, failed or unverified:
 
 ## Example (illustrative only)
