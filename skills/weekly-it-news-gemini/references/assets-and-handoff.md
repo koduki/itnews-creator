@@ -1,0 +1,7 @@
+# 素材収集とPowerPointへの受け渡し
+
+Gemini Tasksはプロットの指定URLを訪問して、報道写真・ニュース記事の画面・公式発表・技術図を収集する。画像ファイルが得られないとき、Webを開けたことだけで取得済みにしない。
+
+各素材をasset_id、source_url、kind、publisher、creator、captured_at、file、status、usage_status、説明目的で管理。statusはpending/captured/extracted/uploaded/embedded/unavailable等。権利条件とファイル実体を確認する。外部ニュース画像や撮影済み資料を根拠として提示する場合、実際にPPTXへ埋め込み出典を残す。権利未確認の素材を配布しない。
+
+最終納品はbase.pptx、承認済みplot.json、assets-manifest.jsonとQAメモ。Claude側はこのファイルを整えるだけで、新たなWeb画像収集は担当しない。未取得画像が残った場合は完成を装わず未達として明記する。

@@ -1,0 +1,68 @@
+{
+  "schema_version": "1.0",
+  "edition_date": "2026-10-25",
+  "status": "approved",
+  "slides": [
+    {
+      "slide_id": "s01",
+      "story_id": "front",
+      "layout_id": "COVER",
+      "title": "Weekly IT News！",
+      "purpose": "表紙",
+      "on_slide": [
+        "今週の見どころ"
+      ],
+      "speaker_notes": "",
+      "asset_ids": []
+    },
+    {
+      "slide_id": "s02",
+      "story_id": "front",
+      "layout_id": "AGENDA",
+      "title": "今週のトピック",
+      "purpose": "目次",
+      "on_slide": [
+        "ニュースA",
+        "ニュースB"
+      ],
+      "speaker_notes": "",
+      "asset_ids": []
+    },
+    {
+      "slide_id": "s03",
+      "story_id": "news-a",
+      "layout_id": "NEWS",
+      "title": "ニュースA",
+      "purpose": "技術的な面白さ",
+      "on_slide": [
+        "根拠を確認した要点"
+      ],
+      "speaker_notes": "説明用",
+      "asset_ids": []
+    },
+    {
+      "slide_id": "s04",
+      "story_id": "news-a",
+      "layout_id": "SOURCE_IMAGE",
+      "title": "公式資料の実画面",
+      "purpose": "実物を見せる",
+      "on_slide": [
+        "何を示すか"
+      ],
+      "speaker_notes": "",
+      "asset_ids": [
+        "official-a"
+      ]
+    }
+  ],
+  "assets": [
+    {
+      "id": "official-a",
+      "source_url": null,
+      "file": null,
+      "status": "pending",
+      "usage_status": "unverified",
+      "kind": "webpage_screenshot"
+    }
+  ]
+}
