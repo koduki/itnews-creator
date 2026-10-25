@@ -43,3 +43,12 @@ Plan **news items first, slides second**. The canonical early-deck structure is 
 - Evidence 2: architecture diagram from a paper, only if essential and fairly cropped/cited.
 - Native extra: redraw a simple translation pipeline as editable shapes if it improves comprehension without misrepresenting source.
 - Move to next topic when nothing further is needed. No obligatory chart or summary.
+
+## Delivery acceptance — mandatory for a requested PowerPoint
+- Required output: a verified **.pptx** with slides, not .docx, .pdf or an outline.
+- Native PPTX editor or creator in this host: available / unavailable / unverified.
+- Screenshot capture or source files: available / unavailable / unverified.
+- Real screenshot count: required __; embedded __; source URLs / placements __.
+- PPTX produced, opened and inspected: pass / fail / unverified.
+- Final decision: COMPLETE / INCOMPLETE (PPTX missing) / INCOMPLETE (required screenshots missing) / UNVERIFIED.
+- Any Word research document is explicitly an *intermediate* rather than the requested final artifact.
