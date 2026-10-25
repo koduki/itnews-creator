@@ -22,7 +22,7 @@ def check():
     assert re.search(r'^name: weekly-it-news$', text, re.M)
     assert re.search(r'^description: \S', text, re.M)
     assert len(text) < 20_000, f'M365 skill instruction length: {len(text)}'
-    for name in ('editorial-structure.md', 'style-from-samples.md', 'visual-evidence.md', 'quality-gates.md', 'platform-compatibility.md', 'copilot-runtime-diagnostics.md', 'copilot-native-workflow.md', 'copilot-chat-workflow.md', 'production-handoff.md', 'acceptance-tests.md'):
+    for name in ('editorial-structure.md', 'style-from-samples.md', 'visual-evidence.md', 'quality-gates.md', 'platform-compatibility.md', 'copilot-runtime-diagnostics.md', 'copilot-native-workflow.md', 'copilot-chat-workflow.md', 'production-handoff.md', 'acceptance-tests.md', 'story-continuity.md'):
         assert (SKILL_DIR / 'references' / name).is_file(), name
         assert name in text, name
     assert (SKILL_DIR / 'templates' / 'slide-plan.md').is_file()
@@ -42,6 +42,10 @@ def check():
     assert (ROOT / 'schemas' / 'evidence-manifest.schema.json').is_file()
     assert (ROOT / 'scripts' / 'qa_pptx.py').is_file()
     assert (SKILL_DIR / 'scripts' / 'build_pptx.py').is_file()
+    assert (SKILL_DIR / 'scripts' / 'check_editorial_flow.py').is_file()
+    assert (SKILL_DIR / 'templates' / 'editorial-storyboard.example.json').is_file()
+    assert 'story-continuity.md' in text
+    assert 'check_editorial_flow.py' in text
     chat = (SKILL_DIR / 'references' / 'copilot-chat-workflow.md').read_text(encoding='utf-8')
     assert 'Code Interpreter' in chat and 'Copilot Chat' in chat
 
