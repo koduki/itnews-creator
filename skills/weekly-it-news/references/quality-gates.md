@@ -3,10 +3,10 @@
 Run as a staged review, not a self-congratulatory checklist. Record pass, fail or unverified for every significant check.
 
 ## Gate 0 — Deliverable and capability acceptance (hard blockers)
-- Default execution is Copilot **inside PowerPoint**; no mandatory Word, handoff JSON, QA CLI or separate render service. Those artifacts are optional and should not delay native creation.
+- Default execution is the **Agent Builder custom agent in Microsoft 365 Copilot Chat**, using Code Interpreter / native file generation to produce PPTX; no mandatory Word, handoff JSON, QA CLI outside the chat or separate render service. PowerPoint Agent in Copilot Chat is the second option; the PowerPoint app is optional.
 - A PowerPoint request requires a **real editable `.pptx`**. Verify filename, existence and slides. Word `.docx`, `/:w:/` SharePoint link, PDF and prose outlines do not count unless expressly authorized.
 - Screenshot-required slides require authentic captured or uploaded source images **actually embedded** in the deck, with topic, URL, and relevance recorded. Search result text, thumbnails and generated illustrations are not real screenshots.
-- Preflight the current host for a PowerPoint generator/editor, browser screenshot facility, image embedding, and file inspection. When a mandatory capability is missing, report the requirement unmet, not success.
+- Preflight the current Copilot Chat host for its **Create documents, charts, and code** capability, a PowerPoint generator or executable bundled `scripts/build_pptx.py`, browser screenshot facility, image embedding, and file inspection. When a mandatory capability is missing, report the requirement unmet, not success.
 - Microsoft Agent Builder skills do not automatically inherit the dedicated PowerPoint Agent capabilities. A host handoff must be explicit.
 - Mark deliverables incomplete if requested PPTX or essential screenshot evidence is missing, even when research is excellent.
 
