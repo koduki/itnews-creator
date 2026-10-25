@@ -40,7 +40,7 @@ To build and verify locally:
 python tests/test_package.py
 python -m unittest discover -s tests -p 'test_build_packages.py' -v
 python scripts/build_packages.py --out-dir dist
-# For a tagged release: python scripts/build_packages.py --out-dir dist --tag v0.2.0
+# For a tagged release: python scripts/build_packages.py --out-dir dist --tag v0.3.0
 ```
 
 To retrieve an ordinary build, open **[Actions → Build skill packages](https://github.com/koduki/itnews-creator/actions/workflows/package.yml)**, choose a successful run, and download `itnews-creator-packages-<run ID>` under Artifacts. For durable, versioned downloads, use **[Releases](https://github.com/koduki/itnews-creator/releases)** after pushing the corresponding tag.
@@ -60,6 +60,16 @@ tests/                             # Skill and distribution tests
 docs/design-philosophy.md          # Editorial and validation rationale
 README.md
 ```
+
+## Copilot Chat runtime requirements and observed failure
+
+The initial Agent Builder field test produced a **Word** SharePoint document rather than the requested **PowerPoint .pptx**, with no genuine Web-page screenshots. This is a failed acceptance test, not evidence that the skill can autonomously create slides in every Copilot host. The actual Word document was not accessible for content inspection, so the precise tool-selection cause is unconfirmed.
+
+**New in v0.3.0:** the portable skill performs a capability preflight before drafting. A PowerPoint request is **complete only** with an actual `.pptx`; `.docx`, PDF, presentation plans and Word SharePoint `/:w:/` links are intermediate at most. If the current agent cannot create a PPTX, it must say so and direct the user to **Copilot in PowerPoint** (skill applied in that host) or the **dedicated PowerPoint Agent** (with research handoff; not automatic skill sharing).
+
+Authentic screenshot-backed slides require images captured from real pages or provided as actual files, embedded and attributed. Web search is not screenshot capture. If required screenshots cannot be sourced, the deck remains **incomplete**, and the agent must report that blocker rather than silently omit them.
+
+See the [Copilot runtime diagnostic and remediation guide](skills/weekly-it-news/references/copilot-runtime-diagnostics.md) for the capability matrix, recommended host choice and explicit output/screenshot validation checklist.
 
 ## Installation
 
@@ -99,6 +109,7 @@ The four originals `20260125.pptx`, `20260412.pptx`, `20260913.pptx`, and `20261
 
 ## Release notes
 - **CI/CD:** dual-package reproducible build, PR/main Artifacts and tag-based GitHub Releases; documented editorial/design rationale.
+- **0.3.0**: verified PPTX output gate, authentic screenshot evidence gate, Microsoft Copilot runtime routing and failure diagnosis.
 - **0.2.0**: original pre-AI narrative structure takes precedence over later polished layouts.
 
 ## Known limits
