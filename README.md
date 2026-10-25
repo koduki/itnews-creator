@@ -43,7 +43,7 @@ The reference decks put important **real-source visuals after each news explanat
 
 **A request for PowerPoint must result in an actual .pptx (or PowerPoint-native deck verifiably exportable to .pptx).** The previous Copilot Chat experiment generated a Word document without the requested screenshots. That is a failed deliverable, not an acceptable alternative: the skill now checks the file format and whether authentic images were truly embedded. Agent Builder custom skills cannot grant unavailable browser or presentation capabilities. If the host cannot produce the requested result, it should disclose this rather than calling Word “done.” See [Copilot runtime diagnosis](skills/weekly-it-news/references/copilot-runtime-diagnostics.md) and [cross-host acceptance tests](skills/weekly-it-news/references/acceptance-tests.md).
 
-## Two complementary Copilot skills (v0.7.0)
+## Two complementary Copilot skills (v0.7.1)
 
 The preferred workflow for this project is now **a real base PowerPoint from Microsoft 365 Copilot Chat → native PowerPoint editing and finishing**. These are deliberately different skills and installation targets:
 
@@ -80,7 +80,7 @@ To build and verify locally:
 python tests/test_package.py
 python -m unittest discover -s tests -p 'test_build_packages.py' -v
 python scripts/build_packages.py --out-dir dist
-# For a tagged release: python scripts/build_packages.py --out-dir dist --tag v0.7.0
+# For a tagged release: python scripts/build_packages.py --out-dir dist --tag v0.7.1
 ```
 
 To retrieve an ordinary build, open **[Actions → Build skill packages](https://github.com/koduki/itnews-creator/actions/workflows/package.yml)**, choose a successful run, and download `itnews-creator-packages-<run ID>` under Artifacts. For durable, versioned downloads, use **[Releases](https://github.com/koduki/itnews-creator/releases)** after pushing the corresponding tag.
@@ -150,7 +150,7 @@ The four originals `20260125.pptx`, `20260412.pptx`, `20260913.pptx`, and `20261
 - OpenAI: [Working with presentations in ChatGPT Work](https://help.openai.com/en/articles/20001278-creating-and-editing-documents-spreadsheets-and-presentations-with-chatgpt-work).
 
 ## Release notes
-- **0.7.0**: v0.5 field-test repairs: contiguous story blocks, actionable exact-URL evidence handoff, PowerPoint source-media-first repairs and editorial-flow regression tests.
+- **0.7.1**: v0.7 field-test repairs plus embedded-image truth check and visible source-image TODOs in the generated base PPTX; v0.5 field-test repairs: contiguous story blocks, actionable exact-URL evidence handoff, PowerPoint source-media-first repairs and editorial-flow regression tests.
 - **0.6.0**: add a separately packaged Copilot-in-PowerPoint polish skill; explicit base-deck handoff and missing-evidence TODO; three distribution ZIPs.
 - **CI/CD:** three-package reproducible build, PR/main Artifacts and tag-based GitHub Releases; documented editorial/design rationale.
 - **0.5.0**: prioritize Agent Builder Copilot Chat one-session PPTX production through Code Interpreter, bundle a tested stdlib-only fallback helper, keep PowerPoint Agent and PowerPoint editor optional; distinguish live tenant E2E validation.
