@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "itnews-creator evidence manifest",
+  "type": "object",
+  "required": ["schema_version", "presentation", "assets"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "presentation": {"type": "string", "minLength": 1},
+    "assets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["slide", "kind", "purpose", "source_url", "publisher", "rights_status", "embedded"],
+        "properties": {
+          "slide": {"type": "integer", "minimum": 1},
+          "kind": {"enum": ["news_photo", "article_figure", "web_screenshot", "official_image", "keynote_capture", "other_documentary"]},
+          "purpose": {"type": "string", "minLength": 1},
+          "source_url": {"type": "string", "pattern": "^https?://"},
+          "publisher": {"type": "string", "minLength": 1},
+          "creator": {"type": ["string", "null"]},
+          "source_date": {"type": ["string", "null"]},
+          "rights_status": {"enum": ["permitted", "quotation_reviewed", "unknown", "restricted"]},
+          "embedded": {"type": "boolean"},
+          "sha256": {"type": "string", "pattern": "^[a-fA-F0-9]{64}$"}
+        }
+      }
+    }
+  }
+}
