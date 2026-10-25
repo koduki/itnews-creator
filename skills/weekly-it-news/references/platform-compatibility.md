@@ -18,6 +18,18 @@ This is a **portable behavior specification** using the `SKILL.md` convention. I
 - To install manually from the repository, copy the `skills/weekly-it-news` directory into the personal Skills folder where permitted. For pure prompt-based paste, copy only SKILL.md; supporting files won't be accessible unless also uploaded.
 - Use native PowerPoint tools for diagrams, tables and chart edits where the Copilot environment permits, and use Brand Kit/templates when configured; explicitly test each operation in the target tenant.
 
+## Mandatory runtime routing for PowerPoint requests
+
+**Agent Builder custom agent ≠ the dedicated PowerPoint Agent ≠ Copilot in PowerPoint.** These are separate entry points, not interchangeable backends. A portable skill cannot automatically transfer itself to another host or force calls to an inaccessible PowerPoint editing tool.
+
+Before attempting authoring in any host, explicitly check **(1) PPTX creation**, **(2) real Web screenshot capture**, **(3) embedding real images**, and **(4) final file verification**. Do not infer tool access from the agent name, license, skill installation or Web search alone.
+
+**If Agent Builder returns Word**: This is a failed PowerPoint request, not a completed presentation. In Microsoft 365 Copilot Chat, select the **PowerPoint Agent** under Tools/Agents to create the requested presentation, or open the PowerPoint app and use **Copilot in PowerPoint with this skill**. If the custom Agent Builder skill is unavailable within PowerPoint Agent, first transfer a structured research brief and image/source manifest and re-apply authoring rules in the PowerPoint environment. Treat that as a two-stage workaround, not automatic skill interoperability.
+
+**Screenshot constraint**: Agent Builder scripts cannot reach the network; native search does not imply browser-screen capture. If the source has no permitted screenshot capture facility and the user requires real evidence screenshots, declare that requirement unfulfilled and use a separate verified screenshot-provisioning step. A screenshot-only slide must have source URL, original date or capture date, visual purpose and readable relevant content.
+
+**Completion**: Confirm that a concrete `.pptx` was produced and can be opened; if not, report "PPTX output requirement unmet". Confirm screenshots are embedded from real pages, or report "screenshot evidence requirement unmet". Never mark a Word link `/:w:/` as a completed PPTX. See `copilot-runtime-diagnostics.md`.
+
 ## Capability matrix — expectations, not guarantees
 
 | Feature | ChatGPT Work | M365 Copilot Chat Agent | Copilot in PowerPoint |
