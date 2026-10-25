@@ -31,6 +31,17 @@ def check():
     assert '2026-01-25' in text and '2026-04-12' in text
     assert 'real editable' in text and '.pptx' in text
     assert 'screenshot evidence requirement unmet' in text
+    assert 'news articles' in text or 'news article' in text
+    assert 'references/acceptance-tests.md' in text
+    assert 'no Word substitution' in text or 'Word substitution' in text
+    visual = (SKILL_DIR / 'references' / 'visual-evidence.md').read_text(encoding='utf-8')
+    assert 'news article' in visual.lower() or 'news-article' in visual.lower()
+    assert 'photograph' in visual.lower()
+    gate = (SKILL_DIR / 'references' / 'quality-gates.md').read_text(encoding='utf-8')
+    assert 'Gate 0' in gate and '.docx' in gate and '.pptx' in gate
+    regression = (SKILL_DIR / 'references' / 'acceptance-tests.md').read_text(encoding='utf-8')
+    assert 'Word' in regression and 'news article' in regression
+
     diagnosis = (SKILL_DIR / 'references' / 'copilot-runtime-diagnostics.md').read_text(encoding='utf-8')
     assert 'Agent Builder' in diagnosis and 'PowerPoint Agent' in diagnosis
     assert 'Word' in diagnosis and 'screenshots' in diagnosis
