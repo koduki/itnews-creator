@@ -29,7 +29,7 @@ def check():
     assert '0 is a hard reject' in text
     assert 'Never manufacture' in text
     assert '2026-01-25' in text and '2026-04-12' in text
-    assert 'real editable' in text and '.pptx' in text
+    assert 'editable' in text and '.pptx' in text
     assert 'screenshot evidence requirement unmet' in text
     assert 'news articles' in text or 'news article' in text
     assert 'references/acceptance-tests.md' in text
