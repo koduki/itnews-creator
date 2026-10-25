@@ -22,13 +22,18 @@ def check():
     assert re.search(r'^name: weekly-it-news$', text, re.M)
     assert re.search(r'^description: \S', text, re.M)
     assert len(text) < 20_000, f'M365 skill instruction length: {len(text)}'
-    for name in ('editorial-structure.md', 'style-from-samples.md', 'visual-evidence.md', 'quality-gates.md', 'platform-compatibility.md'):
+    for name in ('editorial-structure.md', 'style-from-samples.md', 'visual-evidence.md', 'quality-gates.md', 'platform-compatibility.md', 'copilot-runtime-diagnostics.md'):
         assert (SKILL_DIR / 'references' / name).is_file(), name
         assert name in text, name
     assert (SKILL_DIR / 'templates' / 'slide-plan.md').is_file()
     assert '0 is a hard reject' in text
     assert 'Never manufacture' in text
     assert '2026-01-25' in text and '2026-04-12' in text
+    assert 'real editable' in text and '.pptx' in text
+    assert 'screenshot evidence requirement unmet' in text
+    diagnosis = (SKILL_DIR / 'references' / 'copilot-runtime-diagnostics.md').read_text(encoding='utf-8')
+    assert 'Agent Builder' in diagnosis and 'PowerPoint Agent' in diagnosis
+    assert 'Word' in diagnosis and 'screenshots' in diagnosis
     structure = (SKILL_DIR / 'references' / 'editorial-structure.md').read_text(encoding='utf-8')
     assert 'source' in structure.lower() and 'news' in structure.lower()
     print(f"PASS: v{manifest['version']} portable structure, canonical early-deck format and QA gates")
