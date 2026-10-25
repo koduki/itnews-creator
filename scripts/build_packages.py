@@ -15,6 +15,7 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[1]
 SKILL_ROOT = ROOT / 'skills' / 'weekly-it-news'
 POLISH_ROOT = ROOT / 'skills' / 'itnews-powerpoint-polish'
+GEMINI_ROOT = ROOT / 'skills' / 'weekly-it-news-gemini'
 COVER_ROOT = ROOT / 'assets' / 'cover'
 MANIFEST = ROOT / 'plugin.json'
 SEMVER = re.compile(r'(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?\Z')
@@ -51,6 +52,9 @@ def validate(tag: str = '') -> tuple[str, list[Path]]:
 
     author = skill_files(SKILL_ROOT, 'weekly-it-news')
     polish = skill_files(POLISH_ROOT, 'itnews-powerpoint-polish')
+    gemini = skill_files(GEMINI_ROOT, 'weekly-it-news-gemini')
+    for req in ('plot-and-layout.md', 'assets-and-handoff.md'):
+        assert (GEMINI_ROOT / 'references' / req).is_file()
     author_main = author[0].read_text(encoding='utf-8')
     polish_main = polish[0].read_text(encoding='utf-8')
     for req in ('editorial-structure.md', 'style-from-samples.md', 'visual-evidence.md',
@@ -68,11 +72,11 @@ def validate(tag: str = '') -> tuple[str, list[Path]]:
         assert req in polish_main, f'Unreferenced polish resource: {req}'
     assert (POLISH_ROOT / 'templates' / 'review-report.md').is_file()
     assert 'templates/review-report.md' in polish_main
-    for p in (ROOT / 'README.md', MANIFEST, *author, *polish):
+    for p in (ROOT / 'README.md', MANIFEST, *author, *polish, *gemini):
         assert p.is_file() and not p.is_symlink(), f'Missing or unsafe input {p}'
         p.read_text(encoding='utf-8')
     assets = cover_assets()
-    return version, [*author, *polish, *assets]
+    return version, [*author, *polish, *gemini, *assets]
 
 
 def cover_assets() -> list[Path]:
@@ -99,16 +103,19 @@ def create_zip(output: Path, entries: list[tuple[Path, str]]) -> None:
             z.writestr(item, source.read_bytes(), compress_type=zipfile.ZIP_DEFLATED, compresslevel=9)
 
 
-def build(out_dir: Path, tag: str = '') -> tuple[Path, Path, Path]:
+def build(out_dir: Path, tag: str = '') -> tuple[Path, Path, Path, Path]:
     version, _ = validate(tag)
     author_files = skill_files(SKILL_ROOT, 'weekly-it-news')
     polish_files = skill_files(POLISH_ROOT, 'itnews-powerpoint-polish')
+    gemini_files = skill_files(GEMINI_ROOT, 'weekly-it-news-gemini')
     author = [(p, p.relative_to(SKILL_ROOT).as_posix()) for p in author_files]
     cover = [(p, 'assets/cover/' + p.name) for p in cover_assets()]
     polish = [(p, p.relative_to(POLISH_ROOT).as_posix()) for p in polish_files]
+    gemini = [(p, p.relative_to(GEMINI_ROOT).as_posix()) for p in gemini_files]
     chatgpt = out_dir / f'itnews-creator-chatgpt-plugin-v{version}.zip'
     copilot = out_dir / f'itnews-creator-copilot-skill-v{version}.zip'
     power = out_dir / f'itnews-creator-powerpoint-polish-skill-v{version}.zip'
+    gemini_out = out_dir / f'itnews-creator-gemini-task-skill-v{version}.zip'
     create_zip(chatgpt, [
         (ROOT / 'README.md', 'README.md'),
         (MANIFEST, 'plugin.json'),
@@ -116,15 +123,17 @@ def build(out_dir: Path, tag: str = '') -> tuple[Path, Path, Path]:
         *((p, 'skills/weekly-it-news/' + name) for p, name in cover),
         *((p, 'skills/itnews-powerpoint-polish/' + name) for p, name in polish),
         *((p, 'skills/itnews-powerpoint-polish/' + name) for p, name in cover),
+        *((p, 'skills/weekly-it-news-gemini/' + name) for p, name in gemini),
     ])
     create_zip(copilot, [*author, *cover])
-    create_zip(power, [*polish, *cover])
-    for archive in (chatgpt, copilot, power):
+    create_zip(power, polish)  # PowerPoint skill ZIP must not contain binary PPTX/JPEG.
+    create_zip(gemini_out, gemini)  # Gemini Skills ZIP accepts portable text references.
+    for archive in (chatgpt, copilot, power, gemini_out):
         with zipfile.ZipFile(archive) as z:
             assert z.testzip() is None, f'Corrupt ZIP: {archive}'
             assert all(not x.endswith('/') for x in z.namelist())
         assert archive.stat().st_size <= 50 * 1024 * 1024, f'Archive exceeds 50 MB: {archive}'
-    return chatgpt, copilot, power
+    return chatgpt, copilot, power, gemini_out
 
 
 def main():
