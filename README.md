@@ -25,6 +25,16 @@ Research and visuals have an **evidence role**: each table, chart, drawing, real
 
 For the full reasoning, including slide archetypes, validation criteria, rights and deliberate non-goals, see **[Design philosophy](docs/design-philosophy.md)**. For the original-deck page references, see [Editorial structure](skills/weekly-it-news/references/editorial-structure.md).
 
+## Copilot-native authoring (preferred)
+
+**The regular workflow completes in Copilot in PowerPoint.** Open a new or existing .pptx, select `weekly-it-news` in the PowerPoint Copilot skills menu, and conduct slide planning, content creation, evidence insertion and revisions there. A dedicated PowerPoint Agent can generate presentations in Copilot Chat, but an Agent Builder custom skill is not automatically installed inside it.
+
+The skill does **not** require a separate PPTX generator, Word intermediary, Python script or JSON handoff file for normal creation. Optional [Copilot-native workflow](skills/weekly-it-news/references/copilot-native-workflow.md) instructions explain when host-native features suffice and how to report genuine limitations.
+
+Only when switching hosts or requesting a reproducible audit, use the [optional production handoff](skills/weekly-it-news/references/production-handoff.md) and [evidence manifest schema](schemas/evidence-manifest.schema.json). A [structural PPTX QA script](scripts/qa_pptx.py) can optionally inspect an already-generated PowerPoint; it is **not** part of the generation path and cannot judge visual legibility, photo rights or factual correctness.
+
+Local optional QA: `python scripts/qa_pptx.py output.pptx --min-images 1 --manifest evidence.json` (only if genuine images were requested and the optional manifest is available).
+
 ## Documentary visuals and hard output contract
 
 The reference decks put important **real-source visuals after each news explanation**. These need not be limited to manufacturer announcements. Reputable news reporting may contain a better photo of a device in use, on-site event/incident photograph, technical diagram, annotated comparison, or evidence-bearing figure. The skill evaluates these sources by **relevance, factual fidelity, publisher/photographer provenance, permitted reuse, crop and on-slide readability**. When the image itself is important, prefer the actual credited image over a tiny screenshot of the whole article; when the article's wording or page context is the subject, capture the relevant part of the real page. Neither a URL nor an AI-generated illustration is documentary evidence.
@@ -115,6 +125,7 @@ The four originals `20260125.pptx`, `20260412.pptx`, `20260913.pptx`, and `20261
 
 ## Release notes
 - **CI/CD:** dual-package reproducible build, PR/main Artifacts and tag-based GitHub Releases; documented editorial/design rationale.
+- **0.4.0**: prioritize Copilot-in-PowerPoint one-session creation; optional evidence audit / cross-host brief; offline PPTX structural QA and regression tests; deduplicate quality gates.
 - **0.3.0**: enforce actual PPTX output (Word is not a substitute); accept meaningful, traceable journalist photographs and graphics inside news articles as well as official images; distinguish an article image from a full-page capture; check that requested images are actually embedded; add Copilot regression cases and runtime routing notes.
 - **0.2.0**: original pre-AI narrative structure takes precedence over later polished layouts.
 
