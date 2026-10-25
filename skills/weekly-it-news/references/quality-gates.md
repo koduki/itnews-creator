@@ -17,6 +17,8 @@ Run as a staged review, not a self-congratulatory checklist. Record pass, fail o
 - All external visuals, including journalistic photographs, news-article diagrams and page captures, are attributed and assessed for permissible reuse; unknown rights cannot be treated as approval.
 
 ## Gate B0 — Faithfulness to the intended news format
+- A **single contiguous block** per news item: explanation, its source images/technical elaboration, and then the next topic. No returning to a completed topic for a second deep-dive/market/risk round. Optional genuinely cross-topic final slide is separate.
+- For BASE DRAFT, inventory precise source URLs when verified, image purpose, intended position and embedded/pending status for PowerPoint. A missing image is an explicit second-stage TODO, not concealed and not a finished visual deck.
 - The deck contains a dated Weekly IT News cover and a concise agenda of the real selected topics, except when the user explicitly requests another format.
 - Each selected news item has an authored explanation before its evidence sequence; adjacent screenshots/technical charts remain connected to that news item. It must be possible to trace every evidence slide to its anchor topic.
 - Speaker analysis, skepticism and firsthand impressions remain clearly different from sourced claims.
