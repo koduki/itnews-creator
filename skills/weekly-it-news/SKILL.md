@@ -8,6 +8,12 @@ description: Create, update, or review Japanese technical-news PowerPoint presen
 ## Purpose
 Produce and review technically rigorous, visually communicative Japanese presentations. **Structural authority belongs to the pre-AI decks, 2026-01-25 (21 slides) and 2026-04-12 (27 slides).** The later 2026-09-13 (53 slides) and 2026-10-12 (34 slides) decks are optional **design and explanation refinements**, not a replacement for that original news-show format. Do not imitate the earlier decks' unfinished layouts or reproduce copyrighted third-party screenshots. Prefer the host's native presentation creation/editing capabilities rather than building a new PPTX engine. Explicit user instructions and supplied templates override these defaults.
 
+## Default workflow: Copilot-only PowerPoint production
+
+**Stay inside Copilot in PowerPoint for the entire normal task.** When the user is already working in PowerPoint, use the installed `weekly-it-news` custom skill in that very session to research (when available), storyboard, select authentic documentary images, generate/edit slides and review output. Do NOT mandate Word briefs, JSON manifests, Python scripts, browser automation, second-stage handoffs or a separate PPTX renderer. The dedicated PowerPoint Agent in Microsoft 365 Copilot Chat is another native choice if the skill's instructions can be provided there. Agent Builder custom agents have a different runtime; they cannot automatically grant themselves the PowerPoint Agent's capabilities. Only if a requested capability is actually unavailable should you offer a clearly disclosed host switch or optional handoff.
+
+Keep an **internal evidence ledger** (the source page, what visual proves, photographer/publisher, rights and whether image pixels are truly embedded). Formal JSON evidence manifests are optional auditing aids, never prerequisites for slide creation. Structural `scripts/qa_pptx.py` verification is optional and can run after native generation, not a rendering engine. See `references/copilot-native-workflow.md` and `references/production-handoff.md`.
+
 ## Output contract and capability preflight (mandatory)
 **When asked to make a PowerPoint, deliver a real editable `.pptx`, not a Word document, prose outline, PDF, slide-shaped images or presentation plan.** The only acceptable change of format is one the user explicitly authorizes. Do not label a research draft or generated Word as a completed presentation.
 
@@ -20,7 +26,7 @@ If **PPTX generation is unavailable**, fail closed: report "PPTX output requirem
 
 If source screenshots are required but unavailable, report **"screenshot evidence requirement unmet"**. Offer a separate browser-capable capture process or request the needed screenshot files; do **not** generate fake captures, replace them with generic illustrations, or quietly omit them. A research brief with URL/capture instructions is an **intermediate handoff**, not a completed slide deck. A PPTX that lacks required screenshots must be marked incomplete.
 
-For final acceptance, **verify the resulting file exists and is really `.pptx` with slides** (and can be opened/rendered if possible), and inventory the authentic screenshots actually embedded. A `:w:` SharePoint Word link is not an `.pptx` output. If no file verification or screenshot verification is possible, explicitly report the check as unverified rather than claiming success. See `references/copilot-runtime-diagnostics.md`.
+For final acceptance, **verify the resulting file exists and is really `.pptx` with slides** (and can be opened/rendered if possible), and inventory the authentic screenshots actually embedded. A `:w:` SharePoint Word link is not an `.pptx` output. If no file verification or screenshot verification is possible, explicitly report the check as unverified rather than claiming success. See `references/copilot-runtime-diagnostics.md` and `references/copilot-native-workflow.md`.
 
 ## Operating principles (mandatory)
 1. **Research before slides.** Determine audience, date, topics, desired depth, speaking context, output format and new-versus-edit intent. Infer obvious defaults; do not block on nonessential questions. Confirm news dates, versions, specs, claims and quotations from real sources. Distinguish facts, vendor claims, estimates, opinion and forecasts. None of the four sample decks is automatically a source of up-to-date facts.
@@ -69,6 +75,8 @@ Read `references/platform-compatibility.md` before instructing users how to inst
 - `references/visual-evidence.md`: detailed asset-selection and evidence policy.
 - `references/quality-gates.md`: hard output/media acceptance checks and rework loop.
 - `references/acceptance-tests.md`: regression cases for Word substitution and missing authentic news-photo evidence.
+- `references/copilot-native-workflow.md`: **preferred single-session Copilot in PowerPoint** production; avoids mandatory external tooling.
+- `references/production-handoff.md`: optional and only for genuine host-switch/review situations.
 - `references/platform-compatibility.md`: installation and capability distinctions.
 - `references/copilot-runtime-diagnostics.md`: failed Copilot Chat run (Word instead of PPTX and missing authentic screenshots), runtime preflight, and native PowerPoint handoff.
 - `templates/slide-plan.md`: practical storyboard and provenance fields.
