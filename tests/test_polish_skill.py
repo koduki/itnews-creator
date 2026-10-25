@@ -33,7 +33,7 @@ class PowerPointPolishSkillTest(unittest.TestCase):
         with TemporaryDirectory() as f1, TemporaryDirectory() as f2:
             archives1 = mod.build(Path(f1), tag='v' + version)
             archives2 = mod.build(Path(f2), tag='v' + version)
-            self.assertEqual(len(archives1), 3)
+            self.assertEqual(len(archives1), 4)
             self.assertEqual([a.name for a in archives1], [a.name for a in archives2])
             for a, b in zip(archives1, archives2):
                 self.assertEqual(a.read_bytes(), b.read_bytes())
@@ -52,9 +52,15 @@ class PowerPointPolishSkillTest(unittest.TestCase):
                 expected = {'SKILL.md', 'references/handoff-contract.md',
                             'references/review-rubric.md', 'references/visual-repair.md', 'references/topic-repair.md',
                             'templates/review-report.md'}
-                self.assertEqual(names, expected | {'assets/cover/avatar-20260315.jpg', 'assets/cover/cover-preview-20260315.jpg', 'assets/cover/weekly-it-news-cover-20260315.pptx', 'assets/cover/README.md'})
+                self.assertEqual(names, expected | {'references/gemini-claude-handoff.md'})
                 self.assertIn('name: itnews-powerpoint-polish', z.read('SKILL.md').decode())
-                self.assertFalse(any(n.endswith(('.pdf', '.docx')) for n in names))
+                self.assertFalse(any(n.endswith(('.pdf', '.docx', '.pptx', '.jpg', '.png')) for n in names))
+            with zipfile.ZipFile(archives1[3]) as z:
+                self.assertIn('SKILL.md', z.namelist())
+                self.assertIn('references/plot-and-layout.md', z.namelist())
+                self.assertIn('references/assets-and-handoff.md', z.namelist())
+                self.assertIn('templates/plot.example.json', z.namelist())
+                self.assertFalse(any(n.endswith(('.pptx', '.jpg', '.png')) for n in z.namelist()))
 
     def test_review_contract_preserves_story_and_truth(self):
         s = (POLISH / 'SKILL.md').read_text(encoding='utf-8')
