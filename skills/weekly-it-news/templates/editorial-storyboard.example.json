@@ -1,0 +1,85 @@
+{
+  "edition_date": "2026-10-25",
+  "status": "BASE_DRAFT",
+  "agenda_topic_ids": [
+    "meta",
+    "php",
+    "gmo"
+  ],
+  "slides": [
+    {
+      "role": "cover",
+      "title": "Weekly IT News！"
+    },
+    {
+      "role": "agenda",
+      "title": "今週のトピック",
+      "topic_ids": [
+        "meta",
+        "php",
+        "gmo"
+      ]
+    },
+    {
+      "role": "explanation",
+      "topic_id": "meta",
+      "title": "常駐AIの動向",
+      "angle": "何が変わったか、どこまで委任できるか"
+    },
+    {
+      "role": "evidence",
+      "topic_id": "meta",
+      "title": "実画面・写真（取得待ち）",
+      "evidence_purpose": "製品の実際の画面を示す",
+      "asset_status": "pending",
+      "source_gap": "正確な公開記事URL未確認。PowerPoint前に調査する",
+      "rights_status": "unverified",
+      "intended_after": "常駐AIの動向"
+    },
+    {
+      "role": "analysis",
+      "topic_id": "meta",
+      "title": "IAMと承認"
+    },
+    {
+      "role": "explanation",
+      "topic_id": "php",
+      "title": "PHP脆弱性の背景"
+    },
+    {
+      "role": "evidence",
+      "topic_id": "php",
+      "title": "一次情報画面（取得待ち）",
+      "evidence_purpose": "勧告の実際の記載を示す",
+      "asset_status": "pending",
+      "source_gap": "セキュリティ勧告の特定URL未確認",
+      "rights_status": "unverified",
+      "intended_after": "PHP脆弱性の背景"
+    },
+    {
+      "role": "analysis",
+      "topic_id": "php",
+      "title": "過去の脆弱性との比較"
+    },
+    {
+      "role": "explanation",
+      "topic_id": "gmo",
+      "title": "クラウドPC侵害"
+    },
+    {
+      "role": "evidence",
+      "topic_id": "gmo",
+      "title": "発表画面（取得待ち）",
+      "evidence_purpose": "事業者発表内容を示す",
+      "asset_status": "pending",
+      "source_gap": "発表ページURL未確認",
+      "rights_status": "unverified",
+      "intended_after": "クラウドPC侵害"
+    },
+    {
+      "role": "analysis",
+      "topic_id": "gmo",
+      "title": "RDP共有境界と対策"
+    }
+  ]
+}
