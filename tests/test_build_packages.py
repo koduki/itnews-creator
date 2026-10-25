@@ -31,6 +31,8 @@ class BuildPackagesTest(unittest.TestCase):
                 self.assertIn("skills/weekly-it-news/SKILL.md", members)
                 self.assertIn("skills/weekly-it-news/references/copilot-runtime-diagnostics.md", members)
                 self.assertIn("skills/weekly-it-news/scripts/build_pptx.py", members)
+                self.assertIn("skills/weekly-it-news/scripts/check_editorial_flow.py", members)
+                self.assertIn("skills/weekly-it-news/references/story-continuity.md", members)
                 self.assertNotIn("tests/test_package.py", members)
                 self.assertEqual(json.loads(z.read("plugin.json"))["version"], version)
             with zipfile.ZipFile(first_archives[1]) as z:
@@ -40,6 +42,9 @@ class BuildPackagesTest(unittest.TestCase):
                 self.assertIn("references/copilot-runtime-diagnostics.md", members)
                 self.assertIn("references/copilot-chat-workflow.md", members)
                 self.assertIn("scripts/build_pptx.py", members)
+                self.assertIn("scripts/check_editorial_flow.py", members)
+                self.assertIn("references/story-continuity.md", members)
+                self.assertIn("templates/editorial-storyboard.example.json", members)
                 self.assertIn("templates/copilot-chat-plan.example.json", members)
                 self.assertIn("templates/slide-plan.md", members)
                 self.assertNotIn("plugin.json", members)
