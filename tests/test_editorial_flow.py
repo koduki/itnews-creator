@@ -63,6 +63,37 @@ class FlowTests(unittest.TestCase):
                 self.assertIsNone(archive.testzip())
                 self.assertIn('ppt/slides/slide3.xml',archive.namelist())
 
+    def test_base_pptx_keeps_visible_pending_image_handoff(self):
+        from importlib.util import spec_from_file_location, module_from_spec
+        import zipfile
+        builder_file = ROOT / 'skills' / 'weekly-it-news' / 'scripts' / 'build_pptx.py'
+        spec = spec_from_file_location('itnews_visible_handoff', builder_file)
+        builder = module_from_spec(spec); spec.loader.exec_module(builder)
+        with TemporaryDirectory() as temp:
+            target = Path(temp) / 'handoff.pptx'
+            builder.build(EXAMPLE, target)
+            with zipfile.ZipFile(target) as z:
+                evidence_slide = z.read('ppt/slides/slide4.xml').decode('utf-8')
+                self.assertIn('要実画像', evidence_slide)
+                self.assertIn('未挿入', evidence_slide)
+                self.assertIn('利用条件', evidence_slide)
+                self.assertIn('正確な公開記事URL未確認', evidence_slide)
+
+    def test_base_builder_rejects_falsely_embedded_media(self):
+        from importlib.util import spec_from_file_location, module_from_spec
+        builder_file = ROOT / 'skills' / 'weekly-it-news' / 'scripts' / 'build_pptx.py'
+        spec = spec_from_file_location('itnews_truthful_media', builder_file)
+        builder = module_from_spec(spec); spec.loader.exec_module(builder)
+        plan = copy.deepcopy(self.plan)
+        evidence = next(s for s in plan['slides'] if s.get('role') == 'evidence')
+        evidence['asset_status'] = 'embedded'
+        evidence['source_url'] = 'https://example.org/verified-source'
+        with TemporaryDirectory() as tmp:
+            source = Path(tmp) / 'plan.json'
+            source.write_text(json.dumps(plan, ensure_ascii=False), encoding='utf-8')
+            with self.assertRaisesRegex(ValueError, 'claims image embedded'):
+                builder.build(source, Path(tmp) / 'bad.pptx')
+
     def test_package_references_present(self):
         author=(ROOT/'skills'/'weekly-it-news'/'SKILL.md').read_text('utf-8')
         polish=(ROOT/'skills'/'itnews-powerpoint-polish'/'SKILL.md').read_text('utf-8')
