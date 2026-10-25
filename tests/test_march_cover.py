@@ -80,7 +80,7 @@ class MarchCoverTest(unittest.TestCase):
         m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
         with TemporaryDirectory() as tmp:
             archives=m.build(Path(tmp))
-            for i,zfile in enumerate(archives):
+            for i,zfile in enumerate(archives[:2]):
                 prefix='assets/cover/' if i else 'skills/weekly-it-news/assets/cover/'
                 with ZipFile(zfile) as z:
                     for filename in ('avatar-20260315.jpg','weekly-it-news-cover-20260315.pptx','cover-preview-20260315.jpg','README.md'):
@@ -89,5 +89,8 @@ class MarchCoverTest(unittest.TestCase):
                 if i==0:
                     with ZipFile(zfile) as z:
                         self.assertIn('skills/itnews-powerpoint-polish/assets/cover/avatar-20260315.jpg',z.namelist())
+            for zfile in archives[2:]:
+                with ZipFile(zfile) as z:
+                    self.assertFalse(any(n.endswith(('.pptx', '.jpg', '.png')) for n in z.namelist()))
 
 if __name__=='__main__':unittest.main()
