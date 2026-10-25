@@ -17,6 +17,12 @@ Do not restart news selection, silently discard the draft, regenerate all slides
 - 16:9 white, `#C00000` red accents, charcoal text, readable Japanese sans. Keep diagrams, charts, tables and labels editable when their content is authored. Real source images remain images.
 - Only use external images that are genuine, relevant, accurately attributed and permitted for the intended reuse. **A link or an AI-generated illustration is not documentary evidence.** Article photography and reporting graphics are as legitimate as official/vendor images when appropriate.
 
+## v0.7 second-stage priorities: editorial continuity and real evidence
+
+The supplied v0.5 field test showed two major defects: **three topics reopened in a second loop** and only **four embedded image objects in 22 slides**, with none of the independent page/photo evidence expected from the earlier presentation style. Compare the separate 2026-03-15 reference (31 slides and 33 embedded images) without turning the raw counts into a quota. In PowerPoint, **first group recurring slides into a single contiguous segment per news item** when the base failed to do so; only then fill authentic images and fix projection layout. See `references/topic-repair.md` for the exact test-case slide order and source-first repair criteria. Keep authored comparisons and technical diagrams that contribute genuine understanding.
+
+Review each news story for **explanation → actual evidence → technical insight**, with image URL, publisher/photographer/figure credit, publication date, lawful usage basis, exact insertion location and embedded-status evidence. If the base had no URLs, seek them using only tools actually available, or record an unverified source gap. Real source imagery has higher priority than decorative design polish, but **no fixed image count**. Run final QA only after evidence gaps, story-continuity problems and citations have been addressed, or report what remains.
+
 ## Operating procedure: edit the PPTX in place
 1. **Inspect, classify and preserve.** Read the current deck, its slides, speaker notes, visible sources and any supplied Chat transcript/brief. Identify news-group boundaries and current story order, slide roles, missing material, poorly aligned objects and source claims. Do not claim notes or external sources were inspected unless accessible. If the deck is a .docx rather than PPTX, stop: ask for a real editable deck or use a PowerPoint-native creation path with the user's agreement.
 2. **Make a compact repair list.** Categorize each issue as **BLOCKER** (false claim, no required evidence, unreadable/corrupt slides), **IMPORTANT** (bad cropping/contrast, missing source, wrong arrows, noneditable authored graphic), or **POLISH** (spacing/typography). Say which work can be done in the current PowerPoint environment. Preserve a copy if destructive changes are anticipated.
@@ -43,6 +49,7 @@ A `.pptx` from Copilot Chat is a valid **base** even if its evidence images are 
 - “発表者ノートを補完して、最終チェックで残った問題を箇条書きにして。”
 
 ## References
+- `references/topic-repair.md`: v0.5 actual-deck failures, corrected news ordering, news-first source-image repair.
 - `references/handoff-contract.md`: how the chat-authored base deck communicates unfinished work without mandatory sidecar files.
 - `references/review-rubric.md`: exact completion gates and priority labels.
 - `references/visual-repair.md`: edit recipes for genuine evidence, visuals, readability and native objects.
