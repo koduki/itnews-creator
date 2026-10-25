@@ -115,7 +115,7 @@ def build(out_dir: Path, tag: str = '') -> tuple[Path, Path, Path]:
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--out-dir', type=Path, default=ROOT / 'dist')
-    parser.add_argument('--tag', default='', help='Validate tag e.g. v0.6.0 against plugin.json')
+    parser.add_argument('--tag', default='', help='Validate tag e.g. v0.7.1 against plugin.json')
     a = parser.parse_args()
     for p in build(a.out_dir, a.tag):
         print(f'Built {p} ({p.stat().st_size} bytes)')
