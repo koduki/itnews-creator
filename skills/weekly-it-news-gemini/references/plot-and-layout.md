@@ -13,3 +13,11 @@ TWO_SOURCES：実画像2点と対応する個別の出典・説明。
 ひとつのstory_idは連続した一つのブロック。別のニュースを挟んで同じstory_idへ戻らない。強制的な固定ページ数・画像数・まとめは不要。明示的に承認された横断比較は例外。
 
 テンプレート原本はGit管理。GeminiスキルZIPへバイナリPPTXや画像を同梱するのではなく、タスクに別途アップロードまたはDrive参照する。資料がないのに忠実な再現ができたと主張しない。
+
+## テンプレートファイルの取得元
+
+正本：https://raw.githubusercontent.com/koduki/itnews-creator/main/assets/templates/weekly-it-news-design-template.pptx
+
+manifest： https://raw.githubusercontent.com/koduki/itnews-creator/main/assets/templates/template-manifest.json
+
+スキルのメタデータではなく、タスクのブラウザ/ファイル操作でPPTXの**実体をダウンロードし検証**する。ダウンロードできないときはDriveまたは添付ファイルを使う。レイアウト参考のみなら文章ルールを使ってもよいが、元のテンプレートを使用したと主張してはならない。

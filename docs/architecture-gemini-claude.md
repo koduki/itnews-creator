@@ -11,7 +11,7 @@
 ## 重要な制約
 - Gemini Tasksがブラウザ操作可能でも、スクリーンショットがファイルとして取得できるかは別途実証が必要。
 - GeminiスキルのPythonコードは外部ネットワークアクセスを保証しない。
-- PowerPointスキルZIPへバイナリのPPTX/PNGを梱包しない。固定テンプレートは別ファイルで渡す。
+- PowerPointスキルZIPへバイナリのPPTX/PNGを梱包しない。固定テンプレートはGitHubの `assets/templates/weekly-it-news-design-template.pptx` にあり、Tasksから raw URL `https://raw.githubusercontent.com/koduki/itnews-creator/main/assets/templates/weekly-it-news-design-template.pptx` を取得・ファイル検証する。取得できない場合はDrive/手動添付へフォールバックする。
 - 3月版の元表紙を厳密に再現し、今の目次形式は維持。本文はCOVER/AGENDA/NEWS/SOURCE_IMAGE/TECH_DIAGRAM/COMPARE/TWO_SOURCESの指定レイアウト。プロットのページ順とニュースの連続性は変更しない。
 - PowerPointのClaude 5.5モデル選択はテナント・契約・管理者設定に依存する。実際に選んだモデル名をQA報告に記録する。
 - GitHubのレイアウト規定は指示文であり、pixel-perfectな生成を保証するものではない。必要なら将来決定論的なPPTX生成器を追加する。

@@ -1,4 +1,4 @@
-# itnews-creator — Weekly IT News v0.9
+# itnews-creator — Weekly IT News v0.9.1
 
 [ライセンス: MIT](LICENSE)
 
@@ -20,16 +20,23 @@
 
 [GitHub Actions — Build skill packages](https://github.com/koduki/itnews-creator/actions/workflows/package.yml) で成功した最新実行のArtifactsをダウンロードし、外側のZIPだけを展開します。
 
-- **Gemini Tasks用**：itnews-creator-gemini-task-skill-v0.9.0.zip。Geminiアプリの「スキル」へアップロードしてGemini Tasksから呼び出します。
-- **PowerPoint用**：itnews-creator-powerpoint-polish-skill-v0.9.0.zip。PowerPointのCopilotで「スキルの管理」から追加します。
-- **旧Copilot Chat用**：itnews-creator-copilot-skill-v0.9.0.zip。互換性用であり、新しい標準ワークフローには使いません。
-- **ChatGPT用**：itnews-creator-chatgpt-plugin-v0.9.0.zip。Microsoft 365やGeminiには登録しません。
+- **Gemini Tasks用**：itnews-creator-gemini-task-skill-v0.9.1.zip。Geminiアプリの「スキル」へアップロードしてGemini Tasksから呼び出します。
+- **PowerPoint用**：itnews-creator-powerpoint-polish-skill-v0.9.1.zip。PowerPointのCopilotで「スキルの管理」から追加します。
+- **旧Copilot Chat用**：itnews-creator-copilot-skill-v0.9.1.zip。互換性用であり、新しい標準ワークフローには使いません。
+- **ChatGPT用**：itnews-creator-chatgpt-plugin-v0.9.1.zip。Microsoft 365やGeminiには登録しません。
 
-**重要：スキルZIPとは別に、PPTXテンプレートをGemini Tasksへ添付します。** バイナリ形式のPPTXやPNGをGemini/PowerPointカスタムスキルZIPへ入れる構成には制限があります。Git管理の既存の[3月版ネイティブ表紙](assets/cover/weekly-it-news-cover-20260315.pptx)と[オリジナルアバター](assets/cover/avatar-20260315.jpg)を利用してください。本文のレイアウトIDと指定色は[契約](skills/weekly-it-news-gemini/references/plot-and-layout.md)で定義します。フルデザインテンプレートのPPTXは別添する設計です。
+**重要：テンプレートの正本はGitHubです。** Gemini Tasks用スキルは、まず次の公開URLから実際のPPTXファイルを取得・検証するよう指示します。
+
+- [7枚の編集可能なデザインテンプレート](assets/templates/weekly-it-news-design-template.pptx)
+- [テンプレートの直接ダウンロード（raw）](https://raw.githubusercontent.com/koduki/itnews-creator/main/assets/templates/weekly-it-news-design-template.pptx)
+- [ハッシュと配布情報](assets/templates/template-manifest.json)
+- [3月版の元表紙](assets/cover/weekly-it-news-cover-20260315.pptx) / [元アバター](assets/cover/avatar-20260315.jpg)
+
+Gemini Tasks本体のブラウザ・ファイル操作で取得を試します。**Geminiスキル内のネットワークスクリプトはサポートされず、URLを読むだけではバイナリを使用できません。** 取得したPPTXを開き直して7枚と先頭の表紙を検証することが必須です。できない場合は、Google Driveのファイルを「Driveから追加」するか、GitHubから取得したPPTXをタスクへ添付してください。GeminiのGitHubリポジトリ取り込みは自動更新されず、ファイルを実際に開いたことの代わりにはなりません。PowerPoint仕上げスキルZIPにこのバイナリを入れる必要はありません。
 
 ## Gemini Tasksへの依頼
 
-Geminiのスキル weekly-it-news-gemini を使い、ニュースを調査して技術的な面白さを対話してください。まず各ページの目的・タイトル・出典URL・見せる画像・レイアウトIDを記した編集プロットを提示し、私の承認を得てください。承認後だけ指定URLの実画像を回収し、撮影画像のファイル実体を確認して、添付テンプレートに沿う編集可能なPPTXを作ってください。1枚目は3月版の元表紙、2枚目は今のシンプルな目次です。画像取得不能は必ず報告してください。
+Geminiのスキル weekly-it-news-gemini を使い、ニュースを調査して技術的な面白さを対話してください。まず各ページの目的・タイトル・出典URL・見せる画像・レイアウトIDを記した編集プロットを提示し、私の承認を得てください。承認後だけ指定URLの実画像を回収し、撮影画像のファイル実体を確認して、まずスキル記載のGitHubのraw URLからテンプレート実体を取得・検証し、取得できなければDriveまたは手動添付を依頼してください。取得できたテンプレートに沿う編集可能なPPTXを作ってください。1枚目は3月版の元表紙、2枚目は今のシンプルな目次です。画像取得不能は必ず報告してください。
 
 ## PowerPointでのClaude 5.5仕上げ
 
