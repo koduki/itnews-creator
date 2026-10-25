@@ -54,20 +54,31 @@ The **PPTX itself** is the minimum handoff between separate Copilot environments
 
 In this design, a skill is an **editing policy**, not a replacement presentation engine. Each Microsoft host uses only features it actually exposes; a restricted host must disclose an unmet requirement rather than invent a tool result. The PowerPoint editing skill is packaged **separately** from the Chat authoring skill; both share the editorial philosophy rather than an automatically connected runtime.
 
+## v0.7: field-test-driven topic order and evidence handoff
+
+The real 2026-10-25 v0.5 output contained 22 slides and 4 embedded image objects. It explained three topics in sequence and then revisited the same three in a second thematic round. The 2026-03-15 presenter-made example contained 31 slides and 33 image objects, with actual NVIDIA event pages, news photography and technical graphics. These counts are **observations, not mandatory image quotas**; the desired difference is the **authentic source-led editorial flow**.
+
+Copilot Chat must finish the story **one topic at a time**: an authored explanation, its evidence or named image gaps, its technical analysis, then the next story. It must not create a broad first pass across topics followed by second passes for risks, markets or implications. A genuinely useful single cross-topic ending is optional.
+
+For each desired real-source visual, the base-PPTX stage must give PowerPoint a precise handoff: the evidence's purpose, verified URL when actually known, image publisher/creator credit, exact intended position, rights status and **embedded/pending/unavailable** state. A URL is not a picture; when a source has not been found, mark the gap and do not invent a link. A base .pptx with explicit pending images can be **BASE DRAFT**, but not final. The PowerPoint skill repairs any reopened topic blocks first, then improves actual images, diagram clarity, layout, notes and citation. Preserve the author's analysis and original news cadence, not decorative image quotas.
+
+`check_editorial_flow.py` is a dependency-free *optional* storyboard validator. Its synthetic v0.5-style regression test rejects reopened topic blocks and incomplete image handoff fields; it does **not** by itself prove the Copilot editor obeys the skill in a Microsoft 365 tenant. See `references/story-continuity.md` and `references/topic-repair.md` in their respective skill trees.
+
 ## Cross-host architecture
 
-Keep one portable `skills/weekly-it-news/SKILL.md` and the referenced `references/` and `templates/`. Let **ChatGPT Work** and **Microsoft 365 Copilot Chat / PowerPoint Copilot** use their own available presentation engines; a custom skill does not replace hidden native tools or guarantee an identical rendering. Screenshot capture and external browsing can differ significantly by account/tenant. Never claim unperformed external fetches or unavailable edits.
+Keep two task-specific portable skills (`skills/weekly-it-news/` and `skills/itnews-powerpoint-polish/`) plus their respective supporting references and templates. Let **ChatGPT Work** and **Microsoft 365 Copilot Chat / PowerPoint Copilot** use their own available presentation engines; a custom skill does not replace hidden native tools or guarantee an identical rendering. Screenshot capture and external browsing can differ significantly by account/tenant. Never claim unperformed external fetches or unavailable edits.
 
-The build produces **two archives from one checked-in source**, without running a PPTX generator:
+The build produces **three archives** from one checked-in source (without executing a native presentation generator):
 
-- ChatGPT plugin archive: root `plugin.json`, `README.md`, and `skills/weekly-it-news/`.
-- Microsoft Copilot skill archive: `SKILL.md` at ZIP root plus its `references/` and `templates/`.
+- ChatGPT plugin archive: root `plugin.json`, `README.md`, and **both** skill folders.
+- Microsoft Copilot Chat authoring skill archive: the `weekly-it-news` skill contents at ZIP root.
+- Microsoft Copilot in PowerPoint finishing skill archive: the `itnews-powerpoint-polish` skill contents at ZIP root.
 
 Neither package contains the source PPTX examples, their screenshots, or downloaded third-party art. Versioned tag and manifest version must match at release time.
 
 ## Distribution versus installation
 
-CI should check metadata and missing skill references, create *reproducible* ZIPs, and attach both packages to each push/PR run as GitHub Actions Artifacts. Tags such as `v0.2.0` also publish downloadable assets on GitHub Releases. Publishing a ZIP **does not auto-install** or synchronize the private ChatGPT plugin, and does not deploy a skill to a Microsoft 365 tenant. Those are separately authorized host actions.
+CI should check metadata and missing skill references, create *reproducible* ZIPs, and attach the three packages to each push/PR run as GitHub Actions Artifacts. Tags such as `v0.7.0` also publish downloadable assets on GitHub Releases. Publishing a ZIP **does not auto-install** or synchronize the private ChatGPT plugin, and does not deploy a skill to a Microsoft 365 tenant. Those are separately authorized host actions.
 
 ### Intentional non-goals
 
