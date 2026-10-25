@@ -49,3 +49,13 @@ Collect: claim; source title; canonical URL; author or publisher; publication/da
 
 ## Value-based image scoring (review heuristic)
 Score 0–2 for claim relevance, information gain, factual fidelity, traceable rights/provenance, and projected readability (10 total); 8+ preferred. Any 0 in fidelity or provenance = reject. A score never overrides missing evidence or rights.
+
+## Authentic screenshot completion gate
+
+When screenshots are explicitly requested, first confirm a browser-capable tool or user-provided source files. A Web search result, cited URL, generative image or article summary is **not** a screenshot.
+
+For each required screenshot track the news item, specific claim, first-party URL, actual captured/uploaded image, source/capture date, permission status, readable crop and slide number.
+
+The Microsoft Agent Builder script sandbox cannot directly access the network. If live screenshot capture is unavailable, report 'screenshot evidence requirement unmet' and give a separate capture/upload path; never silently replace genuine evidence with filler.
+
+A presentation missing its explicitly required screenshots is incomplete. See `copilot-runtime-diagnostics.md`.
