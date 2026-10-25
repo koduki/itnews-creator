@@ -1,6 +1,6 @@
 # Optional production handoff for cross-host recovery (FALLBACK only)
 
-**Default:** stay inside Copilot in PowerPoint; do not write intermediate files simply because this reference exists. The brief below is useful only when a host switch, user review, or reproducible audit is actually necessary.
+**Default:** stay inside the Agent Builder custom agent in Copilot Chat; do not write intermediate files simply because this reference exists. The brief below is useful only when a host switch, user review, or reproducible audit is actually necessary.
 
 ## Minimum human-readable handoff
 - Intended output: actual `.pptx` and its target location, not Word.
