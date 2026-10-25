@@ -10,6 +10,9 @@ Use PASS / FAIL / UNVERIFIED for *observable* outcomes, not generic claims. Insp
 - No traceable provenance for crucial third-party media; unverified rights are not implicitly cleared.
 
 ## I1: Important quality issues
+- A topic reappears after a later topic begins (reopened-topic / second-tour regression). Repair ordering before cosmetic polishing; each topic has one contiguous explanation → evidence → context block.
+- Evidence assets only exist as text URLs and have not been actually embedded where required for the final deck.
+- Missing precise URLs/photographer credits for source images: do not call a generic research-report title an adequate image citation.
 - The one-news-at-a-time rhythm changed; source-only evidence slide orphaned from its story; agenda not matching headlines.
 - Presentation's author's opinion silently converted to fact; unexplained date, version or unit mismatch.
 - Blurred screenshot at projector scale; too much browser chrome; annotation obscures evidence; source URL lost.
@@ -36,3 +39,8 @@ Use PASS / FAIL / UNVERIFIED for *observable* outcomes, not generic claims. Insp
 - An AI-generated device UI is called a real screenshot: **hard failure**, replace or remove.
 - Original news overview rewritten as an executive business roadmap: **editorial invariant broken**, restore.
 - PowerPoint custom-skill runtime cannot fetch an article screenshot: **not a reason to invent one**; retain task as outstanding.
+
+## v0.7 case-based regression
+- **Oct 25 v0.5 example:** 22 slides, four image objects; Meta 3–5 & 14–15, PHP 6–9 & 16–17, GMO 10–13 & 18–21: **I1 editorial failure** until grouped. Reordering recipe is in `topic-repair.md`; don't mistake 4 images for an automatic numerical failure.
+- **Mar 15 original example:** 31 slides, 33 image objects; genuine event screens, journalistic photos and spec tables. This teaches **source-led pacing**, not mandatory reproduction of the image ratio or unsafe third-party assets.
+- Passing cosmetic typography without addressing evidence provenance or reopened topics is **not** final approval.
