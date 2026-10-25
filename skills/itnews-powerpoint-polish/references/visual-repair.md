@@ -27,3 +27,9 @@
 - Replacing a genuine sourced screenshot with a different image.
 - Shrinking source content enough to make it unreadable, altering a crop that removes qualifying context or omitting a necessary caveat.
 - Overwriting original draft when the user expects a separate polished version. Prefer save-as/copy when supported and especially before structural changes.
+
+## v0.7 order of operations (from real comparison)
+1. Inspect the deck's agenda and sequence, make one uninterrupted group per news item; move second-tour market/risk/evidence slides next to their own story.
+2. Find exact sources for the most informative missing actual photos and screenshots; do not use a full webpage thumbnail if a relevant credited news image/figure is better. If the feature cannot acquire pixels, document the exact desired asset and leave it pending.
+3. Balance each explanation with source-led pages and truly necessary diagrams. Neither maximize the image count nor turn every slide into a card/chart.
+4. Only then resolve typography, crop and speaker notes, and run final PowerPoint-native visual QA.
