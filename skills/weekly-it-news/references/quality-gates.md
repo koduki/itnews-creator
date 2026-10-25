@@ -3,17 +3,12 @@
 Run as a staged review, not a self-congratulatory checklist. Record pass, fail or unverified for every significant check.
 
 ## Gate 0 — Deliverable and capability acceptance (hard blockers)
+- Default execution is Copilot **inside PowerPoint**; no mandatory Word, handoff JSON, QA CLI or separate render service. Those artifacts are optional and should not delay native creation.
 - A PowerPoint request requires a **real editable `.pptx`**. Verify filename, existence and slides. Word `.docx`, `/:w:/` SharePoint link, PDF and prose outlines do not count unless expressly authorized.
 - Screenshot-required slides require authentic captured or uploaded source images **actually embedded** in the deck, with topic, URL, and relevance recorded. Search result text, thumbnails and generated illustrations are not real screenshots.
 - Preflight the current host for a PowerPoint generator/editor, browser screenshot facility, image embedding, and file inspection. When a mandatory capability is missing, report the requirement unmet, not success.
 - Microsoft Agent Builder skills do not automatically inherit the dedicated PowerPoint Agent capabilities. A host handoff must be explicit.
 - Mark deliverables incomplete if requested PPTX or essential screenshot evidence is missing, even when research is excellent.
-
-## Gate 0 — Hard media acceptance
-- If PowerPoint was requested, require an actual .pptx or verifiably PowerPoint-native document exportable as .pptx. Check file type and slide count if possible. Word .docx, PDF and Markdown are NOT interchangeable.
-- A Copilot Agent Builder Word document is an intermediate draft, not a completed slide deck. If this agent has no PPTX generating tool, disclose the blocker; never silently substitute another format.
-- If the user requested documentary images, check real press photographs, news-article figures, actual screenshots or other useful source-backed visuals are embedded in the deck. Merely mentioning URLs, or creating synthetic images, does not satisfy the requirement. Zero embedded genuine images despite an explicit request is a failure, not a success.
-- Document output format, actual embedded media count, source evidence and unverified host capabilities. See references/acceptance-tests.md.
 
 ## Gate A — Source and claims
 - Each nontrivial technical/news claim has an actual supporting source. Distinguish established facts, vendor promises, rumors, forecasts and editorial analysis.
