@@ -8,6 +8,7 @@ No network, pip or external package is required. Images must already exist as
 local .png/.jpg files made available by the user/host with suitable reuse rights.
 """
 import argparse
+from datetime import datetime
 import json
 from pathlib import Path
 from xml.sax.saxutils import escape, quoteattr
@@ -52,6 +53,18 @@ def image(sid, rid, name, x, y, w, h):
             '<a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr></p:pic>')
 
 
+def outline_rect(sid, name, x, y, w, h, color='4167A1', width=19050):
+    nv = (f'<p:nvSpPr><p:cNvPr id="{sid}" name={quoteattr(name)}/>'
+          '<p:cNvSpPr/><p:nvPr/></p:nvSpPr>')
+    geom = (f'<a:xfrm><a:off x="{x}" y="{y}"/>'
+            f'<a:ext cx="{w}" cy="{h}"/></a:xfrm>'
+            '<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>'
+            '<a:noFill/>'
+            f'<a:ln w="{width}"><a:solidFill><a:srgbClr val="{color}"/>'
+            '</a:solidFill></a:ln>')
+    return f'<p:sp>{nv}<p:spPr>{geom}</p:spPr></p:sp>'
+
+
 def slide_xml(shapes):
     head = f'<p:sld xmlns:p="{P}" xmlns:a="{A}" xmlns:r="{R}"><p:cSld><p:spTree>'
     group = '<p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr>'
@@ -91,8 +104,39 @@ def render_slide(slide, index, base, media):
         nonlocal nextid
         shapes.append(shape(nextid,f'Editable text {nextid}',txt,x,y,w,h,sz,color,bold,fill));nextid+=1
     if layout == 'cover':
-        add(slide.get('date',''),800000,1400000,10000000,800000,3500,'C00000',True)
-        add(title or 'Weekly IT News！',800000,2600000,11000000,1500000,4600,'333333',True)
+        # Match 2026-03-15's actual first-slide geometry and signature avatar.
+        # This concerns slide 1 ONLY: agenda (slide 2) remains unchanged.
+        raw_date = str(slide.get('edition_date') or slide.get('date') or '')
+        try:
+            stamp = datetime.strptime(raw_date.replace('.', '-').replace('/', '-'), '%Y-%m-%d')
+        except ValueError:
+            raise ValueError('March-style cover requires edition_date/date YYYY-MM-DD')
+        def inches(v): return round(v * EMU)
+        def native(txt,x,y,w,h,pts,color='000000',bold=False):
+            add(txt,inches(x),inches(y),inches(w),inches(h),pts*100,color,bold)
+        # The blue date ribbon and framed calendar are part of the March cover.
+        shapes.append(shape(nextid,'March cover date ribbon','',inches(.665),inches(2.264),inches(3.781),inches(.69),100,'FFFFFF',False,'4472C4'));nextid+=1
+        native(f'{stamp.year}年',.73,2.25,3.3,.58,27,'FFFFFF')
+        native(f'{stamp.month:02d}月',2.40,2.91,2.05,.96,54)
+        native(f'{stamp.day:02d}',.99,3.78,3.05,1.90,127)
+        shapes.append(outline_rect(nextid,'March cover date frame',inches(.665),inches(2.264),inches(3.781),inches(3.323)));nextid+=1
+        native('Weekly',.08,.18,4.98,1.44,87,'FF0000',True)
+        native('IT',5.00,.18,1.90,1.44,88,'000000',True)
+        native('News！',.08,1.79,5.27,1.50,90,'000000',True)
+        native('今週のトピック',4.88,2.24,7.40,.73,34,'C00000',True)
+        teaser = str(slide.get('cover_teaser') or slide.get('teaser') or
+                     next(iter(slide.get('bullets') or []), '今回の注目ニュース'))
+        native('・'+teaser.lstrip('・• '),5.00,3.24,7.80,1.73,25,'000000')
+        # The original March-15 avatar ships *inside* the skill ZIP so the
+        # user need not attach a separate file.  Explicit override allowed.
+        supplied = slide.get('avatar_image')
+        packaged = Path(__file__).resolve().parents[1] / 'assets' / 'cover' / 'avatar-20260315.jpg'
+        repo_asset = Path(__file__).resolve().parents[3] / 'assets' / 'cover' / 'avatar-20260315.jpg'
+        avatar = (base / supplied).resolve() if supplied else (packaged if packaged.is_file() else repo_asset)
+        data, ext = image_valid(avatar)
+        key=f'image{len(media)+1}.{ext}';media.append((key,data,ext,index))
+        photo_rel=(2,key)
+        shapes.append(image(nextid,2,'March cover original avatar',inches(11.489),inches(.128),inches(1.697),inches(1.697)));nextid+=1
     else:
         add(title,700000,340000,11200000,800000,2800,'C00000',True)
         add('',700000,1230000,10800000,30000,200,'C00000',False,'C00000')
@@ -163,7 +207,10 @@ def build(plan_path,output):
                 raise ValueError(f'Slide {i} claims image embedded but has no actual image file')
             if entry.get('image') and entry.get('asset_status') != 'embedded':
                 raise ValueError(f'Slide {i} has local image bytes but asset_status is not embedded')
-        content,pic=render_slide(entry,i,plan_path.parent,media);xmls.append(content)
+        working = dict(entry)
+        if working.get('layout') == 'cover' and not working.get('edition_date'):
+            working['edition_date'] = deck.get('edition_date') or deck.get('date') or working.get('date')
+        content,pic=render_slide(working,i,plan_path.parent,media);xmls.append(content)
         relations.append(rels([(1,'slideLayout','../slideLayouts/slideLayout1.xml')]+([(2,'image','../media/'+pic[1])] if pic else [])))
     if len(media)<minimum:
         raise ValueError(f'Image requirement unmet: {len(media)} local source images embedded; {minimum} required')

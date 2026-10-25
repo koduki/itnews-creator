@@ -57,3 +57,6 @@ A `.pptx` from Copilot Chat is a valid **base** even if its evidence images are 
 
 ## Platform reality
 Microsoft documents Copilot in PowerPoint editing and custom skills, but feature availability varies by tenant, version and permissions. Select the skill in PowerPoint's Copilot pane via **+ → Choose skills** or `@itnews-powerpoint-polish`; add it through **Manage skills → Add skill** if permitted. OneDrive folder name must match the `name` field of `SKILL.md`. Do not claim live screenshot capture, external-image downloading, edit access, speaker-note updates or slide rendering unless they actually worked. Inaccessible material must remain a documented limitation. Do not force the user to install Python, extra apps or external tools for normal PowerPoint polishing.
+
+## 3月版の表紙（1枚目のみ）
+最初の1枚だけ同梱の `assets/cover/weekly-it-news-cover-20260315.pptx` に合わせ、同梱 `assets/cover/avatar-20260315.jpg` を維持。日付と今週のトピック予告だけ更新し、2ページ目の目次・ニュース構成は変更しない。

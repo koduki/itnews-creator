@@ -1,0 +1,119 @@
+{
+  "template_name": "march-2026-weekly-it-news-cover",
+  "reference": "assets/cover/weekly-it-news-cover-20260315.pptx — original first-slide shapes, bundled with user-approved avatar; topic teaser made editable",
+  "slide_inches": [
+    13.3333333333,
+    7.5
+  ],
+  "background": "FFFFFF",
+  "mode": "editable-native-shapes",
+  "elements": {
+    "weekly": {
+      "text": "Weekly",
+      "x": 0.09,
+      "y": 0.2,
+      "w": 4.55,
+      "h": 1.1,
+      "pt": 83,
+      "color": "FF0000",
+      "bold": true,
+      "font": "Arial"
+    },
+    "it": {
+      "text": "IT",
+      "x": 4.85,
+      "y": 0.2,
+      "w": 1.55,
+      "h": 1.1,
+      "pt": 83,
+      "color": "000000",
+      "bold": true,
+      "font": "Arial"
+    },
+    "news": {
+      "text": "News！",
+      "x": 0.09,
+      "y": 1.91,
+      "w": 4.5,
+      "h": 1.24,
+      "pt": 82,
+      "color": "000000",
+      "bold": true,
+      "font": "Arial"
+    },
+    "date_border": {
+      "x": 0.69,
+      "y": 3.24,
+      "w": 3.8,
+      "h": 2.35,
+      "stroke": "4468A5",
+      "stroke_pt": 1.6
+    },
+    "date_blue_bar": {
+      "x": 0.7,
+      "y": 3.25,
+      "w": 3.77,
+      "h": 0.48,
+      "fill": "4472C4"
+    },
+    "year": {
+      "x": 0.94,
+      "y": 3.26,
+      "w": 1.94,
+      "h": 0.42,
+      "pt": 21,
+      "color": "FFFFFF",
+      "bold": true,
+      "font": "Arial"
+    },
+    "month": {
+      "x": 2.72,
+      "y": 3.79,
+      "w": 1.55,
+      "h": 0.8,
+      "pt": 42,
+      "color": "000000",
+      "font": "Arial"
+    },
+    "day": {
+      "x": 1.04,
+      "y": 4.04,
+      "w": 2.26,
+      "h": 1.42,
+      "pt": 99,
+      "color": "000000",
+      "font": "Arial"
+    },
+    "topic_heading": {
+      "text": "今週のトピック",
+      "x": 5.01,
+      "y": 2.3,
+      "w": 6.88,
+      "h": 0.79,
+      "pt": 29,
+      "color": "C00000",
+      "bold": true,
+      "font": "Yu Gothic"
+    },
+    "topic_teaser": {
+      "x": 5.1,
+      "y": 3.22,
+      "w": 7.4,
+      "h": 1.55,
+      "pt": 23,
+      "color": "000000",
+      "font": "Yu Gothic"
+    },
+    "avatar": {
+      "x": 11.49,
+      "y": 0.13,
+      "w": 1.7,
+      "h": 1.7,
+      "asset": "assets/cover/avatar-20260315.jpg"
+    }
+  },
+  "usage": "Use bundled cover template for slide 1; update year, month, day and teaser, keep bundled original avatar. Slide 2 onwards must keep current agenda/news format.",
+  "template_pptx": "assets/cover/weekly-it-news-cover-20260315.pptx",
+  "avatar_source": "assets/cover/avatar-20260315.jpg",
+  "preview": "assets/cover/cover-preview-20260315.jpg"
+}

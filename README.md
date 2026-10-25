@@ -25,9 +25,9 @@ Copilot Chatで完成度の高いPPTXが作れた場合、必ずしも②を実�
 
 | ファイル | 用途 |
 | --- | --- |
-| `itnews-creator-copilot-skill-v0.7.1.zip` | Copilot ChatのAgent Builderに登録する制作用スキル |
-| `itnews-creator-powerpoint-polish-skill-v0.7.1.zip` | PowerPoint内のCopilotに登録する仕上げ用スキル |
-| `itnews-creator-chatgpt-plugin-v0.7.1.zip` | ChatGPT向け。Microsoft 365には登録しない |
+| `itnews-creator-copilot-skill-v0.8.0.zip` | Copilot ChatのAgent Builderに登録する制作用スキル |
+| `itnews-creator-powerpoint-polish-skill-v0.8.0.zip` | PowerPoint内のCopilotに登録する仕上げ用スキル |
+| `itnews-creator-chatgpt-plugin-v0.8.0.zip` | ChatGPT向け。Microsoft 365には登録しない |
 
 **外側のZIPと、内側のスキルZIPを取り違えないでください。** 内側のスキルZIPは登録画面がZIPアップロードに対応していればそのまま使用します。PowerPointがファイル・フォルダー指定を求める場合は、仕上げ用ZIPをさらに展開し、`SKILL.md` と付属フォルダーを指定します。
 
@@ -36,11 +36,24 @@ Copilot Chatで完成度の高いPPTXが作れた場合、必ずしも②を実�
 
 Artifactsの保存期間は**30日**です。GitHubへのログインが必要な場合があります。ZIPの生成と、Microsoft 365へのインストール・更新は別作業です。
 
+## 3月版の表紙を同梱（1ページ目のみ）
+
+**2026年3月15日版の表紙だけ**を切り出した編集可能なPowerPointテンプレートを、元の**右上アバター画像**とともにGitで管理し、Copilot Chat／PowerPointの両スキルZIPに同梱しています。ユーザーはアバターを個別アップロードする必要はありません。
+
+- [編集可能な表紙テンプレート](assets/cover/weekly-it-news-cover-20260315.pptx)
+- [元のアバター画像](assets/cover/avatar-20260315.jpg)
+- [表紙プレビュー](assets/cover/cover-preview-20260315.jpg)
+- [表紙の詳細ルール](skills/weekly-it-news/references/march-cover.md)
+
+巨大な赤黒の **Weekly IT News！**、青い日付枠、右側の赤い「今週のトピック」、右上の実アバターを再現します。**日付とトピック予告だけを毎週更新し、2ページ目以降の現在の目次デザインは変更しません。** 元の固定トピック画像は編集可能なテキストへ置換しています。
+
+元の31枚のプレゼンテーション全体や、そこに登場するニュース記事等の第三者画像は同梱しません。アバター・参考テンプレートの利用条件については[リソースの説明](assets/cover/README.md)を参照してください。
+
 ## 2. Copilot Chatに制作スキルを登録する
 
 1. [Microsoft 365 Copilot Chat](https://m365.cloud.microsoft/chat/) を開く。
 2. 「エージェントとスキル」から**Agent Builder**に進み、Weekly IT Newsエージェントを新規作成するか、既存エージェントを編集する。
-3. **Configure（構成）→ Skills（スキル）** で `itnews-creator-copilot-skill-v0.7.1.zip` を追加する。旧版がある場合は置き換える。
+3. **Configure（構成）→ Skills（スキル）** で `itnews-creator-copilot-skill-v0.8.0.zip` を追加する。旧版がある場合は置き換える。
 4. スキル名 **`weekly-it-news`** を確認する。
 5. **「ドキュメント、グラフ、コードを作成」**（Code Interpreterに対応する機能）が利用可能で有効になっているか確認し、エージェントを保存する。
 
@@ -74,7 +87,7 @@ WordやPDFではなく、実際の編集可能な.pptxを返してください�
 1. Copilot Chatで作ったベース`.pptx`をOneDriveへ保存し、**PowerPointでそのファイルを開く**。
 2. PowerPointのCopilotを表示する。
 3. 対応する画面では、**「＋」→「スキルの選択」→「スキルの管理」→「スキルの追加」**へ進む。
-4. `itnews-creator-powerpoint-polish-skill-v0.7.1.zip` を登録する。ZIPに非対応の画面では、展開した `SKILL.md` と `references/`・`templates/` を用いる。
+4. `itnews-creator-powerpoint-polish-skill-v0.8.0.zip` を登録する。ZIPに非対応の画面では、展開した `SKILL.md` と `references/`・`templates/` を用いる。
 5. **`itnews-powerpoint-polish`** が認識されたことを確認し、現在開いているPPTXに適用する。対応環境では `@itnews-powerpoint-polish` で指定できる。
 
 個人用OneDriveのSkillsフォルダーに手動配置する方式では、フォルダー名を `itnews-powerpoint-polish` として、その直下に `SKILL.md` を置きます。UIやスキル登録の可否はライセンス、組織設定、機能提供状況により変わります。

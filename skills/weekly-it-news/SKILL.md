@@ -87,3 +87,6 @@ Read `references/platform-compatibility.md` before instructing users how to inst
 - `references/platform-compatibility.md`: installation and capability distinctions.
 - `references/copilot-runtime-diagnostics.md`: failed Copilot Chat run (Word instead of PPTX and missing authentic screenshots), runtime preflight, and native PowerPoint handoff.
 - `templates/slide-plan.md`: practical storyboard and provenance fields.
+
+## 3月版の表紙（1枚目のみ）
+最初の1枚だけ同梱の `assets/cover/weekly-it-news-cover-20260315.pptx` に合わせ、同梱 `assets/cover/avatar-20260315.jpg` を維持。日付と今週のトピック予告だけ更新し、2ページ目の目次・ニュース構成は変更しない。

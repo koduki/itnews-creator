@@ -15,6 +15,7 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[1]
 SKILL_ROOT = ROOT / 'skills' / 'weekly-it-news'
 POLISH_ROOT = ROOT / 'skills' / 'itnews-powerpoint-polish'
+COVER_ROOT = ROOT / 'assets' / 'cover'
 MANIFEST = ROOT / 'plugin.json'
 SEMVER = re.compile(r'(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?\Z')
 ZIP_DATE = (2020, 1, 1, 0, 0, 0)
@@ -70,7 +71,18 @@ def validate(tag: str = '') -> tuple[str, list[Path]]:
     for p in (ROOT / 'README.md', MANIFEST, *author, *polish):
         assert p.is_file() and not p.is_symlink(), f'Missing or unsafe input {p}'
         p.read_text(encoding='utf-8')
-    return version, [*author, *polish]
+    assets = cover_assets()
+    return version, [*author, *polish, *assets]
+
+
+def cover_assets() -> list[Path]:
+    names = ('weekly-it-news-cover-20260315.pptx', 'avatar-20260315.jpg', 'cover-preview-20260315.jpg', 'README.md')
+    result = [COVER_ROOT / name for name in names]
+    for path in result:
+        assert path.is_file() and not path.is_symlink() and path.stat().st_size > 0, f'Missing cover asset: {path}'
+    with zipfile.ZipFile(result[0]) as z:
+        assert z.testzip() is None and 'ppt/slides/slide1.xml' in z.namelist()
+    return result
 
 
 def create_zip(output: Path, entries: list[tuple[Path, str]]) -> None:
@@ -92,6 +104,7 @@ def build(out_dir: Path, tag: str = '') -> tuple[Path, Path, Path]:
     author_files = skill_files(SKILL_ROOT, 'weekly-it-news')
     polish_files = skill_files(POLISH_ROOT, 'itnews-powerpoint-polish')
     author = [(p, p.relative_to(SKILL_ROOT).as_posix()) for p in author_files]
+    cover = [(p, 'assets/cover/' + p.name) for p in cover_assets()]
     polish = [(p, p.relative_to(POLISH_ROOT).as_posix()) for p in polish_files]
     chatgpt = out_dir / f'itnews-creator-chatgpt-plugin-v{version}.zip'
     copilot = out_dir / f'itnews-creator-copilot-skill-v{version}.zip'
@@ -100,10 +113,12 @@ def build(out_dir: Path, tag: str = '') -> tuple[Path, Path, Path]:
         (ROOT / 'README.md', 'README.md'),
         (MANIFEST, 'plugin.json'),
         *((p, 'skills/weekly-it-news/' + name) for p, name in author),
+        *((p, 'skills/weekly-it-news/' + name) for p, name in cover),
         *((p, 'skills/itnews-powerpoint-polish/' + name) for p, name in polish),
+        *((p, 'skills/itnews-powerpoint-polish/' + name) for p, name in cover),
     ])
-    create_zip(copilot, author)
-    create_zip(power, polish)
+    create_zip(copilot, [*author, *cover])
+    create_zip(power, [*polish, *cover])
     for archive in (chatgpt, copilot, power):
         with zipfile.ZipFile(archive) as z:
             assert z.testzip() is None, f'Corrupt ZIP: {archive}'
