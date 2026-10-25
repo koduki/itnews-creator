@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "itnews-creator",
-  "version": "0.3.0",
-  "description": "Evidence-led Japanese IT news PowerPoint skill with meaningful sourced journalism photos, article graphics and strict PPTX delivery validation.",
+  "version": "0.4.0",
+  "description": "Copilot-native IT news PowerPoint skill with evidence-backed editorial imagery, optional audit and strict .pptx acceptance.",
   "author": {
     "name": "koduki"
   },
@@ -12,11 +12,11 @@
       "interface": {
         "displayName": "IT News Slide Creator",
         "shortDescription": "Evidence-led technical slides",
-        "longDescription": "Create Weekly IT News PowerPoint decks using topic-first explanations, meaningful photos and diagrams from reliable news articles and official sources, authentic screenshots, editable charts, image attribution, and actual PPTX output checks.",
+        "longDescription": "Create and refine actual Weekly IT News PowerPoint decks within the host's native presentation editor, using informative credited news photos, real source screenshots and editable diagrams, with optional provenance and structural quality audit.",
         "developerName": "koduki",
         "category": "Productivity",
         "capabilities": [],
-        "defaultPrompt": "Weekly IT Newsスキルで実際のPowerPoint（.pptx）を作成してください。各ニュースの解説後に、公式サイトだけでなく信頼できるニュース記事の重要な写真・図版・画面を、情報価値と利用条件を評価して実際のスライドに入れてください。出典を残し、PPTX出力と画像の埋め込みを検証。作成環境が非対応ならWordへ無断変更せず未達を報告してください。"
+        "defaultPrompt": "weekly-it-newsスキルを使って、可能ならPowerPoint内のCopilotで調査・構成・スライド作成・画像挿入・検証まで完結してください。公式資料と信頼できるニュース記事の写真・技術図を内容に応じて引用し、出典と権利を確認。実際の.pptxと埋め込まれた画像を確認し、非対応機能があればその点だけ明示してください。外部スクリプトやWord経由は必須にしないでください。"
       }
     }
   },
