@@ -8,6 +8,9 @@ This is a **portable behavior specification** using the `SKILL.md` convention. I
 - ChatGPT Work’s file capabilities vary by configuration; do not assume that its desktop PowerPoint integration exists merely because it can make presentation deliverables.
 - The repository's root `plugin.json` is for a separate ChatGPT plugin package; the portable SKILL.md is in `skills/weekly-it-news/`.
 
+## Preferred Copilot-native usage
+**Do not introduce a mandatory outside workflow.** Open/create the .pptx in PowerPoint, invoke the weekly-it-news skill directly within Copilot in PowerPoint and continue drafting, retrieving permitted source assets, inserting relevant images and reviewing slides in that same app. The dedicated PowerPoint Agent is another native Microsoft option, but Agent Builder custom skills are not automatically available inside it. If a required screenshot capture or third-party image cannot be obtained in that specific runtime, disclose the missing capability; never claim it was acquired. See `copilot-native-workflow.md`.
+
 ## Microsoft 365 Copilot Chat (Agent Builder)
 - As of Microsoft Learn documentation updated Sep 30, 2026, custom skills in declarative agents are **preview** and require a qualifying tenant enrolled in **Frontier Program**. Support depends on licenses, policies and admin settings; do not claim that all Copilot Chat users can upload a skill.
 - Go to Copilot Chat → Agents & Skills → New agent → Agent Builder. Enable any necessary document/chart or image creation capabilities when available. On Configure → Skills → Add, upload the Microsoft-specific ZIP with `SKILL.md` at archive root and its `references/` and `templates/` directory. Skill instructions must be under **20,000 characters**, package <= **50 MB**. See: https://learn.microsoft.com/microsoft-365/copilot/extensibility/agent-builder-add-skills
