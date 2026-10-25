@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "itnews-creator",
-  "version": "0.8.1",
-  "description": "Two-stage Weekly IT News with original March-style cover, real bundled avatar and unchanged agenda from slide two.",
+  "version": "0.9.0",
+  "description": "Gemini Tasks researches and creates plot-locked evidence-rich PPTX; Claude 5.5 in Copilot for PowerPoint performs final layout polishing.",
   "author": {
     "name": "koduki"
   },
@@ -12,11 +12,11 @@
       "interface": {
         "displayName": "IT News Slide Creator",
         "shortDescription": "Evidence-led technical slides",
-        "longDescription": "Research and generate a real editable Weekly IT News PPTX in Copilot Chat, then optionally polish its authentic media, technical diagrams, speaker notes and sources with a separate Copilot in PowerPoint skill.",
+        "longDescription": "Gemini Tasks-led Weekly IT News: approve a page plot, capture genuine source images, create template-based editable PPTX, and polish existing slides with Claude in Copilot for PowerPoint.",
         "developerName": "koduki",
         "category": "Productivity",
         "capabilities": [],
-        "defaultPrompt": "Microsoft 365 Copilot Chatのweekly-it-newsスキルで、実際の編集可能なPowerPoint（.pptx）を作成してください。Agent Builderの「ドキュメント、グラフ、コードを作成」機能／Code Interpreterで、このチャット内からPPTXを生成してください。必要なら同梱のscripts/build_pptx.pyを実行してください。出典画像は実際に利用可能なPNG/JPEGだけを挿入し、取得できないスクショは未達と報告。Wordへ代替せずPPTXを検証しリンクしてください。"
+        "defaultPrompt": "Gemini Tasksでweekly-it-news-geminiスキルを使い、ニュースの調査とページ単位のプロットを共同作成して承認後、実画像収集と固定テンプレートから編集可能なPPTXを作成してください。最終編集はPowerPointのClaudeモデルで、ページ順・内容・素材を守って調整してください。"
       }
     }
   },
