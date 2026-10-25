@@ -38,7 +38,7 @@ def validate(tag: str = "") -> tuple[str, list[Path]]:
     assert main.stat().st_size < 1024 * 1024, "SKILL.md exceeds 1 MiB"
     support = sorted([*SKILL_ROOT.glob("references/*.md"), *SKILL_ROOT.glob("templates/*.md")])
     assert support and all(p.is_file() for p in support)
-    for required in ("editorial-structure.md", "style-from-samples.md", "visual-evidence.md", "quality-gates.md", "platform-compatibility.md", "copilot-runtime-diagnostics.md"):
+    for required in ("editorial-structure.md", "style-from-samples.md", "visual-evidence.md", "quality-gates.md", "platform-compatibility.md", "copilot-runtime-diagnostics.md", "copilot-native-workflow.md", "production-handoff.md", "acceptance-tests.md"):
         assert (SKILL_ROOT / "references" / required).is_file(), f"Missing {required}"
         assert required in skill, f"SKILL.md does not reference {required}"
     inputs = [main, *support]
