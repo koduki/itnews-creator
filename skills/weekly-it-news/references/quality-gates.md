@@ -9,11 +9,17 @@ Run as a staged review, not a self-congratulatory checklist. Record pass, fail o
 - Microsoft Agent Builder skills do not automatically inherit the dedicated PowerPoint Agent capabilities. A host handoff must be explicit.
 - Mark deliverables incomplete if requested PPTX or essential screenshot evidence is missing, even when research is excellent.
 
+## Gate 0 — Hard media acceptance
+- If PowerPoint was requested, require an actual .pptx or verifiably PowerPoint-native document exportable as .pptx. Check file type and slide count if possible. Word .docx, PDF and Markdown are NOT interchangeable.
+- A Copilot Agent Builder Word document is an intermediate draft, not a completed slide deck. If this agent has no PPTX generating tool, disclose the blocker; never silently substitute another format.
+- If the user requested documentary images, check real press photographs, news-article figures, actual screenshots or other useful source-backed visuals are embedded in the deck. Merely mentioning URLs, or creating synthetic images, does not satisfy the requirement. Zero embedded genuine images despite an explicit request is a failure, not a success.
+- Document output format, actual embedded media count, source evidence and unverified host capabilities. See references/acceptance-tests.md.
+
 ## Gate A — Source and claims
 - Each nontrivial technical/news claim has an actual supporting source. Distinguish established facts, vendor promises, rumors, forecasts and editorial analysis.
 - Product/benchmark numbers are transcribed accurately, unit-checked and as-of-dated. Quotes preserve intended context. Potentially conflicting sources are reconciled or acknowledged.
 - Avoid stale news presented as fresh. The date of a presentation is not the publication date of a source.
-- External visuals are correctly attributed and reuse conditions assessed; unknown permissions cannot be treated as approval.
+- All external visuals, including journalistic photographs, news-article diagrams and page captures, are attributed and assessed for permissible reuse; unknown rights cannot be treated as approval.
 
 ## Gate B0 — Faithfulness to the intended news format
 - The deck contains a dated Weekly IT News cover and a concise agenda of the real selected topics, except when the user explicitly requests another format.
@@ -23,7 +29,7 @@ Run as a staged review, not a self-congratulatory checklist. Record pass, fail o
 - The new deck improves pre-AI legibility without replacing early-deck structure with later-deck layout conventions.
 
 ## Gate B — Choice of medium
-- Each image/diagram/chart/table has a slide-specific informational purpose.
+- Each image/diagram/chart/table has a slide-specific informational purpose. Meaningful news photographs and article figures are legitimate; official provenance is not a requirement.
 - Charts use comparable values; tables are chosen for exact numbers; arrows accurately indicate relationships; screenshots are authentic if framed as evidence.
 - Decorative stock/photos, duplicate screenshots, and invented images masquerading as evidence are removed.
 
@@ -41,7 +47,7 @@ Run as a staged review, not a self-congratulatory checklist. Record pass, fail o
 - If platform tools do not support full rendering, screenshot, or verification, mark those checks *unverified* and describe the limitation in final handoff.
 
 ## Minimum delivered audit summary
-- Slide count and format; inherited or updated style; approximate number/types of charts, native diagrams/tables and authenticated screenshots.
+- Slide count and verified output format (.pptx not .docx); style; number/types of charts, native diagrams/tables, authentic article photos/figures and screenshots actually embedded rather than merely linked.
 - Claims verified vs unresolved; attribution log location.
 - Editable elements and what remains raster.
 - QA passed, QA failed and QA not executed due to tool limits.
