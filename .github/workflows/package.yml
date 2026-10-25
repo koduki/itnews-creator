@@ -27,7 +27,8 @@ jobs:
         run: |
           python tests/test_package.py
           python -m unittest discover -s tests -p 'test_build_packages.py' -v
-          python -m unittest discover -s tests -p 'test_qa_pptx.py' -v\n          python -m unittest discover -s tests -p 'test_chat_pptx.py' -v
+          python -m unittest discover -s tests -p 'test_qa_pptx.py' -v
+          python -m unittest discover -s tests -p 'test_chat_pptx.py' -v
       - name: Build two distribution ZIPs
         shell: bash
         run: |
