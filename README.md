@@ -1,164 +1,191 @@
-# itnews-creator
+# itnews-creator — Weekly IT News 制作スキル
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-> Evidence-first IT news PowerPoint skill for ChatGPT Work and Microsoft 365 Copilot, with meaningful diagrams, authentic press and news-article imagery, strict PPTX output and slide QA.
+**Microsoft 365 Copilot Chatでニュースを調査・議論してベースPowerPointを作り、PowerPointアプリ内のCopilotで仕上げる**ための、独立した2本のスキルです。
 
-A portable, evidence-led Japanese PowerPoint authoring skill, based on four user-supplied **Weekly IT News！** decks, with **2026-01-25 and 2026-04-12 as structural originals** and **2026-09-13 and 2026-10-12 as later optional visual refinements**.
+> ニュースの概要を説明し、実際の発表・記事・写真・技術資料を見せながら掘り下げる。きれいな企業向けスライドを量産することではなく、Weekly IT Newsらしい発表を制作することが目標です。
 
-The skill is not a new PowerPoint engine. It tells the available native ChatGPT / Microsoft 365 Copilot presentation tools **what to research, how to choose meaningful visuals, and what to validate**. The news-first editorial rules are shared, while the two independently installable skills specialize in base creation and final PowerPoint editing.
+## まず全体像
 
-## What it does
-- Preserves the original weekly format: **dated cover → short 今週のトピック → news explanation → authentic source screenshots/technical context → next news**. Later chapter dividers and summary slides are optional.
-- Selects editable shape diagrams, numeric charts, tables, authentic official/event screenshots, **relevant credited photos and figures from news articles**, or no image as appropriate. Images are judged by information value, not whether they came from an official page.
-- Rejects decorative filler, unverifiable claims, misleading comparisons and manufactured screenshots. Distinguishes an image within a news story from a screenshot of the whole webpage, with publisher/photographer credit and lawful reuse requirements.
-- Uses a style family derived from the examples: 16:9, white, `#C00000` red, charcoal Japanese sans, simple agenda headlines, source-backed technical news explanations; optional numbered cards, chapter dividers and comparisons.
-- Enforces a two-part review: source/rights validation plus slide-rendering/design QA when tools are available.
-
-## Why the skill is designed this way
-
-The four supplied PPTX examples represent **two different purposes**, not four equally authoritative templates. The January/April pre-AI decks express the author's intended *editorial form*: a dated cover, a short agenda, then **news explanation → multiple real-source slides → next news**, with technical context and presenter commentary. Their uneven layout is **not** a design requirement. The September/October AI-era decks offer optional technical diagrams, side-by-side comparisons and stronger visual organization; they must **not** displace that underlying news-first cadence.
-
-Research and visuals have an **evidence role**: each table, chart, drawing, real screenshot or retrieved image must clarify a specific claim or technical mechanism. Native editable visuals are preferred for original explanation, whereas screenshots preserve the authentic state of external sources. Reject impressive-looking but irrelevant art, invented UI shots, numeric comparisons without compatible data, and unattributed or impermissibly reused content. "No image" is a valid decision. Confirm source accuracy and rights separately from the final layout review; do not report checks that the host cannot perform.
-
-**Cross-host strategy:** two cooperating `SKILL.md` files separate research/base creation from native PowerPoint finishing; ChatGPT Work and Microsoft 365 Copilot use their own **native** presentation engines subject to host-specific capabilities. We retain native presentation-generation preference and bundle only a deliberately limited offline PPTX fallback inside Copilot Chat for hosts without a usable native composer; pixel-identical output is not promised. This is not a custom override of either product's built-in PowerPoint skill.
-
-For the full reasoning, including slide archetypes, validation criteria, rights and deliberate non-goals, see **[Design philosophy](docs/design-philosophy.md)**. For the original-deck page references, see [Editorial structure](skills/weekly-it-news/references/editorial-structure.md).
-
-## Copilot Chat-first authoring (preferred)
-
-**The normal workflow starts in Microsoft 365 Copilot Chat.** When requested, the user can take the resulting real base `.pptx` into PowerPoint and run a separate `itnews-powerpoint-polish` skill for final editing; no Word/JSON transfer is required. Create/open the custom Agent Builder agent with the `weekly-it-news` skill. Ensure **Configure → Capabilities → Create documents, charts, and code** (Code Interpreter) is enabled. Microsoft documents Code Interpreter as enabled by default in Agent Builder, supporting generated downloadable files. Ask for a real `.pptx` deliverable.
-
-The agent should use any suitable built-in PowerPoint-capable creation operation first; **when no richer PPTX composer is present but skill-script execution is available, it can run the bundled [offline standard-library PPTX helper](skills/weekly-it-news/scripts/build_pptx.py) inside Copilot Chat**. The helper produces simple editable 16:9 slides and embeds actual local PNG/JPEG images. It does not scrape the Web, download copyrighted photos, or fabricate screenshots. No external Python setup or separate app is required from the user. See [Copilot Chat workflow](skills/weekly-it-news/references/copilot-chat-workflow.md).
-
-If the custom agent cannot make a PPTX, the dedicated **PowerPoint Agent in Copilot Chat** is the second option; because custom Agent Builder skills do not automatically transfer, the editorial brief must be supplied explicitly. **Copilot in PowerPoint is the dedicated finishing stage** in the two-step workflow, not the initial conversational news-research stage. A single-stage Copilot Chat PPTX remains possible when the user prefers it.
-
-The existing Word-only result is a regression example, not completed slide generation. The [acceptance tests](skills/weekly-it-news/references/acceptance-tests.md) distinguish offline package/helper tests from live Copilot tenant smoke tests. Real journalistic/official image pixels must be obtainable and embedded; search links alone are not screenshots.
-
-For advanced auditing or unusual host switching, the [evidence manifest schema](schemas/evidence-manifest.schema.json) and [structural PPTX QA script](scripts/qa_pptx.py) remain **optional** and do not delay normal Copilot Chat generation.
-
-## Documentary visuals and hard output contract
-
-The reference decks put important **real-source visuals after each news explanation**. These need not be limited to manufacturer announcements. Reputable news reporting may contain a better photo of a device in use, on-site event/incident photograph, technical diagram, annotated comparison, or evidence-bearing figure. The skill evaluates these sources by **relevance, factual fidelity, publisher/photographer provenance, permitted reuse, crop and on-slide readability**. When the image itself is important, prefer the actual credited image over a tiny screenshot of the whole article; when the article's wording or page context is the subject, capture the relevant part of the real page. Neither a URL nor an AI-generated illustration is documentary evidence.
-
-**A request for PowerPoint must result in an actual .pptx (or PowerPoint-native deck verifiably exportable to .pptx).** The previous Copilot Chat experiment generated a Word document without the requested screenshots. That is a failed deliverable, not an acceptable alternative: the skill now checks the file format and whether authentic images were truly embedded. Agent Builder custom skills cannot grant unavailable browser or presentation capabilities. If the host cannot produce the requested result, it should disclose this rather than calling Word “done.” See [Copilot runtime diagnosis](skills/weekly-it-news/references/copilot-runtime-diagnostics.md) and [cross-host acceptance tests](skills/weekly-it-news/references/acceptance-tests.md).
-
-## Two complementary Copilot skills (v0.7.1)
-
-The preferred workflow for this project is now **a real base PowerPoint from Microsoft 365 Copilot Chat → native PowerPoint editing and finishing**. These are deliberately different skills and installation targets:
-
-| Stage | Runtime / skill | Responsibility | Expected output |
+| 段階 | 利用場所 | スキル | 成果物 |
 | --- | --- | --- | --- |
-| A — research & base | Copilot Chat custom Agent Builder agent / `weekly-it-news` | Dialogue, research, topic selection, original editorial analysis, source links and a real **editable base PPTX** | `BASE DRAFT .pptx`, optionally with explicit missing-photo/TODO notes |
-| B — finish & QA | Copilot **in PowerPoint** / `itnews-powerpoint-polish` | Edit existing slides, retrieve or insert genuine sourced photos **only when possible**, repair diagrams/typography, notes and sources, verify actual final PPTX | Polished `.pptx` and an honest remaining-issues report |
+| ① 調査・ベース作成 | Microsoft 365 **Copilot Chat** のAgent Builderエージェント | `weekly-it-news` | 対話・ニュース調査・技術的考察・出典・**編集可能なベース .pptx** |
+| ② 仕上げ・検査 | **PowerPointアプリ内**のCopilot | `itnews-powerpoint-polish` | 元PPTXを編集し、実画像・図表・配置・出典・発表者ノートを仕上げた **.pptx** |
 
-Chat remains free to produce a fully finished PPTX when it has the capabilities. In the two-stage workflow, the base PPTX is valid even without all documentary media **as long as missing images are explicitly disclosed and it is not falsely called final**. PowerPoint skills do not automatically access Agent Builder's conversation or code execution; the **opened deck itself, its notes and any user-provided links** are the handoff. No sidecar JSON, external scripts or separate browser is mandatory. The PowerPoint skill cannot conjure missing Web browsing/screenshot permissions: any still-missing required evidence must be reported.
+2つのスキルは別々にインストールします。**両者をつなぐ基本の受け渡しはPPTXファイルそのもの**です。出典や未取得画像の情報は、スライドまたは発表者ノートに残すことを推奨します。Agent Builderの会話履歴やスキル設定がPowerPointへ自動共有されるわけではありません。
 
-For this PowerPoint skill, Microsoft documents **PowerPoint Copilot → + → Choose skills → Manage skills → Add skill** (or upload `SKILL.md` and supporting files into its OneDrive Skills folder); install the **PowerPoint-polish** ZIP, **not** the Agent Builder authoring ZIP. The PowerPoint skill folder name must match its `SKILL.md` name: `itnews-powerpoint-polish`. PowerPoint skills depend on account/tenant feature availability. See [Microsoft's custom-skill documentation](https://support.microsoft.com/ja-jp/powerpoint/copilot/copilot-in-powerpoint-skills) and [in-PowerPoint editing](https://support.microsoft.com/ja-jp/powerpoint/edit-with-copilot-in-powerpoint).
+Copilot Chatで完成度の高いPPTXが作れた場合、必ずしも②を実施する必要はありません。一方、Web画像の取得や配置などChatでできなかった作業は、PowerPoint側へ明示的に引き継ぎます。
 
-## v0.7 real-deck regression fixes (2026-10-25 vs 2026-03-15)
+## 1. 配布ZIPを入手する
 
-The user-supplied **Oct 25 v0.5 deck** has **22 slides / 4 image objects**. It discusses Meta (3–5), PHP (6–9), GMO (10–13), then **revisits** Meta (14–15), PHP (16–17), GMO (18–21): an avoidable second topic tour. The **Mar 15 pre-AI deck** has **31 slides / 33 image objects**, including event-page screenshots, journalistic source photos and product-spec graphics. These counts are observations **not a minimum photo quota**. Neither reference deck is repackaged.
+[GitHub Actions — Build skill packages](https://github.com/koduki/itnews-creator/actions/workflows/package.yml) を開き、**成功した最新の実行**のページ下部にある **Artifacts** から `itnews-creator-packages-<実行ID>` をダウンロードします。
 
-v0.7 assigns **story order to Copilot Chat**: each topic must be one contiguous narrative: **explanation → meaningful original source/evidence photos and screenshots (or explicit media TODO) → further technical context → next topic**. The Chat-stage base PPTX must preserve exact verified media URLs and show the **placement, rights and actual embedded/pending state** on notes or explicit handoff; do not invent unavailable links. `BASE DRAFT` is acceptable when the real PPTX exists and visual gaps are documented; Word is never a PPTX base.
+外側のArtifact ZIPは**展開**してください。その中に次の配布物とチェックサム `SHA256SUMS` が入っています。
 
-The **PowerPoint polish skill** detects and repairs reopened topic blocks *before* typography work and prioritizes **actual source image insertion and attribution** over card redesign. It must not demand a fixed number of pictures nor remove useful editable technical diagrams. See the in-package [Chat narrative and evidence contract](skills/weekly-it-news/references/story-continuity.md), [PowerPoint repair notes](skills/itnews-powerpoint-polish/references/topic-repair.md), and optional [continuity validator](skills/weekly-it-news/scripts/check_editorial_flow.py).
+| ファイル | 用途 |
+| --- | --- |
+| `itnews-creator-copilot-skill-v0.7.1.zip` | Copilot ChatのAgent Builderに登録する制作用スキル |
+| `itnews-creator-powerpoint-polish-skill-v0.7.1.zip` | PowerPoint内のCopilotに登録する仕上げ用スキル |
+| `itnews-creator-chatgpt-plugin-v0.7.1.zip` | ChatGPT向け。Microsoft 365には登録しない |
 
-## Build, CI and distribution
+**外側のZIPと、内側のスキルZIPを取り違えないでください。** 内側のスキルZIPは登録画面がZIPアップロードに対応していればそのまま使用します。PowerPointがファイル・フォルダー指定を求める場合は、仕上げ用ZIPをさらに展開し、`SKILL.md` と付属フォルダーを指定します。
 
-Three packages are **built automatically from one repository**:
+- [ビルドとArtifacts](https://github.com/koduki/itnews-creator/actions/workflows/package.yml)
+- [GitHub Releases](https://github.com/koduki/itnews-creator/releases)（タグ付きリリースがある版のみ）
 
-- **ChatGPT:** `itnews-creator-chatgpt-plugin-vX.Y.Z.zip`, with `plugin.json` and both skill folders.
-- **Microsoft 365 Copilot Chat:** `itnews-creator-copilot-skill-vX.Y.Z.zip`, with the authoring skill `SKILL.md` at ZIP root.
-- **Copilot in PowerPoint:** `itnews-creator-powerpoint-polish-skill-vX.Y.Z.zip`, with the **independent** edit-only skill `SKILL.md` at ZIP root.
+Artifactsの保存期間は**30日**です。GitHubへのログインが必要な場合があります。ZIPの生成と、Microsoft 365へのインストール・更新は別作業です。
 
-GitHub Actions workflow [`.github/workflows/package.yml`](.github/workflows/package.yml) runs on **pull requests**, **pushes to `main`**, and manual dispatch. It runs validation and packaging tests, creates all three ZIPs, writes `SHA256SUMS`, and saves them as **GitHub Actions Artifacts (30-day retention)**. On a push of a `vX.Y.Z` tag it additionally publishes the same ZIPs and checksums as **GitHub Release assets**, requiring the tag to match `plugin.json`'s `version`. A release run for a mismatched tag fails rather than publishing misversioned archives. The build uses Python's standard library and fixed ZIP member metadata for reproducibility.
+## 2. Copilot Chatに制作スキルを登録する
 
-To build and verify locally:
+1. [Microsoft 365 Copilot Chat](https://m365.cloud.microsoft/chat/) を開く。
+2. 「エージェントとスキル」から**Agent Builder**に進み、Weekly IT Newsエージェントを新規作成するか、既存エージェントを編集する。
+3. **Configure（構成）→ Skills（スキル）** で `itnews-creator-copilot-skill-v0.7.1.zip` を追加する。旧版がある場合は置き換える。
+4. スキル名 **`weekly-it-news`** を確認する。
+5. **「ドキュメント、グラフ、コードを作成」**（Code Interpreterに対応する機能）が利用可能で有効になっているか確認し、エージェントを保存する。
+
+参考：[Microsoft Learn — Agent Builderにスキルを追加](https://learn.microsoft.com/ja-jp/microsoft-365/copilot/extensibility/agent-builder-add-skills)
+
+### Copilot Chatへの依頼例
+
+```text
+weekly-it-newsを使い、2026年10月25日版のWeekly IT Newsを作成してください。
+話題はMeta Muse、PHP2Shell、GMO/お名前.com デスクトップクラウド侵害です。
+まず対話しながら各話題のポイントと技術的な考察を決めてください。
+
+表紙→今週のトピック→ニュースAの説明・根拠資料・技術解説→
+ニュースBの説明・根拠資料・技術解説→ニュースC…、の順とし、
+3件を一巡した後に各話題へ戻る構成は禁止します。
+
+実際の公式発表・記事写真・技術図を優先し、未取得の画像については
+「必要な理由・確認済みのURL・挿入位置・未取得状態」をスライドや
+ノートに残してください。URLを検証できなければ捏造しないでください。
+
+PowerPointで仕上げる前提なので、BASE DRAFTでも構いません。
+WordやPDFではなく、実際の編集可能な.pptxを返してください。
+```
+
+**Copilot Chat段階の完成条件：** 実際の`.pptx`が存在すること、各ニュースが連続したまとまりになっていること、出典・実画像の未対応事項を隠していないこと。画像や仕上げが未完でも、明示された**BASE DRAFT**ならPowerPointへ引き継げます。Wordは代用品になりません。
+
+カスタムスキル自体がPPTX生成能力を付与するわけではありません。同梱の標準Pythonによる簡易生成スクリプト `skills/weekly-it-news/scripts/build_pptx.py` は、利用環境でコード実行できる場合の補助手段です。Microsoft 365テナントでの実行は未検証です。
+
+## 3. PowerPointに仕上げスキルを登録する
+
+1. Copilot Chatで作ったベース`.pptx`をOneDriveへ保存し、**PowerPointでそのファイルを開く**。
+2. PowerPointのCopilotを表示する。
+3. 対応する画面では、**「＋」→「スキルの選択」→「スキルの管理」→「スキルの追加」**へ進む。
+4. `itnews-creator-powerpoint-polish-skill-v0.7.1.zip` を登録する。ZIPに非対応の画面では、展開した `SKILL.md` と `references/`・`templates/` を用いる。
+5. **`itnews-powerpoint-polish`** が認識されたことを確認し、現在開いているPPTXに適用する。対応環境では `@itnews-powerpoint-polish` で指定できる。
+
+個人用OneDriveのSkillsフォルダーに手動配置する方式では、フォルダー名を `itnews-powerpoint-polish` として、その直下に `SKILL.md` を置きます。UIやスキル登録の可否はライセンス、組織設定、機能提供状況により変わります。
+
+参考：[Microsoft サポート — PowerPointのカスタムスキル](https://support.microsoft.com/ja-jp/powerpoint/copilot/copilot-in-powerpoint-skills)
+
+### PowerPointへの仕上げ依頼例
+
+```text
+@itnews-powerpoint-polish
+
+このWeekly IT NewsのベースPPTXを完成版に仕上げてください。
+ニュースごとの説明・根拠画像・技術解説をひとまとまりにし、
+別の話題の後に同じニュースへ戻る順序があれば、まず修正してください。
+
+未取得の報道写真、公式発表画面、ニュース記事内の技術図を、
+出典・利用条件を確認したうえで実際に挿入できる範囲で補完してください。
+画像URLだけで「挿入済み」と扱わないでください。
+
+意味のある模式図や表は保持し、読みやすさ、画像のクロップ、
+余白、文字のはみ出し、出典、発表者ノートを改善してください。
+実行できなかったことは具体的な残課題として報告してください。
+```
+
+この仕上げは**元原稿の全面書き直しではありません**。ニュースの事実関係と発表者の考察を守り、必要な補完と投影品質に集中します。
+
+## 4. Weekly IT Newsのコンセプト
+
+### 原型となる資料
+
+- **2026-01-25 / 2026-04-12：編集構成の原型。** 日付入り表紙、短い「今週のトピック」、一つのニュースの解説、続く実資料・スクショや技術説明、次のニュースという流れを優先します。以前の読みにくい配置まで再現する必要はありません。
+- **2026-09-13 / 2026-10-12：表現上の改善例。** 編集可能な図表、比較、整った余白や文字組みは参考にしますが、章扉・固定スライド枚数・毎回のまとめスライドは必須にしません。
+- **2026-03-15：実画像重視の追加参考。** 発表・製品・報道・技術資料の実物を見せながら進める意図を示します。
+- **2026-10-25 v0.5生成版：回帰防止の反例。** Meta Muse、PHP2Shell、GMO侵害を説明してから、再び同じ順番で各ニュースの詳細に戻る構成でした。説明内容の価値は残し、**話題の再訪を避ける**よう改善します。
+
+参考比較で観測された画像オブジェクト数（10/25版：22枚中4点、3/15版：31枚中33点）は**最低画像枚数の目標ではありません**。画像は「そのニュースについて何を理解・確認できるか」で採否を決めます。
+
+### 守りたい発表の流れ
+
+```text
+表紙「Weekly IT News！」
+今週のトピック（実際の話題数）
+ニュースA：ニュース概要・技術背景
+  ├─ 記事写真、発表画面、実際の製品・UI・技術図
+  ├─ 必要な比較表や編集可能な模式図
+  └─ 発表者の分析・考察（事実と区別）
+ニュースB：ニュース概要→根拠資料→技術的解説・考察
+ニュースC：ニュース概要→根拠資料→技術的解説・考察
+（必要なら一枚だけ話題横断の考察）
+```
+
+**一度終えたニュースに後半から戻らない。** 実際の根拠画像と、説明のために作成した模式図は役割が異なります。数値の根拠、正確な図の矢印、報道写真の撮影者・掲載元、画像の利用条件をそれぞれ確認します。公式サイト以外の良質な報道写真や記事内図版も採用対象です。
+
+**AIが作った写真風画像や架空のUIは、実際のスクリーンショットの代わりにはなりません。** URLは画像そのものではなく、出典を記載しただけで第三者画像の自由な再利用が認められるわけでもありません。
+
+## 5. 各段階のチェックポイント
+
+| 確認項目 | Copilot Chat | PowerPoint |
+| --- | --- | --- |
+| 編集可能なPPTXファイル | **必須** | そのファイルを編集 |
+| ニュースごとの連続性 | **確定させる** | 不整合があれば先に修正 |
+| 技術的内容と考察 | 主担当、出典を明確に | 意図を保持、必要なら確認 |
+| 出典URLと未取得画像 | 可能な範囲で記録 | 画像を取得・挿入できる範囲で補完 |
+| 実画像が本当に埋め込まれたか | 状況を明記 | **最終検証** |
+| 文字組み・図表・ノート・読みやすさ | ベース | **最終QA** |
+
+`BASE DRAFT` はベースPPTXが存在しながら画像・品質面の未完了事項がある状態です。`FINAL` として完了を報告できるのは重要な要件を満たした場合のみで、未検証項目がある場合はその旨を残します。
+
+## 6. よくある問題
+
+| 症状 | 対応 |
+| --- | --- |
+| ZIPリンクから取得できない | [Actions](https://github.com/koduki/itnews-creator/actions/workflows/package.yml)→成功済み実行→Artifactsを取得。外側ZIPだけ展開する |
+| Copilot ChatでWordが生成された | Agent Builderのファイル生成機能を確認。**WordをPPTXとして完成扱いしない** |
+| PowerPointに仕上げスキルが表示されない | スキル対応状況、UI、組織ポリシー、ライセンスを確認。ZIPではなく展開ファイルを求める場合もある |
+| ニュースの話題が途中で再登場する | `story-continuity.md` と `topic-repair.md` に沿って一つのニュースブロックへ統合する |
+| 画像がない／URLだけ貼られている | Web検索と画像取得・スクショ撮影は別機能。取得・埋め込み可能な実データか確認し、不可なら未取得と報告する |
+| PowerPoint側がChatの背景を知らない | PPTX、スライドノート、出典・画像TODO、必要な追加指示を渡す。会話履歴の自動共有は前提にしない |
+
+## 7. 開発者向け：構成・CI/CD
+
+```text
+plugin.json                               ChatGPTプラグインのマニフェスト
+LICENSE                                   MITライセンス
+skills/weekly-it-news/                    Copilot Chatでの調査とベースPPTX作成
+  SKILL.md
+  references/story-continuity.md          ニュース構成・画像引き継ぎ
+  scripts/build_pptx.py                   簡易PPTX生成（対応環境のみ）
+  scripts/check_editorial_flow.py         任意の構成チェック
+skills/itnews-powerpoint-polish/          PowerPoint内の仕上げ
+  SKILL.md
+  references/topic-repair.md              ニュース順序・実資料の補完
+scripts/build_packages.py                3種類のZIPを再現可能に生成
+scripts/qa_pptx.py                        任意のPPTX実体検査
+tests/                                     ZIP構造・生成・構成の回帰テスト
+docs/design-philosophy.md                 詳細な設計思想
+.github/workflows/package.yml             GitHub Actions
+```
 
 ```bash
 python tests/test_package.py
-python -m unittest discover -s tests -p 'test_build_packages.py' -v
+python -m unittest discover -s tests -p 'test_*.py' -v
 python scripts/build_packages.py --out-dir dist
-# For a tagged release: python scripts/build_packages.py --out-dir dist --tag v0.7.1
 ```
 
-To retrieve an ordinary build, open **[Actions → Build skill packages](https://github.com/koduki/itnews-creator/actions/workflows/package.yml)**, choose a successful run, and download `itnews-creator-packages-<run ID>` under Artifacts. For durable, versioned downloads, use **[Releases](https://github.com/koduki/itnews-creator/releases)** after pushing the corresponding tag.
+GitHub ActionsはPR、`main`へのpush、手動実行でテストし、**3種類のZIP**と `SHA256SUMS` をArtifactsに保存します。タグ `vX.Y.Z` によるリリースではマニフェストのバージョン一致を確認します。配布ZIP作成はMicrosoft 365への自動登録ではありません。
 
-**Building and publishing archives is not installation or deployment.** It does not automatically update the existing private ChatGPT plugin, nor upload a skill into a Microsoft 365 tenant; those are separate host-specific steps.
+詳細資料： [設計思想](docs/design-philosophy.md) / [ニュース構成ルール](skills/weekly-it-news/references/story-continuity.md) / [PowerPointの修復ルール](skills/itnews-powerpoint-polish/references/topic-repair.md) / [Copilot Chat実行ガイド](skills/weekly-it-news/references/copilot-chat-workflow.md) / [受け入れ条件](skills/weekly-it-news/references/acceptance-tests.md)
 
-## Repository layout
+## ライセンスと制約
 
-```text
-plugin.json                           # ChatGPT plugin manifest
-skills/weekly-it-news/SKILL.md        # Portable core instructions
-skills/weekly-it-news/references/     # Design, visual rights, QA, platform nuances
-skills/weekly-it-news/templates/      # Slide storyboard and example plan
-skills/weekly-it-news/scripts/        # In-chat stdlib PPTX fallback
-skills/itnews-powerpoint-polish/       # Separate PowerPoint editing/polish skill
-scripts/build_packages.py            # Reproducible three-ZIP builder
-tests/                             # Skill and distribution tests
-.github/workflows/package.yml      # Build + Artifacts + tag Release
-docs/design-philosophy.md          # Editorial and validation rationale
-README.md
-```
+独自コード・スキル定義・ドキュメントは [MIT License](LICENSE) です。参考にした過去のPPTX、ニュース記事の画像、企業ロゴ、第三者の図表はMITの対象外で、リポジトリにも同梱していません。
 
-## Copilot Chat runtime requirements and observed failure
-
-The initial Agent Builder field test produced a **Word** SharePoint document rather than the requested **PowerPoint .pptx**, with no genuine Web-page screenshots. This is a failed acceptance test, not evidence that the skill can autonomously create slides in every Copilot host. The actual Word document was not accessible for content inspection, so the precise tool-selection cause is unconfirmed.
-
-**New in v0.3.0:** the portable skill performs a capability preflight before drafting. A PowerPoint request is **complete only** with an actual `.pptx`; `.docx`, PDF, presentation plans and Word SharePoint `/:w:/` links are intermediate at most. If the current agent cannot create a PPTX, it must first verify Code Interpreter and attempt a real PPTX; then suggest the **dedicated PowerPoint Agent in Copilot Chat** (not automatic skill sharing), with Copilot in PowerPoint as an optional alternative.
-
-Authentic screenshot-backed slides require images captured from real pages or provided as actual files, embedded and attributed. Web search is not screenshot capture. If required screenshots cannot be sourced, the deck remains **incomplete**, and the agent must report that blocker rather than silently omit them.
-
-See the [Copilot runtime diagnostic and remediation guide](skills/weekly-it-news/references/copilot-runtime-diagnostics.md) for the capability matrix, recommended host choice and explicit output/screenshot validation checklist.
-
-## Installation
-
-### ChatGPT
-Install the plugin archive generated from this repository when plugin installation is available in your workspace. The portable skill is `skills/weekly-it-news/SKILL.md`. Availability in ChatGPT / Work depends on account settings and enabled tools. Ask for a presentation *using the weekly-it-news skill* and attach a template if exact styling is desired.
-
-### Microsoft 365 Copilot Chat Agent Builder — primary installation
-Enable Code Interpreter (Create documents, charts, and code). For organizations eligible for custom skills (Frontier preview as documented Sep 2026): zip the **contents** of `skills/weekly-it-news/` with `SKILL.md` at the archive root, then upload to Agent Builder → Configure → Skills. Don't use the root ChatGPT plugin ZIP for Agent Builder.
-
-### Copilot in PowerPoint
-Install **`itnews-creator-powerpoint-polish-skill-vX.Y.Z.zip`** (not the Chat authoring ZIP) through Copilot in PowerPoint: **+ → Choose skills → Manage skills → Add skill**, or copy the `skills/itnews-powerpoint-polish/` folder into the OneDrive Skills folder where allowed. The folder and YAML `name` must both equal `itnews-powerpoint-polish`. After opening the base PPTX, select `@itnews-powerpoint-polish`. Use native Brand Kits/templates when available; never assert that a downloaded article screenshot was captured unless it was actually inserted.
-
-## Example requests
-> 「Weekly IT Newsのスキルを使って、今週のMojo/MLIRニュースを一次ソースで調査し、20枚の技術プレゼンを作って。図解が有効なら編集可能なPowerPoint図形にし、出典を残して。」
-
-> 「このPPTXをレビューし、意味のない画像、比較条件が異なるグラフ、文字はみ出しを修正して。公式資料スクショには出典を付けて。」
-
-> 「ニュース記事の画面を引用するなら、その画像が示す具体的な根拠を説明して。適切な画面を取得できないなら無理に貼らないで。」
-
-## License
-
-The original source code, portable agent-skill instructions, build scripts, and
-repository documentation are released under the **MIT License**. See [LICENSE](LICENSE).
-
-**Scope:** MIT covers content owned by this repository's author only. The four
-reference PowerPoint decks are **not distributed or relicensed** here. External
-product imagery, news/article screenshots, logos, third-party technical figures,
-and other cited material retain their respective rights and reuse requirements.
-A citation alone is not permission to redistribute someone else's work.
-
-## Reference decks and rights
-The four originals `20260125.pptx`, `20260412.pptx`, `20260913.pptx`, and `20261012.pptx` **are not committed** because they include external product, press and keynote images. See [canonical editorial structure](skills/weekly-it-news/references/editorial-structure.md) and [style lineage](skills/weekly-it-news/references/style-from-samples.md) for source-slide indices. Slides and graphics aren't automatically free to redistribute merely because sources are attributed. Reuse original private deck as a template by attaching it in the target assistant, when permissions allow.
-
-## Compatibility references
-- Microsoft: [Agent Builder skills](https://learn.microsoft.com/microsoft-365/copilot/extensibility/agent-builder-add-skills), [PowerPoint custom skills](https://support.microsoft.com/ja-jp/powerpoint/copilot/copilot-in-powerpoint-skills).
-- OpenAI: [Working with presentations in ChatGPT Work](https://help.openai.com/en/articles/20001278-creating-and-editing-documents-spreadsheets-and-presentations-with-chatgpt-work).
-
-## Release notes
-- **0.7.1**: v0.7 field-test repairs plus embedded-image truth check and visible source-image TODOs in the generated base PPTX; v0.5 field-test repairs: contiguous story blocks, actionable exact-URL evidence handoff, PowerPoint source-media-first repairs and editorial-flow regression tests.
-- **0.6.0**: add a separately packaged Copilot-in-PowerPoint polish skill; explicit base-deck handoff and missing-evidence TODO; three distribution ZIPs.
-- **CI/CD:** three-package reproducible build, PR/main Artifacts and tag-based GitHub Releases; documented editorial/design rationale.
-- **0.5.0**: prioritize Agent Builder Copilot Chat one-session PPTX production through Code Interpreter, bundle a tested stdlib-only fallback helper, keep PowerPoint Agent and PowerPoint editor optional; distinguish live tenant E2E validation.
-- **0.4.0**: prioritize Copilot-in-PowerPoint one-session creation; optional evidence audit / cross-host brief; offline PPTX structural QA and regression tests; deduplicate quality gates.
-- **0.3.0**: enforce actual PPTX output (Word is not a substitute); accept meaningful, traceable journalist photographs and graphics inside news articles as well as official images; distinguish an article image from a full-page capture; check that requested images are actually embedded; add Copilot regression cases and runtime routing notes.
-- **0.2.0**: original pre-AI narrative structure takes precedence over later polished layouts.
-
-## Known limits
-- The skill cannot modify built-in slide generation engines, force use of a specific hidden tool, guarantee live website screenshot capture, or ensure identical pixel output in different hosts.
-- Existing PPTX native charts are not present in any of the four reference decks (though editable tables and native shape diagrams are); chart guidance is an enhancement, not a sample-derived convention.
-- Cross-host actual invocation and output quality must be tested in each account/tenant after installation. No promise of auto-screenshot availability.
+GitHub ActionsのZIP生成とオフラインの構造テストは実施していますが、**Microsoft 365テナントでの両スキルの実行・PowerPoint編集・実画像取得はまだ実地検証が必要です**。スキルはMicrosoftの標準機能や権限を増やすものではなく、PPTX生成、画像キャプチャ、実画像挿入の可否は環境によります。
