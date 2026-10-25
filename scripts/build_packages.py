@@ -41,7 +41,9 @@ def validate(tag: str = "") -> tuple[str, list[Path]]:
     for required in ("editorial-structure.md", "style-from-samples.md", "visual-evidence.md", "quality-gates.md", "platform-compatibility.md", "copilot-runtime-diagnostics.md", "copilot-native-workflow.md", "copilot-chat-workflow.md", "production-handoff.md", "acceptance-tests.md"):
         assert (SKILL_ROOT / "references" / required).is_file(), f"Missing {required}"
         assert required in skill, f"SKILL.md does not reference {required}"
-    assert (SKILL_ROOT / "scripts" / "build_pptx.py").is_file(), "Missing Copilot Chat generator"\n    assert "scripts/build_pptx.py" in skill, "SKILL.md lacks in-chat PPTX script reference"\n    inputs = [main, *support]
+    assert (SKILL_ROOT / "scripts" / "build_pptx.py").is_file(), "Missing Copilot Chat generator"
+    assert "scripts/build_pptx.py" in skill, "SKILL.md lacks in-chat PPTX script reference"
+    inputs = [main, *support]
     for p in [ROOT / "README.md", MANIFEST, *inputs]:
         assert p.is_file() and not p.is_symlink(), f"Missing or unsafe input: {p}"
         p.read_text(encoding="utf-8")
