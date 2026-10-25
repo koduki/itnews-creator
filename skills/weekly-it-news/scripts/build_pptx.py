@@ -131,6 +131,16 @@ def build(plan_path,output):
         raise ValueError('JSON requires a nonempty slides array')
     if len(deck['slides'])>100:raise ValueError('Too many slides for this minimal fallback')
     slides=deck['slides'];media=[]; xmls=[]; relations=[]
+    if any('topic_id' in slide or 'role' in slide for slide in slides if isinstance(slide, dict)):
+        # Validate continuity before emitting a PPTX; never silently re-sort an authored story.
+        from importlib.util import spec_from_file_location, module_from_spec
+        flow_path = Path(__file__).with_name('check_editorial_flow.py')
+        spec = spec_from_file_location('itnews_flow_validator', flow_path)
+        if spec is None or spec.loader is None: raise ValueError('Missing continuity validator')
+        validator = module_from_spec(spec)
+        spec.loader.exec_module(validator)
+        errors=validator.validate_plan(deck,final=False)
+        if errors: raise ValueError('Invalid news storyboard: ' + '; '.join(errors))
     minimum=deck.get('min_evidence_images',0)
     if not isinstance(minimum,int) or isinstance(minimum,bool) or minimum<0:
         raise ValueError('min_evidence_images must be a nonnegative integer')
