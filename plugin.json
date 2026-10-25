@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "itnews-creator",
-  "version": "0.6.0",
-  "description": "Two-stage Weekly IT News: Copilot Chat source-backed base PPTX and separate PowerPoint polishing/QA skill.",
+  "version": "0.7.0",
+  "description": "Two-stage Weekly IT News: contiguous topical narrative in Copilot Chat; source-backed media and PowerPoint polish with evidence handoff and QA.",
   "author": {
     "name": "koduki"
   },
