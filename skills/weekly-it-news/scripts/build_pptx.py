@@ -212,8 +212,11 @@ def build(plan_path,output):
             working['edition_date'] = deck.get('edition_date') or deck.get('date') or working.get('date')
         content,pic=render_slide(working,i,plan_path.parent,media);xmls.append(content)
         relations.append(rels([(1,'slideLayout','../slideLayouts/slideLayout1.xml')]+([(2,'image','../media/'+pic[1])] if pic else [])))
-    if len(media)<minimum:
-        raise ValueError(f'Image requirement unmet: {len(media)} local source images embedded; {minimum} required')
+    # The bundled avatar is presentation branding, not documentary evidence.
+    evidence_count=sum(1 for _,_,_,slide_index in media
+                       if slides[slide_index-1].get('layout') != 'cover')
+    if evidence_count<minimum:
+        raise ValueError(f'Image requirement unmet: {evidence_count} local source images embedded; {minimum} required')
     content_types=f'<Types xmlns="{C}"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/><Default Extension="jpeg" ContentType="image/jpeg"/><Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/><Override PartName="/ppt/slideMasters/slideMaster1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slideMaster+xml"/><Override PartName="/ppt/slideLayouts/slideLayout1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"/><Override PartName="/ppt/theme/theme1.xml" ContentType="application/vnd.openxmlformats-officedocument.theme+xml"/>'+''.join(f'<Override PartName="/ppt/slides/slide{i}.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>' for i in range(1,len(slides)+1))+'</Types>'
     ids=''.join(f'<p:sldId id="{255+i}" r:id="rId{i+1}"/>' for i in range(1,len(slides)+1))
     presentation=f'<p:presentation xmlns:p="{P}" xmlns:a="{A}" xmlns:r="{R}"><p:sldMasterIdLst><p:sldMasterId id="2147483648" r:id="rId1"/></p:sldMasterIdLst><p:sldIdLst>{ids}</p:sldIdLst><p:sldSz cx="{SW}" cy="{SH}" type="screen16x9"/><p:notesSz cx="6858000" cy="9144000"/></p:presentation>'
@@ -227,8 +230,8 @@ def build(plan_path,output):
     with ZipFile(output,'w',ZIP_DEFLATED) as z:
         for name,body in sorted(files.items()):z.writestr(name,body)
         for name,data,ext,i in media:z.writestr('ppt/media/'+name,data)
-    print(f'PPTX created: {output} ({len(slides)} slides, {len(media)} supplied local images)')
-    return len(slides),len(media)
+    print(f'PPTX created: {output} ({len(slides)} slides, {evidence_count} source images, {len(media)-evidence_count} cover/avatar images)')
+    return len(slides),evidence_count
 
 
 def main():

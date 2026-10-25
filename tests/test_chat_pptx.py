@@ -39,13 +39,13 @@ class ChatPptxTest(unittest.TestCase):
                 self.assertIsNone(z.testzip())
                 self.assertIn('ppt/presentation.xml',z.namelist())
                 self.assertIn('ppt/slides/slide3.xml',z.namelist())
-                self.assertEqual(z.read('ppt/media/image1.png'),PNG)
+                self.assertEqual(z.read('ppt/media/image2.png'),PNG)
                 slide=ET.fromstring(z.read('ppt/slides/slide3.xml'))
                 ns={'a':mod.A,'p':mod.P}
                 vals=[x.text for x in slide.findall('.//a:t',ns)]
                 self.assertIn('ソース図',vals)
                 self.assertTrue(slide.findall('.//p:pic',ns))
-                self.assertIn(b'image1.png',z.read('ppt/slides/_rels/slide3.xml.rels'))
+                self.assertIn(b'image2.png',z.read('ppt/slides/_rels/slide3.xml.rels'))
 
     def test_missing_evidence_is_not_silent_success(self):
         with TemporaryDirectory() as td:

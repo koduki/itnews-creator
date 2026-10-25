@@ -61,6 +61,17 @@ class MarchCoverTest(unittest.TestCase):
                 self.assertEqual(z.read(pics[0]),AVATAR.read_bytes())
                 self.assertNotIn('今週の検証',agenda)
 
+    def test_cover_avatar_is_not_counted_as_documentary_evidence(self):
+        script=ROOT/'skills'/'weekly-it-news'/'scripts'/'build_pptx.py'
+        with TemporaryDirectory() as td:
+            wd=Path(td)
+            plan=wd/'plan.json'
+            plan.write_text(json.dumps({'edition_date':'2026-10-25','min_evidence_images':1,
+                'slides':[{'layout':'cover','title':'Weekly IT News！','teaser':'検証'}]},ensure_ascii=False),encoding='utf-8')
+            p=subprocess.run([sys.executable,str(script),str(plan),str(wd/'out.pptx')],capture_output=True,text=True)
+            self.assertNotEqual(p.returncode,0)
+            self.assertIn('Image requirement unmet',p.stderr)
+
     def test_packages_ship_all_cover_resources(self):
         spec=importlib.util.spec_from_file_location('build_packages',ROOT/'scripts'/'build_packages.py')
         m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
