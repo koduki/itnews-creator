@@ -21,3 +21,6 @@
 
 ## User prompt for the PowerPoint stage
 `@itnews-powerpoint-polish このCopilot Chatで作った下書きPPTXを仕上げて。ニュースの順番・技術的主張・私の考察を保持し、スライド全体の可読性、図表の正確さ、画像の裁ち落とし、出典と発表者ノートをレビューして修正して。画像未取得の箇所は、取得可能で利用条件が確認できる実画像だけで補完し、無理なら残課題として報告して。`
+
+## v0.7 minimum evidence card
+One item per missing real-source image in notes or the explicit Chat handoff: **parent news topic; exact verified source page URL (or `未確認`), publisher/creator/date if known, what the audience should notice, desired placement AFTER that news explanation, permission/citation status, image state (embedded/pending/unavailable), PowerPoint TODO**. Unnamed reports or only a generic source label do not permit reliable image recovery. The handoff must also preserve the full **agenda topic order** and list any topic blocks reopened in the base. PowerPoint may repair bad order without restarting the research.
