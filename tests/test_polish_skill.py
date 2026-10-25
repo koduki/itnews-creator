@@ -50,7 +50,7 @@ class PowerPointPolishSkillTest(unittest.TestCase):
             with zipfile.ZipFile(archives1[2]) as z:
                 names = set(z.namelist())
                 expected = {'SKILL.md', 'references/handoff-contract.md',
-                            'references/review-rubric.md', 'references/visual-repair.md',
+                            'references/review-rubric.md', 'references/visual-repair.md', 'references/topic-repair.md',
                             'templates/review-report.md'}
                 self.assertEqual(names, expected)
                 self.assertIn('name: itnews-powerpoint-polish', z.read('SKILL.md').decode())
