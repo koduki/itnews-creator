@@ -54,12 +54,15 @@ def validate(tag: str = '') -> tuple[str, list[Path]]:
     polish_main = polish[0].read_text(encoding='utf-8')
     for req in ('editorial-structure.md', 'style-from-samples.md', 'visual-evidence.md',
                 'quality-gates.md', 'platform-compatibility.md', 'copilot-runtime-diagnostics.md',
-                'copilot-native-workflow.md', 'copilot-chat-workflow.md', 'production-handoff.md', 'acceptance-tests.md'):
+                'copilot-native-workflow.md', 'copilot-chat-workflow.md', 'production-handoff.md', 'acceptance-tests.md', 'story-continuity.md'):
         assert (SKILL_ROOT / 'references' / req).is_file()
         assert req in author_main, f'Unreferenced author resource: {req}'
     assert (SKILL_ROOT / 'scripts' / 'build_pptx.py').is_file()
     assert 'scripts/build_pptx.py' in author_main
-    for req in ('handoff-contract.md', 'review-rubric.md', 'visual-repair.md'):
+    assert (SKILL_ROOT / 'scripts' / 'check_editorial_flow.py').is_file()
+    assert 'scripts/check_editorial_flow.py' in author_main
+    assert (SKILL_ROOT / 'templates' / 'editorial-storyboard.example.json').is_file()
+    for req in ('handoff-contract.md', 'review-rubric.md', 'visual-repair.md', 'topic-repair.md'):
         assert (POLISH_ROOT / 'references' / req).is_file()
         assert req in polish_main, f'Unreferenced polish resource: {req}'
     assert (POLISH_ROOT / 'templates' / 'review-report.md').is_file()
