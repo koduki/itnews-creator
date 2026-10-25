@@ -2,6 +2,13 @@
 
 Run as a staged review, not a self-congratulatory checklist. Record pass, fail or unverified for every significant check.
 
+## Gate 0 — Deliverable and capability acceptance (hard blockers)
+- A PowerPoint request requires a **real editable `.pptx`**. Verify filename, existence and slides. Word `.docx`, `/:w:/` SharePoint link, PDF and prose outlines do not count unless expressly authorized.
+- Screenshot-required slides require authentic captured or uploaded source images **actually embedded** in the deck, with topic, URL, and relevance recorded. Search result text, thumbnails and generated illustrations are not real screenshots.
+- Preflight the current host for a PowerPoint generator/editor, browser screenshot facility, image embedding, and file inspection. When a mandatory capability is missing, report the requirement unmet, not success.
+- Microsoft Agent Builder skills do not automatically inherit the dedicated PowerPoint Agent capabilities. A host handoff must be explicit.
+- Mark deliverables incomplete if requested PPTX or essential screenshot evidence is missing, even when research is excellent.
+
 ## Gate A — Source and claims
 - Each nontrivial technical/news claim has an actual supporting source. Distinguish established facts, vendor promises, rumors, forecasts and editorial analysis.
 - Product/benchmark numbers are transcribed accurately, unit-checked and as-of-dated. Quotes preserve intended context. Potentially conflicting sources are reconciled or acknowledged.
