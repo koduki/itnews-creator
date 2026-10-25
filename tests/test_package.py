@@ -22,7 +22,7 @@ def check():
     assert re.search(r'^name: weekly-it-news$', text, re.M)
     assert re.search(r'^description: \S', text, re.M)
     assert len(text) < 20_000, f'M365 skill instruction length: {len(text)}'
-    for name in ('editorial-structure.md', 'style-from-samples.md', 'visual-evidence.md', 'quality-gates.md', 'platform-compatibility.md', 'copilot-runtime-diagnostics.md'):
+    for name in ('editorial-structure.md', 'style-from-samples.md', 'visual-evidence.md', 'quality-gates.md', 'platform-compatibility.md', 'copilot-runtime-diagnostics.md', 'copilot-native-workflow.md', 'production-handoff.md', 'acceptance-tests.md'):
         assert (SKILL_DIR / 'references' / name).is_file(), name
         assert name in text, name
     assert (SKILL_DIR / 'templates' / 'slide-plan.md').is_file()
@@ -33,6 +33,15 @@ def check():
     assert 'screenshot evidence requirement unmet' in text
     assert 'news articles' in text or 'news article' in text
     assert 'references/acceptance-tests.md' in text
+    assert 'Stay inside Copilot in PowerPoint' in text
+    assert 'JSON evidence manifests are optional' in text
+    native = (SKILL_DIR / 'references' / 'copilot-native-workflow.md').read_text(encoding='utf-8')
+    assert 'within Microsoft Copilot' in native and 'Default' not in native[:4]
+    handoff = (SKILL_DIR / 'references' / 'production-handoff.md').read_text(encoding='utf-8')
+    assert 'FALLBACK' in handoff.upper() or 'fallback' in handoff.lower()
+    assert (ROOT / 'schemas' / 'evidence-manifest.schema.json').is_file()
+    assert (ROOT / 'scripts' / 'qa_pptx.py').is_file()
+
     assert 'no Word substitution' in text or 'Word substitution' in text
     visual = (SKILL_DIR / 'references' / 'visual-evidence.md').read_text(encoding='utf-8')
     assert 'news article' in visual.lower() or 'news-article' in visual.lower()
