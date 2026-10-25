@@ -30,3 +30,9 @@ These are behavioral requirements, not claims that any particular M365 tenant or
 4. Inspect the embedded pictures, source page and credit; distinguish article image from article-page screenshot.
 5. Check numeric source/chart precision, diagram arrows, layout readability, and native editability where intended.
 6. Record pass/fail/unverified individually. Never claim a run passed if a required operation was not executed.
+
+## R5 — Copilot Chat custom agent generates PPTX without PowerPoint app
+- **Input:** In the Agent Builder custom agent, ask for a PPTX and require a downloadable file, not Word.
+- **Pass:** Agent Builder Code Interpreter (or equivalent native creation) actually generates a valid PPTX **inside Copilot Chat**; when a bundled helper is used, the resulting PPTX contains editable text and verified images supplied as real local bytes.
+- **Fail:** Claim that Code Interpreter is not available *solely* because the PowerPoint Agent is separate; send the user to PowerPoint app before checking Code Interpreter; return Word or make unverifiable image claims.
+- **Environment distinction:** CI can validate the offline helper and package structure; **live Copilot Chat invocation still requires a separate tenant smoke test**.
