@@ -36,3 +36,11 @@ These are behavioral requirements, not claims that any particular M365 tenant or
 - **Pass:** Agent Builder Code Interpreter (or equivalent native creation) actually generates a valid PPTX **inside Copilot Chat**; when a bundled helper is used, the resulting PPTX contains editable text and verified images supplied as real local bytes.
 - **Fail:** Claim that Code Interpreter is not available *solely* because the PowerPoint Agent is separate; send the user to PowerPoint app before checking Code Interpreter; return Word or make unverifiable image claims.
 - **Environment distinction:** CI can validate the offline helper and package structure; **live Copilot Chat invocation still requires a separate tenant smoke test**.
+## R5 — v0.5 topic recurrence (observed regression)
+- Input: cover/agenda → Meta overview → PHP overview → GMO overview → Meta risk/market → PHP response → GMO detailed analysis.
+- **Fail:** a completed topic reopens in a later section. **Pass:** all Meta follow-up slides reside with Meta, then PHP, then GMO. A genuinely cross-topic closing synthesis is optional. The bundled `scripts/check_editorial_flow.py` has executable positive/negative plan tests; actual Copilot runtime results still require host-side inspection.
+
+## R6 — Actionable evidence handoff, not false quota
+- The Oct 25 draft contains 4 embedded image objects (all conceptual), while the March 15 reference has 33, many source/report captures. Do not set a 33/31 quota.
+- **Pass BASE:** each intended missing photo/news/article screenshot is tied to its exact verified URL or explicitly marked unknown, purpose, placement, attribution/rights and `pending` state; PPTX and original commentary are retained.
+- **Pass FINAL:** essential authentic images are lawfully incorporated and legible, with honest QA status. **Fail:** `SOURCE: 提供調査レポート` alone used as an image retrieval link, or invented page URL, or a URL described as an embedded image.
