@@ -1,4 +1,4 @@
-# Optional production handoff for cross-host recovery
+# Optional production handoff for cross-host recovery (FALLBACK only)
 
 **Default:** stay inside Copilot in PowerPoint; do not write intermediate files simply because this reference exists. The brief below is useful only when a host switch, user review, or reproducible audit is actually necessary.
 
