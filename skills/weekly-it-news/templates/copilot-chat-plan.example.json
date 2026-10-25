@@ -1,0 +1,8 @@
+{
+  "min_evidence_images": 0,
+  "slides": [
+    {"layout": "cover", "date": "2026-10-25", "title": "Weekly IT News！"},
+    {"layout": "agenda", "title": "今週のトピック", "bullets": ["検証済みニュースA", "検証済みニュースB"]},
+    {"layout": "explainer", "title": "検証済みニュースA", "bullets": ["実際に確認した事実を記載", "技術的な背景", "考察は区別して記載"]}
+  ]
+}
