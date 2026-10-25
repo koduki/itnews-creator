@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-> Evidence-first IT news PowerPoint skill for ChatGPT Work and Microsoft 365 Copilot, with meaningful diagrams, authentic screenshots and slide QA.
+> Evidence-first IT news PowerPoint skill for ChatGPT Work and Microsoft 365 Copilot, with meaningful diagrams, authentic press and news-article imagery, strict PPTX output and slide QA.
 
 A portable, evidence-led Japanese PowerPoint authoring skill, based on four user-supplied **Weekly IT News！** decks, with **2026-01-25 and 2026-04-12 as structural originals** and **2026-09-13 and 2026-10-12 as later optional visual refinements**.
 
@@ -10,8 +10,8 @@ The skill is not a new PowerPoint engine. It tells the available native ChatGPT 
 
 ## What it does
 - Preserves the original weekly format: **dated cover → short 今週のトピック → news explanation → authentic source screenshots/technical context → next news**. Later chapter dividers and summary slides are optional.
-- Selects editable shape diagrams, numeric charts, structured tables, authentic official/product UI screenshots or no image as appropriate.
-- Rejects decorative filler, unverifiable claims, misleading comparisons and manufactured screenshots.
+- Selects editable shape diagrams, numeric charts, tables, authentic official/event screenshots, **relevant credited photos and figures from news articles**, or no image as appropriate. Images are judged by information value, not whether they came from an official page.
+- Rejects decorative filler, unverifiable claims, misleading comparisons and manufactured screenshots. Distinguishes an image within a news story from a screenshot of the whole webpage, with publisher/photographer credit and lawful reuse requirements.
 - Uses a style family derived from the examples: 16:9, white, `#C00000` red, charcoal Japanese sans, simple agenda headlines, source-backed technical news explanations; optional numbered cards, chapter dividers and comparisons.
 - Enforces a two-part review: source/rights validation plus slide-rendering/design QA when tools are available.
 
@@ -24,6 +24,12 @@ Research and visuals have an **evidence role**: each table, chart, drawing, real
 **Cross-host strategy:** one shared `SKILL.md` specifies storytelling, research, media choice and quality gates; ChatGPT Work and Microsoft 365 Copilot use their own **native** presentation engines subject to host-specific capabilities. We do not implement a separate PPTX generation engine or claim pixel-identical output. This is not a custom override of either product's built-in PowerPoint skill.
 
 For the full reasoning, including slide archetypes, validation criteria, rights and deliberate non-goals, see **[Design philosophy](docs/design-philosophy.md)**. For the original-deck page references, see [Editorial structure](skills/weekly-it-news/references/editorial-structure.md).
+
+## Documentary visuals and hard output contract
+
+The reference decks put important **real-source visuals after each news explanation**. These need not be limited to manufacturer announcements. Reputable news reporting may contain a better photo of a device in use, on-site event/incident photograph, technical diagram, annotated comparison, or evidence-bearing figure. The skill evaluates these sources by **relevance, factual fidelity, publisher/photographer provenance, permitted reuse, crop and on-slide readability**. When the image itself is important, prefer the actual credited image over a tiny screenshot of the whole article; when the article's wording or page context is the subject, capture the relevant part of the real page. Neither a URL nor an AI-generated illustration is documentary evidence.
+
+**A request for PowerPoint must result in an actual .pptx (or PowerPoint-native deck verifiably exportable to .pptx).** The previous Copilot Chat experiment generated a Word document without the requested screenshots. That is a failed deliverable, not an acceptable alternative: the skill now checks the file format and whether authentic images were truly embedded. Agent Builder custom skills cannot grant unavailable browser or presentation capabilities. If the host cannot produce the requested result, it should disclose this rather than calling Word “done.” See [Copilot runtime diagnosis](skills/weekly-it-news/references/copilot-runtime-diagnostics.md) and [cross-host acceptance tests](skills/weekly-it-news/references/acceptance-tests.md).
 
 ## Build, CI and distribution
 
@@ -109,7 +115,7 @@ The four originals `20260125.pptx`, `20260412.pptx`, `20260913.pptx`, and `20261
 
 ## Release notes
 - **CI/CD:** dual-package reproducible build, PR/main Artifacts and tag-based GitHub Releases; documented editorial/design rationale.
-- **0.3.0**: verified PPTX output gate, authentic screenshot evidence gate, Microsoft Copilot runtime routing and failure diagnosis.
+- **0.3.0**: enforce actual PPTX output (Word is not a substitute); accept meaningful, traceable journalist photographs and graphics inside news articles as well as official images; distinguish an article image from a full-page capture; check that requested images are actually embedded; add Copilot regression cases and runtime routing notes.
 - **0.2.0**: original pre-AI narrative structure takes precedence over later polished layouts.
 
 ## Known limits
