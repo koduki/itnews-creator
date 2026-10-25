@@ -10,6 +10,7 @@ local .png/.jpg files made available by the user/host with suitable reuse rights
 import argparse
 from datetime import datetime
 import json
+import xml.etree.ElementTree as ET
 from pathlib import Path
 from xml.sax.saxutils import escape, quoteattr
 from zipfile import ZipFile, ZIP_DEFLATED
@@ -95,6 +96,76 @@ def image_valid(path):
     raise ValueError('Only genuine local PNG/JPEG image bytes are supported: '+str(path))
 
 
+def cover_asset(name):
+    # The ZIP places assets beside scripts/; Git checkout keeps the canonical
+    # asset at repository root.  Do not guess or use remote files.
+    packaged = Path(__file__).resolve().parents[1] / 'assets' / 'cover' / name
+    checkout = Path(__file__).resolve().parents[3] / 'assets' / 'cover' / name
+    result = packaged if packaged.is_file() else checkout
+    if not result.is_file(): raise ValueError(f'Missing bundled March-cover resource: {name}')
+    return result
+
+
+def original_march_cover(slide, index, base, media):
+    """Reuses the original March-slide XML/shapes; changes only date and teaser."""
+    raw_date = str(slide.get('edition_date') or slide.get('date') or '')
+    try:
+        stamp = datetime.strptime(raw_date.replace('.', '-').replace('/', '-'), '%Y-%m-%d')
+    except ValueError:
+        raise ValueError('March-style cover requires edition_date/date YYYY-MM-DD')
+    teaser = str(slide.get('cover_teaser') or slide.get('teaser') or
+                 next(iter(slide.get('bullets') or []), '今回の注目ニュース'))
+    source=cover_asset('weekly-it-news-cover-20260315.pptx')
+    with ZipFile(source) as z:
+        root=ET.fromstring(z.read('ppt/slides/slide1.xml'))
+    texts={
+        'TextBox 4':[f'{stamp.day:02d} '],
+        'Rectangle 5':[str(stamp.year),'年'],
+        'Rectangle 1':[f'{stamp.month:02d}','月'],
+        'TextBox 13':['・'+teaser.lstrip('・• ')],
+    }
+    found=set()
+    for sp in root.findall(f'.//{{{P}}}sp'):
+        attrs=sp.find(f'./{{{P}}}nvSpPr/{{{P}}}cNvPr')
+        name=attrs.attrib.get('name') if attrs is not None else ''
+        if name in ('Rectangle 5','Rectangle 6'):
+            # In the original deck these shapes reference a *blue* theme.
+            # Our minimal deck has a red master theme. Set the original blue
+            # explicitly so the cover does not unexpectedly turn red.
+            sp_pr=sp.find(f'{{{P}}}spPr')
+            style=sp.find(f'{{{P}}}style')
+            if style is not None:sp.remove(style)
+            for child in list(sp_pr):
+                if child.tag in {f'{{{A}}}solidFill',f'{{{A}}}noFill',f'{{{A}}}ln'}:
+                    sp_pr.remove(child)
+            if name == 'Rectangle 5':
+                fill=ET.SubElement(sp_pr,f'{{{A}}}solidFill')
+                ET.SubElement(fill,f'{{{A}}}srgbClr',{'val':'4472C4'})
+            else:
+                ET.SubElement(sp_pr,f'{{{A}}}noFill')
+            line=ET.SubElement(sp_pr,f'{{{A}}}ln',{'w':'19050'})
+            solid=ET.SubElement(line,f'{{{A}}}solidFill')
+            ET.SubElement(solid,f'{{{A}}}srgbClr',{'val':'4167A1'})
+        if name not in texts:continue
+        nodes=sp.findall(f'.//{{{A}}}t')
+        if len(nodes)!=len(texts[name]):
+            raise ValueError(f'March cover shape changed unexpectedly: {name}')
+        for node,value in zip(nodes,texts[name]):node.text=value
+        found.add(name)
+    if found!=set(texts):
+        raise ValueError('March cover no longer contains all editable date/teaser shapes')
+    # The original embedded avatar uses rId3; the standalone builder reserves
+    # rId1 for its layout and rId2 for the image. Leave every shape untouched.
+    embedded=root.find(f'.//{{{A}}}blip')
+    if embedded is None:raise ValueError('March cover avatar is missing')
+    embedded.set(f'{{{R}}}embed','rId2')
+    avatar=(base/slide['avatar_image']).resolve() if slide.get('avatar_image') else cover_asset('avatar-20260315.jpg')
+    data,ext=image_valid(avatar)
+    key=f'image{len(media)+1}.{ext}';media.append((key,data,ext,index))
+    ET.register_namespace('p',P);ET.register_namespace('a',A);ET.register_namespace('r',R)
+    return ET.tostring(root,encoding='unicode'),(2,key)
+
+
 def render_slide(slide, index, base, media):
     layout = slide.get('layout','explainer')
     title = slide.get('title','')
@@ -104,39 +175,7 @@ def render_slide(slide, index, base, media):
         nonlocal nextid
         shapes.append(shape(nextid,f'Editable text {nextid}',txt,x,y,w,h,sz,color,bold,fill));nextid+=1
     if layout == 'cover':
-        # Match 2026-03-15's actual first-slide geometry and signature avatar.
-        # This concerns slide 1 ONLY: agenda (slide 2) remains unchanged.
-        raw_date = str(slide.get('edition_date') or slide.get('date') or '')
-        try:
-            stamp = datetime.strptime(raw_date.replace('.', '-').replace('/', '-'), '%Y-%m-%d')
-        except ValueError:
-            raise ValueError('March-style cover requires edition_date/date YYYY-MM-DD')
-        def inches(v): return round(v * EMU)
-        def native(txt,x,y,w,h,pts,color='000000',bold=False):
-            add(txt,inches(x),inches(y),inches(w),inches(h),pts*100,color,bold)
-        # The blue date ribbon and framed calendar are part of the March cover.
-        shapes.append(shape(nextid,'March cover date ribbon','',inches(.665),inches(2.264),inches(3.781),inches(.69),100,'FFFFFF',False,'4472C4'));nextid+=1
-        native(f'{stamp.year}年',.73,2.25,3.3,.58,27,'FFFFFF')
-        native(f'{stamp.month:02d}月',2.40,2.91,2.05,.96,54)
-        native(f'{stamp.day:02d}',.99,3.78,3.05,1.90,127)
-        shapes.append(outline_rect(nextid,'March cover date frame',inches(.665),inches(2.264),inches(3.781),inches(3.323)));nextid+=1
-        native('Weekly',.08,.18,4.98,1.44,87,'FF0000',True)
-        native('IT',5.00,.18,1.90,1.44,88,'000000',True)
-        native('News！',.08,1.79,5.27,1.50,90,'000000',True)
-        native('今週のトピック',4.88,2.24,7.40,.73,34,'C00000',True)
-        teaser = str(slide.get('cover_teaser') or slide.get('teaser') or
-                     next(iter(slide.get('bullets') or []), '今回の注目ニュース'))
-        native('・'+teaser.lstrip('・• '),5.00,3.24,7.80,1.73,25,'000000')
-        # The original March-15 avatar ships *inside* the skill ZIP so the
-        # user need not attach a separate file.  Explicit override allowed.
-        supplied = slide.get('avatar_image')
-        packaged = Path(__file__).resolve().parents[1] / 'assets' / 'cover' / 'avatar-20260315.jpg'
-        repo_asset = Path(__file__).resolve().parents[3] / 'assets' / 'cover' / 'avatar-20260315.jpg'
-        avatar = (base / supplied).resolve() if supplied else (packaged if packaged.is_file() else repo_asset)
-        data, ext = image_valid(avatar)
-        key=f'image{len(media)+1}.{ext}';media.append((key,data,ext,index))
-        photo_rel=(2,key)
-        shapes.append(image(nextid,2,'March cover original avatar',inches(11.489),inches(.128),inches(1.697),inches(1.697)));nextid+=1
+        return original_march_cover(slide,index,base,media)
     else:
         add(title,700000,340000,11200000,800000,2800,'C00000',True)
         add('',700000,1230000,10800000,30000,200,'C00000',False,'C00000')

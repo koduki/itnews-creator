@@ -50,6 +50,9 @@ class MarchCoverTest(unittest.TestCase):
                 head=''.join(slide1.itertext())
                 agenda=''.join(slide2.itertext())
                 self.assertIn('2026年',head)
+                # The source template's blue ribbon must not become red when
+                # grafted onto the fallback deck's red master theme.
+                self.assertIn(b'4472C4',z.read('ppt/slides/slide1.xml'))
                 self.assertIn('10月',head)
                 self.assertIn('25',head)
                 self.assertIn('今週の検証',head)
