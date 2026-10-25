@@ -25,6 +25,9 @@ assert why the agent chose Word or that a particular skill was invoked.
   an Agent Builder custom agent. Copilot in PowerPoint can also create a new
   presentation and reuse a referenced PPTX or Word research document.
 
+## Photographs and article figures count as documentary evidence
+The user may prefer an important photo, news-article technical figure or actual event image, not a website screenshot. Do not limit research to official vendor pages. Search reputable news articles as well as original announcements, verify what the particular image explains, and preserve publisher/photographer credits, publication URL, date and permission/quotation rationale. If the photo is the informative subject, inserting the credited photo is usually better than a tiny full-page news screenshot; if the page or reported quote itself is the subject, capture the relevant actual page. A URL or generated illustration is not a captured documentary image. A real-source visual request is satisfied only if its meaningful image appears in the final PPTX, or its absence is reported.
+
 ## Screenshot evidence contract
 - Web search results, URLs, generated images and article summaries **are not
   screenshots**. A real screenshot must be captured from an actual page or
