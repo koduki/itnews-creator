@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "itnews-creator",
-  "version": "0.2.0",
-  "description": "Portable, evidence-led PowerPoint authoring skill for ChatGPT Work and Microsoft 365 Copilot with source-aware visuals and QA.",
+  "version": "0.3.0",
+  "description": "Evidence-first technical news presentations for ChatGPT Work and Microsoft 365 Copilot, with verified PPTX output and authentic screenshot QA.",
   "author": {
     "name": "koduki"
   },
@@ -12,7 +12,7 @@
       "interface": {
         "displayName": "IT News Slide Creator",
         "shortDescription": "Evidence-led technical slides",
-        "longDescription": "Create Japanese weekly IT news presentations with the original topic-first editorial rhythm, authentic evidence sequences, meaningful editable diagrams, accurate graphs and quality checks.",
+        "longDescription": "Create Japanese IT news presentations using an editorial storyline, accurate diagrams/charts and authentic sources; verify final PPTX output and screenshot evidence, with explicit platform-specific capability checks.",
         "developerName": "koduki",
         "category": "Productivity",
         "capabilities": [],
