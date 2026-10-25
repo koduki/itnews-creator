@@ -98,6 +98,18 @@ def render_slide(slide, index, base, media):
         add('',700000,1230000,10800000,30000,200,'C00000',False,'C00000')
         bullets=slide.get('bullets',[])
         if not isinstance(bullets,list) or any(not isinstance(x,str) for x in bullets): raise ValueError('bullets must be a list of strings')
+        # The stdlib base generator cannot write PowerPoint speaker notes.  Make
+        # unresolved documentary evidence visible *in the PPTX itself* so that
+        # PowerPoint polish can finish it without a separate JSON handoff.
+        if slide.get('role') == 'evidence' and not slide.get('image'):
+            details = [
+                '【BASE DRAFT｜要実画像】この根拠画像は未挿入',
+                '目的: ' + str(slide.get('evidence_purpose', '未記録')),
+                '出典: ' + str(slide.get('source_url') or slide.get('source_gap') or '未調査'),
+                '挿入位置: ' + str(slide.get('intended_after', '未指定')),
+                '利用条件: ' + str(slide.get('rights_status', '未確認')),
+            ]
+            bullets = [*bullets, *details]
         if bullets:
             height=min(5100000,max(2800000,len(bullets)*720000))
             texts='\n'.join(('• '+x) for x in bullets)
@@ -146,6 +158,11 @@ def build(plan_path,output):
         raise ValueError('min_evidence_images must be a nonnegative integer')
     for i,entry in enumerate(slides,1):
         if not isinstance(entry,dict):raise ValueError('Each slide must be an object')
+        if entry.get('role') == 'evidence':
+            if entry.get('asset_status') == 'embedded' and not entry.get('image'):
+                raise ValueError(f'Slide {i} claims image embedded but has no actual image file')
+            if entry.get('image') and entry.get('asset_status') != 'embedded':
+                raise ValueError(f'Slide {i} has local image bytes but asset_status is not embedded')
         content,pic=render_slide(entry,i,plan_path.parent,media);xmls.append(content)
         relations.append(rels([(1,'slideLayout','../slideLayouts/slideLayout1.xml')]+([(2,'image','../media/'+pic[1])] if pic else [])))
     if len(media)<minimum:
