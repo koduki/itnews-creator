@@ -1,0 +1,80 @@
+# Copilot runtime diagnosis — Word output or missing real screenshots
+
+## What this means
+Agent Builder declarative agents and their custom skills are **not the same execution
+environment** as Microsoft's dedicated PowerPoint Agent or Copilot **inside**
+PowerPoint. Uploading `SKILL.md` adds workflow instructions; it does **not**
+grant the declarative agent access to a native presentation editor, enable a
+headless web browser, or automatically route requests to the PowerPoint Agent.
+
+A URL with `:w:` is a Word document link, not evidence that a PowerPoint file
+was generated. Without access to the actual document or agent transcript, do not
+assert why the agent chose Word or that a particular skill was invoked.
+
+## Strict output contract
+- When the user requests slides or a PowerPoint, the primary deliverable is
+  **an actual editable .pptx**, not Word (.docx), a prose outline, PDF, or a
+  screenshot of slides, unless the user explicitly agrees to an alternative.
+- Preflight available presentation/file-generation tools; if none can write a
+  valid .pptx, explain the **blocking capability**. A storyboard, Word research
+  brief, or source list can be offered as a clearly labeled *intermediate
+  artifact*, never as task completion.
+- Verify the file type and presence of real slides before claiming success.
+  When possible, open/render the generated presentation and validate content.
+- In Copilot Chat, the dedicated PowerPoint Agent is selected separately from
+  an Agent Builder custom agent. Copilot in PowerPoint can also create a new
+  presentation and reuse a referenced PPTX or Word research document.
+
+## Screenshot evidence contract
+- Web search results, URLs, generated images and article summaries **are not
+  screenshots**. A real screenshot must be captured from an actual page or
+  provided by the user, verified as an actual source image, and have attribution.
+- Make a per-news-item evidence inventory (source URL, why shown, screenshot
+  present/absent, rights status, capture date, crop/readability).
+- Before promising screenshots, determine whether the runtime can actually
+  browse and capture the visible source page; **skills' script sandbox cannot
+  access the network**. Having Web search does not imply screen capture.
+- If the user asks for screenshot-backed slides and the capture tool is absent,
+  state **"screenshot requirement unmet"** and ask for user-provided source
+  screenshots or propose a separate browser-capable workflow. Do not silently
+  omit the evidence pages and claim the slide deck is complete.
+- Native diagram/chart/table slides may complement genuine screenshots but do
+  not replace evidence when the screenshot itself is necessary.
+
+## Two practical Copilot paths
+1. **Copilot in PowerPoint (preferred for native editing)**:
+   Open a new or existing .pptx in PowerPoint, choose/upload the custom skill,
+   optionally reference an existing PPTX for style and a Word research file for
+   content, and explicitly ask for a presentation.
+2. **Microsoft 365 Copilot Chat PowerPoint Agent**:
+   Select the dedicated **PowerPoint** agent in the Tools/Agents menu. If the
+   custom Agent Builder skill is not available within this agent, transfer the
+   approved outline, visual plan and citations to it. Test PowerPoint output.
+   Never imply that Agent Builder-installed skills automatically run in this
+   separate agent.
+
+A two-pass research/evidence -> native PowerPoint generation workflow is acceptable
+but must preserve the required screenshots and sources. If the first stage only
+created Word, report it as a **research draft**, not a completed PowerPoint.
+
+## Verification checklist
+1. Is the user-visible output a real **.pptx** with multiple slides?
+2. Did a native PowerPoint creation tool execute, or was another file generated?
+3. For each requested evidence screenshot, which real URL was captured and is it
+   embedded in the resulting PPTX?
+4. Did the source image retain readable relevant content with provenance?
+5. Are authored diagrams and data charts editable, and are visuals nondecorative?
+6. If any mandatory requirement fails, mark the task **incomplete** and provide
+   a concrete host-switch/repair path.
+
+## Microsoft references (as of 2026-10)
+- Agent Builder skills and limits:
+  https://learn.microsoft.com/en-us/microsoft-365/copilot/extensibility/agent-builder-add-skills
+- Custom skill script sandbox:
+  https://learn.microsoft.com/en-us/microsoft-365/copilot/extensibility/declarative-agent-skills
+- Dedicated Word/Excel/PowerPoint Agents:
+  https://support.microsoft.com/en-us/office/365-copilot-app/get-started-with-word-excel-and-powerpoint-agents-in-microsoft-365-copilot
+- Native PowerPoint skills:
+  https://support.microsoft.com/en-us/powerpoint/copilot/copilot-in-powerpoint-skills
+- New presentation in PowerPoint:
+  https://support.microsoft.com/en-us/powerpoint/copilot/create-a-new-presentation-with-copilot-in-powerpoint
