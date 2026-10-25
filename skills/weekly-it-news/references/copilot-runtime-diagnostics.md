@@ -3,9 +3,7 @@
 ## What this means
 Agent Builder declarative agents and their custom skills are **not the same execution
 environment** as Microsoft's dedicated PowerPoint Agent or Copilot **inside**
-PowerPoint. Uploading `SKILL.md` adds workflow instructions; it does **not**
-grant the declarative agent access to a native presentation editor, enable a
-headless web browser, or automatically route requests to the PowerPoint Agent.
+PowerPoint. Uploading `SKILL.md` adds workflow instructions, and does **not** automatically route requests to the PowerPoint Agent. However Agent Builder **normally enables Code Interpreter**, which can create downloadable files and provides a potential direct **PPTX generation path inside the custom Copilot Chat agent**. The bundled `scripts/build_pptx.py` offers a tested offline fallback if skill-script execution is supported. None of this provides browser capture or downloaded article images automatically.
 
 A URL with `:w:` is a Word document link, not evidence that a PowerPoint file
 was generated. Without access to the actual document or agent transcript, do not
@@ -44,17 +42,19 @@ The user may prefer an important photo, news-article technical figure or actual 
 - Native diagram/chart/table slides may complement genuine screenshots but do
   not replace evidence when the screenshot itself is necessary.
 
-## Two practical Copilot paths
-1. **Copilot in PowerPoint (preferred for native editing)**:
-   Open a new or existing .pptx in PowerPoint, choose/upload the custom skill,
-   optionally reference an existing PPTX for style and a Word research file for
-   content, and explicitly ask for a presentation.
-2. **Microsoft 365 Copilot Chat PowerPoint Agent**:
+## Copilot Chat-first choices and an optional editor
+1. **Microsoft 365 Copilot Chat custom Agent Builder agent (default)**: check
+   its Code Interpreter capability; use it to generate a real downloadable PPTX
+   in the same chat, optionally through the bundled stdlib helper.
+2. **Microsoft 365 Copilot Chat PowerPoint Agent (secondary)**:
    Select the dedicated **PowerPoint** agent in the Tools/Agents menu. If the
    custom Agent Builder skill is not available within this agent, transfer the
    approved outline, visual plan and citations to it. Test PowerPoint output.
    Never imply that Agent Builder-installed skills automatically run in this
    separate agent.
+
+3. **Copilot inside PowerPoint (optional)**: open a .pptx there only when
+   the user prefers app-based editing or Copilot Chat cannot finish.
 
 A two-pass research/evidence -> native PowerPoint generation workflow is acceptable
 but must preserve the required screenshots and sources. If the first stage only
@@ -81,3 +81,5 @@ created Word, report it as a **research draft**, not a completed PowerPoint.
   https://support.microsoft.com/en-us/powerpoint/copilot/copilot-in-powerpoint-skills
 - New presentation in PowerPoint:
   https://support.microsoft.com/en-us/powerpoint/copilot/create-a-new-presentation-with-copilot-in-powerpoint
+
+- Agent Builder Code Interpreter: https://learn.microsoft.com/en-us/microsoft-365/copilot/extensibility/code-interpreter
