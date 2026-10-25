@@ -38,7 +38,7 @@ def validate(tag: str = "") -> tuple[str, list[Path]]:
     assert main.stat().st_size < 1024 * 1024, "SKILL.md exceeds 1 MiB"
     support = sorted([*SKILL_ROOT.glob("references/*.md"), *SKILL_ROOT.glob("templates/*.md")])
     assert support and all(p.is_file() for p in support)
-    for required in ("editorial-structure.md", "style-from-samples.md", "visual-evidence.md", "quality-gates.md", "platform-compatibility.md"):
+    for required in ("editorial-structure.md", "style-from-samples.md", "visual-evidence.md", "quality-gates.md", "platform-compatibility.md", "copilot-runtime-diagnostics.md"):
         assert (SKILL_ROOT / "references" / required).is_file(), f"Missing {required}"
         assert required in skill, f"SKILL.md does not reference {required}"
     inputs = [main, *support]
@@ -84,7 +84,7 @@ def build(out_dir: Path, tag: str = "") -> tuple[Path, Path]:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out-dir", type=Path, default=ROOT / "dist")
-    parser.add_argument("--tag", default="", help="Validate release tag (e.g., v0.2.0) against plugin.json")
+    parser.add_argument("--tag", default="", help="Validate release tag (e.g., v0.3.0) against plugin.json")
     args = parser.parse_args()
     for output in build(args.out_dir, args.tag):
         print(f"Built {output} ({output.stat().st_size} bytes)")
