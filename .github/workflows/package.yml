@@ -32,7 +32,7 @@ jobs:
           python -m unittest discover -s tests -p 'test_polish_skill.py' -v
           python -m unittest discover -s tests -p 'test_editorial_flow.py' -v
           python -m unittest discover -s tests -p 'test_march_cover.py' -v
-      - name: Build three distribution ZIPs
+      - name: Build four distribution ZIPs
         shell: bash
         run: |
           set -euo pipefail
