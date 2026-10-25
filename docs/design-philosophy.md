@@ -43,6 +43,17 @@ Native shapes/graphs are preferred for freshly authored representations because 
 
 Failures should trigger repair of the specific slides, not a total redesign or a fabricated "QA passed" label.
 
+## Two-stage editorial workflow (v0.6.0)
+
+The owner prefers **conversation-first creation, PowerPoint-native finishing** rather than asking a single assistant to do everything. The repository therefore has **two task-specialized skills**:
+
+- **`weekly-it-news` in Microsoft 365 Copilot Chat**: explore candidate news conversationally, verify technical sources, preserve presenter interpretation, and produce an actual editable **base PPTX**. If documentary images or layout polish remain unresolved, deliver as a clearly labeled **BASE DRAFT**, with exact source URLs and what still needs completing. A base deck with disclosed gaps is acceptable in this intentionally two-stage workflow; it is not a finished, fully evidence-backed presentation.
+- **`itnews-powerpoint-polish` in Copilot in PowerPoint**: edit that existing file, protect the original news-to-evidence order, insert authentic sourced images where capabilities and rights permit, repair cropping, typography, native diagrams, speaker notes and source credits, then perform final visual checks. This phase should not restart the research or transform a technical news show into a generic corporate slide deck.
+
+The **PPTX itself** is the minimum handoff between separate Copilot environments. Slide notes and citations are preferred for traceability; a compact follow-up brief can supply missing links or image requests. Automatic sharing of an Agent Builder skill, its conversation history, or a user's browser capabilities into PowerPoint is **not assumed**. A Word file, fabricated screenshot or source URL without image pixels cannot substitute for the expected artifact.
+
+In this design, a skill is an **editing policy**, not a replacement presentation engine. Each Microsoft host uses only features it actually exposes; a restricted host must disclose an unmet requirement rather than invent a tool result. The PowerPoint editing skill is packaged **separately** from the Chat authoring skill; both share the editorial philosophy rather than an automatically connected runtime.
+
 ## Cross-host architecture
 
 Keep one portable `skills/weekly-it-news/SKILL.md` and the referenced `references/` and `templates/`. Let **ChatGPT Work** and **Microsoft 365 Copilot Chat / PowerPoint Copilot** use their own available presentation engines; a custom skill does not replace hidden native tools or guarantee an identical rendering. Screenshot capture and external browsing can differ significantly by account/tenant. Never claim unperformed external fetches or unavailable edits.
