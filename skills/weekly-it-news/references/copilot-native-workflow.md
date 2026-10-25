@@ -1,12 +1,12 @@
-# Copilot-native PowerPoint workflow (default)
+# Copilot in PowerPoint — optional editing route (not the Copilot Chat default)
 
-The objective is an end-to-end PowerPoint authoring experience **within Microsoft Copilot**, preferably Copilot **inside PowerPoint**. This skill supplies editorial instructions, not a replacement PowerPoint renderer. A Word, PDF, HTML or outline response is not completed slide generation.
+The objective is an end-to-end PowerPoint authoring experience **within Microsoft Copilot**, primarily Copilot Chat with a custom Agent Builder skill. This skill supplies editorial instructions, not a replacement PowerPoint renderer. A Word, PDF, HTML or outline response is not completed slide generation.
 
-## 1. Choose the right host BEFORE authoring
+## 1. Use this only when the user prefers the PowerPoint app or Copilot Chat output is blocked
 
-1. **Preferred — Copilot in PowerPoint:** open/new `.pptx`, invoke `@weekly-it-news` from the PowerPoint Copilot skills menu, create and refine slides **in that same session**. This is the primary path and must not require a script, a JSON handoff file, or a second service.
-2. **Alternative — dedicated PowerPoint Agent in Microsoft 365 Copilot Chat:** create the `.pptx` there; test whether the same custom skill is actually available. Do not assume Agent Builder skills carry over; if not, use the skill's authoring rules as instructions, including visual source requirements.
-3. **Agent Builder custom agent:** it may help with research and storyboard planning, but skill installation alone does not provide PowerPoint creation, web-page capture or PowerPoint Agent delegation. If a PPTX creator is not actually available, disclose that and recommend opening PowerPoint; do **not** claim a Word document is success.
+1. **Optional — Copilot in PowerPoint:** open/new `.pptx`, invoke `@weekly-it-news` from the PowerPoint Copilot skills menu, create and refine slides **in that same session**. This is a secondary path and must not require a script, a JSON handoff file, or a second service.
+2. **Copilot Chat — dedicated PowerPoint Agent:** create the `.pptx` there; test whether the same custom skill is actually available. Do not assume Agent Builder skills carry over; if not, use the skill's authoring rules as instructions, including visual source requirements.
+3. **Default — Agent Builder custom agent in Copilot Chat:** Code Interpreter is normally enabled and can generate files. Use native presentation generation or the bundled offline `scripts/build_pptx.py` fallback within Copilot Chat if it can be executed. If neither makes PPTX, try the dedicated PowerPoint Agent in Copilot Chat before suggesting an app switch. Do **not** claim a Word document is success. See `copilot-chat-workflow.md`.
 
 ## 2. Native single-session workflow
 
