@@ -21,19 +21,21 @@ The four supplied PPTX examples represent **two different purposes**, not four e
 
 Research and visuals have an **evidence role**: each table, chart, drawing, real screenshot or retrieved image must clarify a specific claim or technical mechanism. Native editable visuals are preferred for original explanation, whereas screenshots preserve the authentic state of external sources. Reject impressive-looking but irrelevant art, invented UI shots, numeric comparisons without compatible data, and unattributed or impermissibly reused content. "No image" is a valid decision. Confirm source accuracy and rights separately from the final layout review; do not report checks that the host cannot perform.
 
-**Cross-host strategy:** one shared `SKILL.md` specifies storytelling, research, media choice and quality gates; ChatGPT Work and Microsoft 365 Copilot use their own **native** presentation engines subject to host-specific capabilities. We do not implement a separate PPTX generation engine or claim pixel-identical output. This is not a custom override of either product's built-in PowerPoint skill.
+**Cross-host strategy:** one shared `SKILL.md` specifies storytelling, research, media choice and quality gates; ChatGPT Work and Microsoft 365 Copilot use their own **native** presentation engines subject to host-specific capabilities. We retain native presentation-generation preference and bundle only a deliberately limited offline PPTX fallback inside Copilot Chat for hosts without a usable native composer; pixel-identical output is not promised. This is not a custom override of either product's built-in PowerPoint skill.
 
 For the full reasoning, including slide archetypes, validation criteria, rights and deliberate non-goals, see **[Design philosophy](docs/design-philosophy.md)**. For the original-deck page references, see [Editorial structure](skills/weekly-it-news/references/editorial-structure.md).
 
-## Copilot-native authoring (preferred)
+## Copilot Chat-first authoring (preferred)
 
-**The regular workflow completes in Copilot in PowerPoint.** Open a new or existing .pptx, select `weekly-it-news` in the PowerPoint Copilot skills menu, and conduct slide planning, content creation, evidence insertion and revisions there. A dedicated PowerPoint Agent can generate presentations in Copilot Chat, but an Agent Builder custom skill is not automatically installed inside it.
+**The normal workflow starts and finishes in Microsoft 365 Copilot Chat.** Create/open the custom Agent Builder agent with the `weekly-it-news` skill. Ensure **Configure → Capabilities → Create documents, charts, and code** (Code Interpreter) is enabled. Microsoft documents Code Interpreter as enabled by default in Agent Builder, supporting generated downloadable files. Ask for a real `.pptx` deliverable.
 
-The skill does **not** require a separate PPTX generator, Word intermediary, Python script or JSON handoff file for normal creation. Optional [Copilot-native workflow](skills/weekly-it-news/references/copilot-native-workflow.md) instructions explain when host-native features suffice and how to report genuine limitations.
+The agent should use any suitable built-in PowerPoint-capable creation operation first; **when no richer PPTX composer is present but skill-script execution is available, it can run the bundled [offline standard-library PPTX helper](skills/weekly-it-news/scripts/build_pptx.py) inside Copilot Chat**. The helper produces simple editable 16:9 slides and embeds actual local PNG/JPEG images. It does not scrape the Web, download copyrighted photos, or fabricate screenshots. No external Python setup or separate app is required from the user. See [Copilot Chat workflow](skills/weekly-it-news/references/copilot-chat-workflow.md).
 
-Only when switching hosts or requesting a reproducible audit, use the [optional production handoff](skills/weekly-it-news/references/production-handoff.md) and [evidence manifest schema](schemas/evidence-manifest.schema.json). A [structural PPTX QA script](scripts/qa_pptx.py) can optionally inspect an already-generated PowerPoint; it is **not** part of the generation path and cannot judge visual legibility, photo rights or factual correctness.
+If the custom agent cannot make a PPTX, the dedicated **PowerPoint Agent in Copilot Chat** is the second option; because custom Agent Builder skills do not automatically transfer, the editorial brief must be supplied explicitly. **Copilot in PowerPoint is optional** for users who prefer direct editing, not the standard entry point.
 
-Local optional QA: `python scripts/qa_pptx.py output.pptx --min-images 1 --manifest evidence.json` (only if genuine images were requested and the optional manifest is available).
+The existing Word-only result is a regression example, not completed slide generation. The [acceptance tests](skills/weekly-it-news/references/acceptance-tests.md) distinguish offline package/helper tests from live Copilot tenant smoke tests. Real journalistic/official image pixels must be obtainable and embedded; search links alone are not screenshots.
+
+For advanced auditing or unusual host switching, the [evidence manifest schema](schemas/evidence-manifest.schema.json) and [structural PPTX QA script](scripts/qa_pptx.py) remain **optional** and do not delay normal Copilot Chat generation.
 
 ## Documentary visuals and hard output contract
 
@@ -69,7 +71,8 @@ To retrieve an ordinary build, open **[Actions → Build skill packages](https:/
 plugin.json                           # ChatGPT plugin manifest
 skills/weekly-it-news/SKILL.md        # Portable core instructions
 skills/weekly-it-news/references/     # Design, visual rights, QA, platform nuances
-skills/weekly-it-news/templates/      # Slide storyboard
+skills/weekly-it-news/templates/      # Slide storyboard and example plan
+skills/weekly-it-news/scripts/        # In-chat stdlib PPTX fallback
 scripts/build_packages.py            # Reproducible dual ZIP builder
 tests/                             # Skill and distribution tests
 .github/workflows/package.yml      # Build + Artifacts + tag Release
@@ -81,7 +84,7 @@ README.md
 
 The initial Agent Builder field test produced a **Word** SharePoint document rather than the requested **PowerPoint .pptx**, with no genuine Web-page screenshots. This is a failed acceptance test, not evidence that the skill can autonomously create slides in every Copilot host. The actual Word document was not accessible for content inspection, so the precise tool-selection cause is unconfirmed.
 
-**New in v0.3.0:** the portable skill performs a capability preflight before drafting. A PowerPoint request is **complete only** with an actual `.pptx`; `.docx`, PDF, presentation plans and Word SharePoint `/:w:/` links are intermediate at most. If the current agent cannot create a PPTX, it must say so and direct the user to **Copilot in PowerPoint** (skill applied in that host) or the **dedicated PowerPoint Agent** (with research handoff; not automatic skill sharing).
+**New in v0.3.0:** the portable skill performs a capability preflight before drafting. A PowerPoint request is **complete only** with an actual `.pptx`; `.docx`, PDF, presentation plans and Word SharePoint `/:w:/` links are intermediate at most. If the current agent cannot create a PPTX, it must first verify Code Interpreter and attempt a real PPTX; then suggest the **dedicated PowerPoint Agent in Copilot Chat** (not automatic skill sharing), with Copilot in PowerPoint as an optional alternative.
 
 Authentic screenshot-backed slides require images captured from real pages or provided as actual files, embedded and attributed. Web search is not screenshot capture. If required screenshots cannot be sourced, the deck remains **incomplete**, and the agent must report that blocker rather than silently omit them.
 
@@ -92,8 +95,8 @@ See the [Copilot runtime diagnostic and remediation guide](skills/weekly-it-news
 ### ChatGPT
 Install the plugin archive generated from this repository when plugin installation is available in your workspace. The portable skill is `skills/weekly-it-news/SKILL.md`. Availability in ChatGPT / Work depends on account settings and enabled tools. Ask for a presentation *using the weekly-it-news skill* and attach a template if exact styling is desired.
 
-### Microsoft 365 Copilot Chat Agent Builder
-For organizations eligible for custom skills (Frontier preview as documented Sep 2026): zip the **contents** of `skills/weekly-it-news/` with `SKILL.md` at the archive root, then upload to Agent Builder → Configure → Skills. Don't use the root ChatGPT plugin ZIP for Agent Builder.
+### Microsoft 365 Copilot Chat Agent Builder — primary installation
+Enable Code Interpreter (Create documents, charts, and code). For organizations eligible for custom skills (Frontier preview as documented Sep 2026): zip the **contents** of `skills/weekly-it-news/` with `SKILL.md` at the archive root, then upload to Agent Builder → Configure → Skills. Don't use the root ChatGPT plugin ZIP for Agent Builder.
 
 ### Copilot in PowerPoint
 Add `skills/weekly-it-news/SKILL.md` and its support folder through PowerPoint Copilot's custom skill workflow or personal OneDrive Skills folder, depending on the UI available to you. You can @mention the skill. Use native Brand Kits when available.
@@ -125,6 +128,7 @@ The four originals `20260125.pptx`, `20260412.pptx`, `20260913.pptx`, and `20261
 
 ## Release notes
 - **CI/CD:** dual-package reproducible build, PR/main Artifacts and tag-based GitHub Releases; documented editorial/design rationale.
+- **0.5.0**: prioritize Agent Builder Copilot Chat one-session PPTX production through Code Interpreter, bundle a tested stdlib-only fallback helper, keep PowerPoint Agent and PowerPoint editor optional; distinguish live tenant E2E validation.
 - **0.4.0**: prioritize Copilot-in-PowerPoint one-session creation; optional evidence audit / cross-host brief; offline PPTX structural QA and regression tests; deduplicate quality gates.
 - **0.3.0**: enforce actual PPTX output (Word is not a substitute); accept meaningful, traceable journalist photographs and graphics inside news articles as well as official images; distinguish an article image from a full-page capture; check that requested images are actually embedded; add Copilot regression cases and runtime routing notes.
 - **0.2.0**: original pre-AI narrative structure takes precedence over later polished layouts.
