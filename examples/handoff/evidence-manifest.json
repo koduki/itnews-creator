@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0",
+  "presentation": "Weekly IT News example (synthetic metadata — no licensed images included)",
+  "assets": [
+    {
+      "slide": 4,
+      "kind": "news_photo",
+      "purpose": "Illustrate a real device photographed during the event",
+      "source_url": "https://example.org/news-item",
+      "publisher": "Example publisher (placeholder)",
+      "creator": null,
+      "source_date": null,
+      "rights_status": "unknown",
+      "embedded": false
+    }
+  ]
+}
