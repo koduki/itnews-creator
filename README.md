@@ -43,7 +43,7 @@ The reference decks put important **real-source visuals after each news explanat
 
 **A request for PowerPoint must result in an actual .pptx (or PowerPoint-native deck verifiably exportable to .pptx).** The previous Copilot Chat experiment generated a Word document without the requested screenshots. That is a failed deliverable, not an acceptable alternative: the skill now checks the file format and whether authentic images were truly embedded. Agent Builder custom skills cannot grant unavailable browser or presentation capabilities. If the host cannot produce the requested result, it should disclose this rather than calling Word “done.” See [Copilot runtime diagnosis](skills/weekly-it-news/references/copilot-runtime-diagnostics.md) and [cross-host acceptance tests](skills/weekly-it-news/references/acceptance-tests.md).
 
-## Two complementary Copilot skills (v0.6.0)
+## Two complementary Copilot skills (v0.7.0)
 
 The preferred workflow for this project is now **a real base PowerPoint from Microsoft 365 Copilot Chat → native PowerPoint editing and finishing**. These are deliberately different skills and installation targets:
 
@@ -55,6 +55,14 @@ The preferred workflow for this project is now **a real base PowerPoint from Mic
 Chat remains free to produce a fully finished PPTX when it has the capabilities. In the two-stage workflow, the base PPTX is valid even without all documentary media **as long as missing images are explicitly disclosed and it is not falsely called final**. PowerPoint skills do not automatically access Agent Builder's conversation or code execution; the **opened deck itself, its notes and any user-provided links** are the handoff. No sidecar JSON, external scripts or separate browser is mandatory. The PowerPoint skill cannot conjure missing Web browsing/screenshot permissions: any still-missing required evidence must be reported.
 
 For this PowerPoint skill, Microsoft documents **PowerPoint Copilot → + → Choose skills → Manage skills → Add skill** (or upload `SKILL.md` and supporting files into its OneDrive Skills folder); install the **PowerPoint-polish** ZIP, **not** the Agent Builder authoring ZIP. The PowerPoint skill folder name must match its `SKILL.md` name: `itnews-powerpoint-polish`. PowerPoint skills depend on account/tenant feature availability. See [Microsoft's custom-skill documentation](https://support.microsoft.com/ja-jp/powerpoint/copilot/copilot-in-powerpoint-skills) and [in-PowerPoint editing](https://support.microsoft.com/ja-jp/powerpoint/edit-with-copilot-in-powerpoint).
+
+## v0.7 real-deck regression fixes (2026-10-25 vs 2026-03-15)
+
+The user-supplied **Oct 25 v0.5 deck** has **22 slides / 4 image objects**. It discusses Meta (3–5), PHP (6–9), GMO (10–13), then **revisits** Meta (14–15), PHP (16–17), GMO (18–21): an avoidable second topic tour. The **Mar 15 pre-AI deck** has **31 slides / 33 image objects**, including event-page screenshots, journalistic source photos and product-spec graphics. These counts are observations **not a minimum photo quota**. Neither reference deck is repackaged.
+
+v0.7 assigns **story order to Copilot Chat**: each topic must be one contiguous narrative: **explanation → meaningful original source/evidence photos and screenshots (or explicit media TODO) → further technical context → next topic**. The Chat-stage base PPTX must preserve exact verified media URLs and show the **placement, rights and actual embedded/pending state** on notes or explicit handoff; do not invent unavailable links. `BASE DRAFT` is acceptable when the real PPTX exists and visual gaps are documented; Word is never a PPTX base.
+
+The **PowerPoint polish skill** detects and repairs reopened topic blocks *before* typography work and prioritizes **actual source image insertion and attribution** over card redesign. It must not demand a fixed number of pictures nor remove useful editable technical diagrams. See the in-package [Chat narrative and evidence contract](skills/weekly-it-news/references/story-continuity.md), [PowerPoint repair notes](skills/itnews-powerpoint-polish/references/topic-repair.md), and optional [continuity validator](skills/weekly-it-news/scripts/check_editorial_flow.py).
 
 ## Build, CI and distribution
 
@@ -72,7 +80,7 @@ To build and verify locally:
 python tests/test_package.py
 python -m unittest discover -s tests -p 'test_build_packages.py' -v
 python scripts/build_packages.py --out-dir dist
-# For a tagged release: python scripts/build_packages.py --out-dir dist --tag v0.6.0
+# For a tagged release: python scripts/build_packages.py --out-dir dist --tag v0.7.0
 ```
 
 To retrieve an ordinary build, open **[Actions → Build skill packages](https://github.com/koduki/itnews-creator/actions/workflows/package.yml)**, choose a successful run, and download `itnews-creator-packages-<run ID>` under Artifacts. For durable, versioned downloads, use **[Releases](https://github.com/koduki/itnews-creator/releases)** after pushing the corresponding tag.
@@ -142,6 +150,7 @@ The four originals `20260125.pptx`, `20260412.pptx`, `20260913.pptx`, and `20261
 - OpenAI: [Working with presentations in ChatGPT Work](https://help.openai.com/en/articles/20001278-creating-and-editing-documents-spreadsheets-and-presentations-with-chatgpt-work).
 
 ## Release notes
+- **0.7.0**: v0.5 field-test repairs: contiguous story blocks, actionable exact-URL evidence handoff, PowerPoint source-media-first repairs and editorial-flow regression tests.
 - **0.6.0**: add a separately packaged Copilot-in-PowerPoint polish skill; explicit base-deck handoff and missing-evidence TODO; three distribution ZIPs.
 - **CI/CD:** three-package reproducible build, PR/main Artifacts and tag-based GitHub Releases; documented editorial/design rationale.
 - **0.5.0**: prioritize Agent Builder Copilot Chat one-session PPTX production through Code Interpreter, bundle a tested stdlib-only fallback helper, keep PowerPoint Agent and PowerPoint editor optional; distinguish live tenant E2E validation.
