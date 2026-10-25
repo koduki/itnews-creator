@@ -36,12 +36,12 @@ def validate(tag: str = "") -> tuple[str, list[Path]]:
     assert re.search(r"(?m)^description: \S", skill)
     assert len(skill) < 20_000, "M365 Copilot skill instructions exceed 20,000 characters"
     assert main.stat().st_size < 1024 * 1024, "SKILL.md exceeds 1 MiB"
-    support = sorted([*SKILL_ROOT.glob("references/*.md"), *SKILL_ROOT.glob("templates/*.md")])
+    support = sorted([*SKILL_ROOT.glob("references/*.md"), *SKILL_ROOT.glob("templates/*.md"), *SKILL_ROOT.glob("templates/*.json"), *SKILL_ROOT.glob("scripts/*.py")])
     assert support and all(p.is_file() for p in support)
-    for required in ("editorial-structure.md", "style-from-samples.md", "visual-evidence.md", "quality-gates.md", "platform-compatibility.md", "copilot-runtime-diagnostics.md", "copilot-native-workflow.md", "production-handoff.md", "acceptance-tests.md"):
+    for required in ("editorial-structure.md", "style-from-samples.md", "visual-evidence.md", "quality-gates.md", "platform-compatibility.md", "copilot-runtime-diagnostics.md", "copilot-native-workflow.md", "copilot-chat-workflow.md", "production-handoff.md", "acceptance-tests.md"):
         assert (SKILL_ROOT / "references" / required).is_file(), f"Missing {required}"
         assert required in skill, f"SKILL.md does not reference {required}"
-    inputs = [main, *support]
+    assert (SKILL_ROOT / "scripts" / "build_pptx.py").is_file(), "Missing Copilot Chat generator"\n    assert "scripts/build_pptx.py" in skill, "SKILL.md lacks in-chat PPTX script reference"\n    inputs = [main, *support]
     for p in [ROOT / "README.md", MANIFEST, *inputs]:
         assert p.is_file() and not p.is_symlink(), f"Missing or unsafe input: {p}"
         p.read_text(encoding="utf-8")
