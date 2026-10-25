@@ -40,7 +40,10 @@ def check():
     handoff = (SKILL_DIR / 'references' / 'production-handoff.md').read_text(encoding='utf-8')
     assert 'FALLBACK' in handoff.upper() or 'fallback' in handoff.lower()
     assert (ROOT / 'schemas' / 'evidence-manifest.schema.json').is_file()
-    assert (ROOT / 'scripts' / 'qa_pptx.py').is_file()\n    assert (SKILL_DIR / 'scripts' / 'build_pptx.py').is_file()\n    chat = (SKILL_DIR / 'references' / 'copilot-chat-workflow.md').read_text(encoding='utf-8')\n    assert 'Code Interpreter' in chat and 'Copilot Chat' in chat
+    assert (ROOT / 'scripts' / 'qa_pptx.py').is_file()
+    assert (SKILL_DIR / 'scripts' / 'build_pptx.py').is_file()
+    chat = (SKILL_DIR / 'references' / 'copilot-chat-workflow.md').read_text(encoding='utf-8')
+    assert 'Code Interpreter' in chat and 'Copilot Chat' in chat
 
     assert 'no Word substitution' in text or 'Word substitution' in text
     visual = (SKILL_DIR / 'references' / 'visual-evidence.md').read_text(encoding='utf-8')
