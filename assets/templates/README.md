@@ -1,12 +1,15 @@
-# Weekly IT News レイアウト見本
+# Weekly IT News 固定デザイン（8レイアウト）
 
-8スライド、16:9、ネイティブPowerPoint図形で編集可能なレイアウト集。
+- [PowerPointテンプレート](weekly-it-news-design-template.pptx)
+- [SHA-256と各レイアウト](template-manifest.json)
 
-- [テンプレート](weekly-it-news-design-template.pptx)
-- [ハッシュと直接取得URL](template-manifest.json)
+1. COVER
+2. AGENDA
+3. **NEWS_TITLE：ニュースごとの章扉**
+4. NEWS
+5. SOURCE_IMAGE
+6. TECH_DIAGRAM
+7. COMPARE
+8. TWO_SOURCES
 
-スライド1はユーザー提供2026-03-15版の表紙と元アバター。日付・予告は毎週変更。スライド2は現行の目次形式。スライド3は **NEWS_TITLE：ニュースごとの章扉**（青い `NEWS 01` と巨大な淡青番号）、スライド4-8はニュース説明・1画像・技術図・比較表・2画像の見本。
-
-スキルZIPにはこのPPTXを含めず、Gemini TasksがGitHubから別ファイルとして取得する。Geminiスキルに外部通信を実行する能力が付与されるわけではないので、取得できなければGoogle Driveまたは手動添付を利用する。
-
-元のアバターやユーザー提供PPTXの画像権利はその権利者に帰属し、MITの自動適用対象ではありません。
+Geminiには**Google Driveまたはユーザー添付**で実PPTXを渡し、manifestのSHA-256を検証します。GitHub rawのURLはGit管理と人間のダウンロード用であり、Gemini VMから取得可能であることは前提にしません。スキルZIPにはテンプレートを同梱しません。

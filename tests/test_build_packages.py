@@ -1,59 +1,50 @@
-"""Run packaging tests without third-party dependencies or GitHub credentials."""
-from importlib.util import module_from_spec, spec_from_file_location
+"""Only the two active skills are packaged, reproducibly."""
+import importlib.util
 from pathlib import Path
 from tempfile import TemporaryDirectory
-import json
 import unittest
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
-spec = spec_from_file_location("build_packages", ROOT / "scripts" / "build_packages.py")
-build_packages = module_from_spec(spec)
-assert spec and spec.loader
-spec.loader.exec_module(build_packages)
+spec = importlib.util.spec_from_file_location("packages", ROOT / "scripts/build_packages.py")
+packages = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(packages)
 
 
-class BuildPackagesTest(unittest.TestCase):
-    def test_both_formats_and_deterministic_content(self):
-        version = json.loads((ROOT / "plugin.json").read_text(encoding="utf-8"))["version"]
+class PackageTests(unittest.TestCase):
+    def test_two_reproducible_skill_packages(self):
+        version = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
         with TemporaryDirectory() as first, TemporaryDirectory() as second:
-            first_archives = build_packages.build(Path(first), tag=f"v{version}")
-            second_archives = build_packages.build(Path(second), tag=f"v{version}")
-            for a, b in zip(first_archives, second_archives):
-                self.assertEqual(a.read_bytes(), b.read_bytes(), a.name)
-                with zipfile.ZipFile(a) as z:
+            a = packages.build(Path(first), tag="v" + version)
+            b = packages.build(Path(second), tag="v" + version)
+            self.assertEqual([p.name for p in a], [
+                f"itnews-creator-gemini-task-skill-v{version}.zip",
+                f"itnews-creator-powerpoint-polish-skill-v{version}.zip",
+            ])
+            self.assertEqual(len(a), 2)
+            for p, q in zip(a, b):
+                self.assertEqual(p.read_bytes(), q.read_bytes())
+                with zipfile.ZipFile(p) as z:
                     self.assertIsNone(z.testzip())
-                    self.assertEqual(len(z.namelist()), len(set(z.namelist())))
-            with zipfile.ZipFile(first_archives[0]) as z:
-                members = set(z.namelist())
-                self.assertIn("plugin.json", members)
-                self.assertIn("README.md", members)
-                self.assertIn("skills/weekly-it-news/SKILL.md", members)
-                self.assertIn("skills/weekly-it-news/references/copilot-runtime-diagnostics.md", members)
-                self.assertIn("skills/weekly-it-news/scripts/build_pptx.py", members)
-                self.assertIn("skills/weekly-it-news/scripts/check_editorial_flow.py", members)
-                self.assertIn("skills/weekly-it-news/references/story-continuity.md", members)
-                self.assertNotIn("tests/test_package.py", members)
-                self.assertEqual(json.loads(z.read("plugin.json"))["version"], version)
-            with zipfile.ZipFile(first_archives[1]) as z:
-                members = set(z.namelist())
-                self.assertIn("SKILL.md", members)
-                self.assertIn("references/editorial-structure.md", members)
-                self.assertIn("references/copilot-runtime-diagnostics.md", members)
-                self.assertIn("references/copilot-chat-workflow.md", members)
-                self.assertIn("scripts/build_pptx.py", members)
-                self.assertIn("scripts/check_editorial_flow.py", members)
-                self.assertIn("references/story-continuity.md", members)
-                self.assertIn("templates/editorial-storyboard.example.json", members)
-                self.assertIn("templates/copilot-chat-plan.example.json", members)
-                self.assertIn("templates/slide-plan.md", members)
-                self.assertNotIn("plugin.json", members)
-                self.assertFalse(any(name.startswith("skills/") for name in members))
+                    self.assertFalse(any(n.endswith((".gs", ".pptx", ".png", ".jpg")) for n in z.namelist()))
+            with zipfile.ZipFile(a[0]) as z:
+                self.assertIn("scripts/build_pptx.py", z.namelist())
+                self.assertIn("scripts/screenshot_relay.js", z.namelist())
+                self.assertIn("templates/assets-manifest.example.json", z.namelist())
+            with zipfile.ZipFile(a[1]) as z:
+                self.assertIn("references/gemini-claude-handoff.md", z.namelist())
+                self.assertNotIn("references/handoff-contract.md", z.namelist())
+                self.assertNotIn("references/topic-repair.md", z.namelist())
 
-    def test_release_must_match_manifest(self):
+    def test_release_tag_guard(self):
         with TemporaryDirectory() as dest:
             with self.assertRaisesRegex(ValueError, "Refusing release"):
-                build_packages.build(Path(dest), tag="v999.999.999")
+                packages.build(Path(dest), tag="v999.999.999")
+
+    def test_legacy_is_gone(self):
+        for path in ("plugin.json", "skills/weekly-it-news", "scripts/qa_pptx.py",
+                     "schemas", "examples/handoff"):
+            self.assertFalse((ROOT / path).exists(), path)
 
 
 if __name__ == "__main__":

@@ -1,46 +1,21 @@
-# Review rubric — edit existing PPTX
+# 最終仕上げQA
 
-Use PASS / FAIL / UNVERIFIED for *observable* outcomes, not generic claims. Inspect the actual open presentation and do targeted repairs before reporting.
+各項目はPASS / FAIL / UNVERIFIEDで報告。実PPTXを開いて確認する。
 
-## B0: Blocking problems (must not call final)
-- Not a genuine `.pptx` / no slide content / edits not saved to the document opened by the user.
-- Provably false or materially misleading claim, mismatched benchmark metrics, missing essential caveat, or official-looking invented evidence.
-- Required source screenshot/photo is unavailable or not actually embedded; note the exact source and intended purpose. One unfulfilled required visual can block final even if the deck is visually neat.
-- Unreadable information-critical slide: clipped claims, invisible labels or mangled evidence image.
-- No traceable provenance for crucial third-party media; unverified rights are not implicitly cleared.
+## B0：未解決ならFINAL不可
+- PPTXが開けない／変更を保存できていない。
+- 実資料の代わりの架空画像、Cloudflare・Cookie画面が被った記事画像、必須スクショの欠落。
+- 重要な見出し・本文・画像が切れる、表紙の日付とタイトルが重なる。
+- 出典・著作者・権利状態の欠落、技術的な事実・数値・発表者の考察の無断変更。
 
-## I1: Important quality issues
-- A topic reappears after a later topic begins (reopened-topic / second-tour regression). Repair ordering before cosmetic polishing; each topic has one contiguous explanation → evidence → context block.
-- Evidence assets only exist as text URLs and have not been actually embedded where required for the final deck.
-- Missing precise URLs/photographer credits for source images: do not call a generic research-report title an adequate image citation.
-- The one-news-at-a-time rhythm changed; source-only evidence slide orphaned from its story; agenda not matching headlines.
-- Presentation's author's opinion silently converted to fact; unexplained date, version or unit mismatch.
-- Blurred screenshot at projector scale; too much browser chrome; annotation obscures evidence; source URL lost.
-- Native technical flow is backwards / logical association mistaken for data flow.
-- Overuse of decorative card/chapter slides that buries the original news cadence.
-- Authored information flattened into an image unnecessarily and editing was explicitly required.
+## I1：優先修正
+- NEWS_TITLEの欠落・重複・青いニュース番号や濃紺タイトルの崩れ。
+- ニュースごとの連続性の崩れ／説明と実画像が離れた。
+- 比較表の小さすぎる文字、図の不明瞭な矢印、単位や前提の不足。
+- 広告／ブラウザUIが資料より目立つ画像、不正確なトリミング。
 
-## P2: Polish targets
-- Align margins, establish consistent headline and body sizing, balance whitespace.
-- Use consistent red `#C00000` emphasis and neutral background; preserve contrast.
-- Standardize image captions and speaker notes; fix Japanese line breaks, typos, punctuation and widows.
-- Make tables and diagrams more legible without recreating source images.
+## P2：最終仕上げ
+- 白背景、赤い本文見出しと青い章扉の区別、余白・文字サイズ・ノート・キャプション。
+- 装飾カードではなく技術ニュース番組のリズム、実画像の焦点、ネイティブ図表の編集性を保つ。
 
-## Process
-1. Scan current slide order and list story/topic groups; don't invent missing source content.
-2. Make a short priority-ordered issue list with slide numbers and original/new value if claims changed.
-3. Fix B0 first, I1 next, P2 last. Prefer localized edits. Reinspect affected slides and also slide transitions.
-4. Inspect all slides at full presentation size as host allows. If notes, browser, download, PowerPoint media objects, or image rights cannot be verified, mark their checks UNVERIFIED.
-5. Confirm actual output `.pptx`; report slide count, edits, added/replaced genuine images, deferred evidence and remaining caveats.
-
-## Acceptance cases
-- A Chat-created 4-slide base PPTX with one `要画像` placeholder and no actual pictures: **base acceptable, final incomplete** until authentic image is added or user explicitly removes that requirement.
-- A real article photo has been inserted but is uncredited: image appears, **attribution check fails**.
-- An AI-generated device UI is called a real screenshot: **hard failure**, replace or remove.
-- Original news overview rewritten as an executive business roadmap: **editorial invariant broken**, restore.
-- PowerPoint custom-skill runtime cannot fetch an article screenshot: **not a reason to invent one**; retain task as outstanding.
-
-## v0.7 case-based regression
-- **Oct 25 v0.5 example:** 22 slides, four image objects; Meta 3–5 & 14–15, PHP 6–9 & 16–17, GMO 10–13 & 18–21: **I1 editorial failure** until grouped. Reordering recipe is in `topic-repair.md`; don't mistake 4 images for an automatic numerical failure.
-- **Mar 15 original example:** 31 slides, 33 image objects; genuine event screens, journalistic photos and spec tables. This teaches **source-led pacing**, not mandatory reproduction of the image ratio or unsafe third-party assets.
-- Passing cosmetic typography without addressing evidence provenance or reopened topics is **not** final approval.
+B0から先に修正し、修正した全ページを再表示。素材を取得し直す必要があればGemini側へ差し戻す。
