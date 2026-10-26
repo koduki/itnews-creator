@@ -65,6 +65,8 @@ class QualityGateTest(unittest.TestCase):
             pre=module.preflight_plot(data,self.dir,strict_assets=True)
             self.assertFalse(pre['passed'])
             self.assertIn('rejected screenshot',str(pre['errors']))
+        data=plot();data['assets'][0]['quality_flags']='bot_challenge'
+        self.assertIn('rejected screenshot', str(module.preflight_plot(data,self.dir,True)['errors']))
 
     def test_missing_media_and_conflicting_source_block(self):
         data=plot();data['assets'][0]['file']='missing.png'
