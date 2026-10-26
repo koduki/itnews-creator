@@ -1,0 +1,107 @@
+"""Regression tests of the Gemini Tasks editable PPTX renderer.
+
+Synthetic test images are NOT presented as documentary evidence.
+"""
+from __future__ import annotations
+
+import importlib.util
+import hashlib
+import json
+from pathlib import Path
+import tempfile
+import unittest
+import zipfile
+from xml.etree import ElementTree as ET
+
+from PIL import Image
+from pptx import Presentation
+
+ROOT = Path(__file__).resolve().parents[1]
+TEMPLATE = ROOT / 'assets/templates/weekly-it-news-design-template.pptx'
+SCRIPT = ROOT / 'skills/weekly-it-news-gemini/scripts/build_pptx.py'
+MODULE = importlib.util.spec_from_file_location('gemini_generator', SCRIPT)
+generator = importlib.util.module_from_spec(MODULE)
+MODULE.loader.exec_module(generator)
+
+
+def sample_plot():
+    return {
+        'edition_date': '2026-10-26', 'status': 'approved',
+        'slides': [
+            {'slide_id':'s01','story_id':'front','layout_id':'COVER','title':'Weekly IT News！','on_slide':['検証用見出し','二つ目の見出し'],'speaker_notes':'cover note'},
+            {'slide_id':'s02','story_id':'front','layout_id':'AGENDA','title':'今週のトピック','on_slide':['A','B'],'speaker_notes':'agenda note'},
+            {'slide_id':'s03','story_id':'a','layout_id':'NEWS','title':'ニュース検証','on_slide':['導入：背景','技術的な違い','出典：test'], 'speaker_notes':'news note'},
+            {'slide_id':'s04','story_id':'a','layout_id':'SOURCE_IMAGE','title':'証拠画像（テスト）','on_slide':['画像見出し','画像の要点','出典：test'], 'asset_ids':['image1']},
+            {'slide_id':'s05','story_id':'a','layout_id':'TECH_DIAGRAM','title':'技術的な模式図','on_slide':['説明文：構成','ブロック1：入力 — テスト。','ブロック2：処理 — 処理。','ブロック3：結果 — 出力。','出典：test']},
+            {'slide_id':'s06','story_id':'b','layout_id':'COMPARE','title':'編集可能な比較表','table':{'headers':['観点','A','B'],'rows':[['速度','速い','遅い']]},'on_slide':['注記：同条件','出典：test']},
+            {'slide_id':'s07','story_id':'b','layout_id':'TWO_SOURCES','title':'2つの画像比較','on_slide':['左画像','右画像'],'asset_ids':['image1','image2']},
+        ],
+        'assets': [{'id':'image1','file':'image1.png'}, {'id':'image2','file':'image2.jpg'}],
+    }
+
+
+class GeminiPptxGeneratorTest(unittest.TestCase):
+    def test_template_integrity_and_hash_mismatch(self):
+        self.assertEqual(generator.verify_template(TEMPLATE),
+                         'f343a4fee2d802ce7ce36290d951a4a09526a451ccb16e9d41d0cb62f5ddee73')
+        with tempfile.TemporaryDirectory() as td:
+            other = Path(td) / 'other.pptx'
+            other.write_bytes(TEMPLATE.read_bytes() + b'X')
+            with self.assertRaisesRegex(ValueError, 'SHA-256 mismatch'):
+                generator.verify_template(other)
+
+    def test_generated_pptx_7_layouts_with_embedded_source_pixels(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            im1 = Image.new('RGB', (400, 220), 'white')
+            im2 = Image.new('RGB', (220, 400), 'white')
+            im1.save(root/'image1.png')
+            im2.save(root/'image2.jpg')
+            p = root/'plot.json'
+            p.write_text(json.dumps(sample_plot(), ensure_ascii=False), encoding='utf-8')
+            out = root/'deck.pptx'
+            result = generator.build_deck(TEMPLATE, p, out, assets_dir=root)
+            self.assertEqual(result['slides_count'], 7)
+            with zipfile.ZipFile(out) as z:
+                self.assertIsNone(z.testzip())
+                media = [f for f in z.namelist() if f.startswith('ppt/media/')]
+                # cover avatar + genuine TEST image bytes (2 copies of image1, 1 image2)
+                self.assertGreaterEqual(len(media), 3)
+                self.assertTrue(any(z.read(name) == (root/'image1.png').read_bytes() for name in media))
+                self.assertTrue(any(z.read(name) == (root/'image2.jpg').read_bytes() for name in media))
+                self.assertTrue(any(z.read(name) == (ROOT/'assets/cover/avatar-20260315.jpg').read_bytes() for name in media))
+                slide_xmls = [z.read(name) for name in z.namelist() if name.startswith('ppt/slides/slide') and name.endswith('.xml')]
+                self.assertTrue(any(b'Yu Gothic' in xml for xml in slide_xmls))
+            deck = Presentation(out)
+            self.assertEqual(len(deck.slides), 7)
+            self.assertIn('2026年', '\n'.join(sh.text for sh in deck.slides[0].shapes if sh.has_text_frame))
+            self.assertEqual(sum(sh.shape_type == 13 for sh in deck.slides[3].shapes), 1)
+            self.assertEqual(sum(sh.shape_type == 13 for sh in deck.slides[6].shapes), 2)
+            self.assertEqual(sum(sh.has_table for sh in deck.slides[5].shapes), 1)
+            self.assertIn('cover note', deck.slides[0].notes_slide.notes_text_frame.text)
+            # Layout IDs are fixed, images are in the deck, and seed slides are gone.
+            self.assertNotIn('ニュースA：', '\n'.join(sh.text for sh in deck.slides[1].shapes if sh.has_text_frame))
+
+    def test_draft_status_blocks_presentation(self):
+        with tempfile.TemporaryDirectory() as td:
+            p=Path(td)/'plot.json'
+            plot=sample_plot(); plot['status']='draft'
+            p.write_text(json.dumps(plot, ensure_ascii=False),encoding='utf-8')
+            with self.assertRaisesRegex(ValueError, 'approved'):
+                generator.build_deck(TEMPLATE,p,Path(td)/'deck.pptx')
+
+    def test_docx_media_and_relationships_extracted(self):
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td);doc=root/'report.docx';data=b'\x89PNG\r\n\x1a\nEXAMPLE'
+            with zipfile.ZipFile(doc,'w') as z:
+                z.writestr('word/media/pic1.png', data)
+                z.writestr('word/_rels/document.xml.rels',
+                   '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink" Target="https://example.com" TargetMode="External"/></Relationships>')
+            items=generator.extract_docx_assets([doc], root/'assets')
+            self.assertEqual(len(items),1)
+            self.assertIn('https://example.com',items[0]['hyperlinks_in_doc'])
+            self.assertEqual(Path(items[0]['local_file']).read_bytes(),data)
+
+
+if __name__ == '__main__':
+    unittest.main()

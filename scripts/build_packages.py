@@ -54,6 +54,7 @@ def validate(tag: str = '') -> tuple[str, list[Path]]:
     author = skill_files(SKILL_ROOT, 'weekly-it-news')
     polish = skill_files(POLISH_ROOT, 'itnews-powerpoint-polish')
     gemini = skill_files(GEMINI_ROOT, 'weekly-it-news-gemini')
+    assert (GEMINI_ROOT / 'scripts' / 'build_pptx.py').is_file()
     for req in ('plot-and-layout.md', 'assets-and-handoff.md'):
         assert (GEMINI_ROOT / 'references' / req).is_file()
     author_main = author[0].read_text(encoding='utf-8')
