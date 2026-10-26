@@ -21,7 +21,7 @@
 
 `plot.json` の各ニュースの先頭に `layout_id: "NEWS_TITLE"` を明示するのを推奨。旧7レイアウト形式の承認プロットは、同じ `story_id` の先頭へ決定論的に章扉を追加して後方互換を確保する（既存の明示章扉があれば二重挿入しない）。任意のトップレベル `story_titles: {"meta": "Meta Muse、日本上陸！"}` で章題だけを本文の長い見出しと別に指定できる。
 
-8枚テンプレートの物理番号は `COVER=1, AGENDA=2, NEWS_TITLE=3, NEWS=4, SOURCE_IMAGE=5, TECH_DIAGRAM=6, COMPARE=7, TWO_SOURCES=8`。旧版の `NEWS=3` というインデックスを再利用しない。
+8枚テンプレートの物理番号は `COVER=1, AGENDA=2, NEWS_TITLE=3, NEWS=4, SOURCE_IMAGE=5, TECH_DIAGRAM=6, COMPARE=7, TWO_SOURCES=8`。生成器はこの8レイアウトの固定順序に従う。
 
 ## 2. 見出し・用語の番組トーン＆マナー
 
