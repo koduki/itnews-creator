@@ -18,7 +18,7 @@ description: Gemini Tasksで技術ニュースを調査・対話し、承認済�
 3. **ページごとのプロット作成とスクリーンショット事前キュー登録**
    - ページごとのプロットをMarkdown（`plot.md`）とJSON（`plot.json`）で提示。`slide_id`、`story_id`、`layout_id`、ページの目的、掲載文、発表者ノート、必要な `asset_ids` と出典URLを設定。話題を一巡してから再訪しない（最後の横断比較・結びを除く）。
    - **1ページ1スクショ原則**：報道や反響のスクリーンショットを見せる際は、1スライドに複数詰め込まず「**1ページ1スクショ**（`SOURCE_IMAGE`）」を基本とし、必要なら連続スライドに分割する。
-   - **GASスクリーンショット中継キューへの早期登録**：Gemini TasksのVMサンドボックスからは外部Webページの直接画像保存ができないため、プロット作成・改訂段階で必要となるWeb記事スクリーンショットのURLをGoogle Sheet（`itnews-screenshot-queue`）へ先行登録し、Google Driveフォルダ（`itnews-assets`）に既存キャプチャがないか確認する。
+   - **GASスクリーンショット中継キューへの早期登録**：Gemini TasksのVMサンドボックスからは外部Webページの直接画像保存ができないため、プロット作成・改訂段階で必要となるWeb記事スクリーンショットのURLをGoogle Sheet（`itnews-screenshot-queue`）へ先行登録し、Google Driveフォルダ（`itnews-assets`）に既存キャプチャがないか確認する。GAS v0.10.1では `pending`→`processing`→`captured` と遷移し、API失敗時はバックオフ後に再試行、回復不能なら `error`。`processing` が取り残された場合も自動復旧する。**`captured`以外の行の旧 `drive_file_id` は、今回の取得成功とは扱わない。**
 4. **プロット承認（必須ゲート）**
    - **プロット承認までPPTXを作らない。** 承認したらスライド枚数、ページ順、話す内容を固定。重要な新情報を発見したら差分と再承認を求める。
 5. **実画像・記事スクリーンショットの回収と検証**

@@ -18,10 +18,11 @@ Gemini TasksのサンドボックスVMは外部Webページの直接ブラウザ
    - スプレッドシートにバインドされたGAS（`scripts/screenshot_relay.js`）が1分周期トリガー（または手動メニュー「📸 IT News スクショ取得 ＞ ▶ pending行を今すぐ一括撮影」）で `status == 'pending'` の行を検知。
    - **第1経路**: Google PageSpeed Insights API (v5, `strategy=desktop`) の `full-page-screenshot` / `final-screenshot` からBase64 PNGを抽出。
    - **第2経路**: スクリプトプロパティ `SCREENSHOT_API_TEMPLATE`（ScreenshotOne / Urlbox等）が設定されていれば使用。
-   - **第3経路**: 公開スクリーンショット中継（`image.thum.io` 1280x800 PNG）へフォールバック。
-   - Google Driveフォルダ `itnews-assets`（Folder ID: `1gha0VJobU6ffTlMm5_ypVOck70cIH4pD`）に `<asset_id>.png` を保存し、シートの `status` を `captured`、`drive_file_id` を記録する。
+   - **第3経路**: 公開スクリーンショット中継（`image.thum.io` 幅1280・高さ853の設定）へフォールバック。PNG/JPEG実バイト・MIME・画像縦横の検証後、実際の形式に合う拡張子で保存。
+   - Google Driveフォルダ `itnews-assets`（Folder ID: `1gha0VJobU6ffTlMm5_ypVOck70cIH4pD`）に `<asset_id>.png`（JPEG応答は `.jpg`）を保存し、シートの `status` を `captured`、`drive_file_id` を記録する。新ファイル保存・シート更新前に前の画像を削除しない。
+   - 429/503でPageSpeedを10分クールダウンして他APIへ切替。処理エラーは最大3回、1分・5分などのバックオフ後に再試行。8分以上残った `processing` は復旧する。再試行情報は既存 `notes` 列の末尾に記録し9列キューは維持。Sheets API経由の編集イベントはトリガー発火を保証しないため、GASは1分ポーリングを使用する。
 3. **Gemini Tasksによる回収とPPTX埋め込み**:
-   - PPTX生成前に `drive:search_files`（`parentId = '1gha0VJobU6ffTlMm5_ypVOck70cIH4pD'`）を実行し、保存されたPNGがあれば `drive:download_file_content` でローカルVMにダウンロードしてPPTXの `SOURCE_IMAGE` / `TWO_SOURCES` フレームへアスペクト比を維持して実体埋め込みする。
+   - **Sheetsのstatusが`captured`であることを先に確認し、再取得中の古いDrive参照を新しい素材と誤認しない。** PPTX生成前に `drive:search_files`（`parentId = '1gha0VJobU6ffTlMm5_ypVOck70cIH4pD'`）を実行し、保存されたPNGがあれば `drive:download_file_content` でローカルVMにダウンロードしてPPTXの `SOURCE_IMAGE` / `TWO_SOURCES` フレームへアスペクト比を維持して実体埋め込みする。
    - まだGASが未実行で画像が存在しない場合は、勝手にAI生成画像で埋めたりせず、テンプレートのグレープレースホルダー枠に対象記事名・URL・`asset_id` を明記し、`assets-manifest.json` に `status: "unavailable"` として記録する。
 
 ## 3. マニフェスト管理と最終納品

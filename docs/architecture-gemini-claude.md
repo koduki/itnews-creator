@@ -18,7 +18,7 @@
 - Gemini成果物：`base.pptx`、`qa/preflight.json`、レンダリング画像。
 - PowerPoint成果物：レイアウト調整済み`final.pptx`と検品報告。
 
-GeminiのVMではGitHub rawのPPTX直接取得やブラウザ画面のPNG保存を前提にしません。テンプレートはDrive／添付から取得し、画像はGAS中継や添付DOCXから回収します。GASの`captured`と、画像内容が妥当と判定された`approved`は別状態です。
+GeminiのVMではGitHub rawのPPTX直接取得やブラウザ画面のPNG保存を前提にしません。テンプレートはDrive／添付から取得し、画像はGAS中継や添付DOCXから回収します。GASの`captured`と、画像内容が妥当と判定された`approved`は別状態です。撮影中継は既存の9列キューのまま、`notes`の機械可読メタデータで実行開始・再試行・クールダウン等を扱います。実機GASへの更新は手作業が必要です（[運用ガイド](gas-relay.md)）。
 
 ## デザイン
 

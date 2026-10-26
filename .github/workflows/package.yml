@@ -23,6 +23,14 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Set up Node.js for Apps Script relay tests
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify GAS syntax and relay behavior
+        run: |
+          node --check skills/weekly-it-news-gemini/scripts/screenshot_relay.js
+          node --test tests/test_gas_relay.cjs
       - name: Install PPTX generator test dependencies
         run: python -m pip install "python-pptx>=1.0,<2" "Pillow>=10,<13"
       - name: Run active pipeline regression tests
