@@ -1,62 +1,57 @@
-# itnews-creator — Weekly IT News v0.9.1
+# itnews-creator — Weekly IT News v0.9.2
 
-[ライセンス: MIT](LICENSE)
+[MIT License](LICENSE) · [実装アーキテクチャ](docs/architecture-gemini-claude.md)
 
-**Gemini Tasksで対話・調査・プロット作成・実画像収集・PPTX制作、Copilot in PowerPointでClaude 5.5を使って最後の仕上げ**を行う構成です。Microsoft 365 Copilot Chatが一から資料を作る従来の経路はレガシーです。
+**Gemini Tasks + Google Apps Script (GAS) + Google Drive + python-pptxで制作し、Copilot in PowerPoint（利用可能なClaude 5.5）で最終調整する**、Weekly IT News用のワークフローです。
 
-## 新しい制作フロー
+以前の「Gemini TasksがGitHub rawからPPTXバイナリを直接取得」「ブラウザ閲覧結果をPNGとしてVMへ直接保存」という**動作しなかった前提は、標準フローから外しました**。ここではユーザーが実機検証したGoogle Drive中継・添付DOCX解体・GAS撮影を標準とします。
 
-| 段階 | 担当 | 出力 |
+## 制作フロー
+
+| 工程 | 担当 | 成果物 |
 | --- | --- | --- |
-| ニュース選定と対話 | Gemini Tasks | 事実/考察を分けたニュース選定 |
-| **ページ単位の編集プロット** | Gemini Tasks + 発表者 | 承認済みplot.md + plot.json |
-| 補足取材と画像の回収 | Gemini Tasks | 本物のスクリーンショット/写真、出典、撮影日時、assets-manifest.json |
-| 固定テンプレートで生成 | Gemini Tasks | **編集可能なbase.pptx**。ページ順・配置・本物の画像を照合 |
-| スライドの最終調整 | Copilot in PowerPoint、**Claude 5.5** | 原稿と写真を変えずに文字、画像、図、表、ノートを改善したfinal.pptx |
+| 資料準備 | Gemini Tasks | 添付DOCXの `word/media/*` と `word/_rels/document.xml.rels` から画像・出典リンクを抽出 |
+| ニュース調査・編集会議 | Gemini Tasks＋発表者 | 見せたいニュース、解説、見出し、ページ単位 `plot.md` / `plot.json` |
+| Web画面撮影 | Google Sheet `itnews-screenshot-queue` → GAS → Drive `itnews-assets` | 撮影ジョブとPNG、取得状況・出典・日時 |
+| 素材回収・品質確認 | Gemini Tasks | `drive:search_files` → `drive:download_file_content` → ローカルで画像を `view_file` して検品 |
+| **承認済みプロットから制作** | Gemini Tasks の `python-pptx` / Pillow | 固定テンプレートを使った、実素材入りの編集可能な `base.pptx` |
+| レンダリングQA | LibreOffice + PDF/PNG変換 + `pypdfium2` | 全ページの文字化け・画像・はみ出しチェック |
+| 最終仕上げ | Copilot in PowerPoint のClaudeモデル | 内容・ページ順を保持して配置・図形・表・ノートを修正した `final.pptx` |
 
-詳細な役割分担：[新アーキテクチャ](docs/architecture-gemini-claude.md)
+## 最初に準備するもの
 
-## 配布とセットアップ
+1. [固定7レイアウトPPTX](assets/templates/weekly-it-news-design-template.pptx) を**Google Driveに1回配置**し、Gemini Tasksから `drive:search_files` と `drive:download_file_content` でダウンロードします。あるいはチャット添付ファイル `user_uploaded_files/` を読みます。
+2. [template-manifest.json](assets/templates/template-manifest.json) のSHA-256（`f343a4fee2d802ce7ce36290d951a4a09526a451ccb16e9d41d0cb62f5ddee73`）と7スライド・表紙の元アバターを検証します。GitHubは**テンプレートの正本・バージョン管理先**であり、Gemini VMのバイナリ取得口ではありません。
+3. Googleスプレッドシート `itnews-screenshot-queue`（タブ `queue`）を用意し、9列 `asset_id, slide_id, url, status, file_name, drive_file_id, drive_view_url, captured_at, notes` を配置します。
+4. シートにバインドしたGoogle Apps Scriptへ [`screenshot_relay.js`](skills/weekly-it-news-gemini/scripts/screenshot_relay.js) の内容を貼り付けます。GAS側は `.gs` として管理されても、**GeminiスキルZIPに入れるファイルは `.js`** です。権限承認後、GASメニューから定期監視トリガーを設定します。Driveの出力先 `itnews-assets` のフォルダID、必要ならAPIキー等を設定してください。運用環境を変えるときはGASの `CONFIG.FOLDER_ID` を更新します。
+5. ZIPから [Geminiスキル](skills/weekly-it-news-gemini/SKILL.md) を登録し、出力PPTXはPowerPoint側の [仕上げスキル](skills/itnews-powerpoint-polish/SKILL.md) に渡します。
 
-[GitHub Actions — Build skill packages](https://github.com/koduki/itnews-creator/actions/workflows/package.yml) で成功した最新実行のArtifactsをダウンロードし、外側のZIPだけを展開します。
+## 画面撮影と検品
 
-- **Gemini Tasks用**：itnews-creator-gemini-task-skill-v0.9.1.zip。Geminiアプリの「スキル」へアップロードしてGemini Tasksから呼び出します。
-- **PowerPoint用**：itnews-creator-powerpoint-polish-skill-v0.9.1.zip。PowerPointのCopilotで「スキルの管理」から追加します。
-- **旧Copilot Chat用**：itnews-creator-copilot-skill-v0.9.1.zip。互換性用であり、新しい標準ワークフローには使いません。
-- **ChatGPT用**：itnews-creator-chatgpt-plugin-v0.9.1.zip。Microsoft 365やGeminiには登録しません。
+プロット作成中に撮影対象URLを上記シートへ **`status=pending`** で登録。GASがPageSpeed Insights v5 → （任意のカスタムScreenshot API）→ `image.thum.io` にフォールバックし、PNG/JPEG等の画像をGoogle Driveへ保存、`captured` とファイルID・URL・撮影時刻を書き戻します。PageSpeed APIはキーなしではHTTP 429の発生があり得るため、フォールバックを必須とします。
 
-**重要：テンプレートの正本はGitHubです。** Gemini Tasks用スキルは、まず次の公開URLから実際のPPTXファイルを取得・検証するよう指示します。
+GeminiはDriveからファイルをVMの `downloads/` に回収し、**画像ファイルを必ず目視確認**します。Cloudflareの「Performing security verification」やCookie同意モーダルがニュース本文を隠している場合、撮影が `captured` でも**合格にしません**。`assets-manifest.json` に不備を記録し、出典を明示してImpress WatchやITmedia等の適切な報道へ差し替えるか、要再撮影とします。撮影サービスへURLを送信するため、公開記事以外（非公開URL・認証トークン付きURL・社内サイト）は投入しません。
 
-- [7枚の編集可能なデザインテンプレート](assets/templates/weekly-it-news-design-template.pptx)
-- [テンプレートの直接ダウンロード（raw）](https://raw.githubusercontent.com/koduki/itnews-creator/main/assets/templates/weekly-it-news-design-template.pptx)
-- [ハッシュと配布情報](assets/templates/template-manifest.json)
-- [3月版の元表紙](assets/cover/weekly-it-news-cover-20260315.pptx) / [元アバター](assets/cover/avatar-20260315.jpg)
+実機で「5件の撮影・Drive回収・PPTXへの画像埋め込み」が成功した構成をベースにしていますが、他サイト・別テナントでも必ず成功するという意味ではありません。著作権と再利用条件を確認します。
 
-Gemini Tasks本体のブラウザ・ファイル操作で取得を試します。**Geminiスキル内のネットワークスクリプトはサポートされず、URLを読むだけではバイナリを使用できません。** 取得したPPTXを開き直して7枚と先頭の表紙を検証することが必須です。できない場合は、Google Driveのファイルを「Driveから追加」するか、GitHubから取得したPPTXをタスクへ添付してください。GeminiのGitHubリポジトリ取り込みは自動更新されず、ファイルを実際に開いたことの代わりにはなりません。PowerPoint仕上げスキルZIPにこのバイナリを入れる必要はありません。
+## 編集方針・デザイン
 
-## Gemini Tasksへの依頼
+- 3月15日版の表紙（赤黒 `Weekly IT News！`、青い日付枠、元アバター）を維持し、2枚目は現行の簡潔な「今週のトピック」。
+- 本文は `NEWS` / `SOURCE_IMAGE` / `TECH_DIAGRAM` / `COMPARE` / `TWO_SOURCES` の固定レイアウト。**原則、1ページ1スクリーンショット**。
+- 「ニュース解説→実画面→技術的な面白さ→次のニュース」を基本に、ひとつのトピックを連続した塊として配置。ページ割りは人間が承認したプロットを変更しない。
+- 見出しは番組調の具体的なフックにし、難解な直訳語（「アンビエントAI」等）は分かりやすい「常駐型AIエージェント」などへ言い換える。事実・攻撃者主張・考察は混同しない。
+- **3つの編集展開パターン**（新プロダクト・重大脆弱性・クラウド侵害と総括）、`python-pptx` の実測座標・Yu Gothic/Meiryo UIを使う文字化け対策は [レイアウト契約](skills/weekly-it-news-gemini/references/plot-and-layout.md) を参照。
 
-Geminiのスキル weekly-it-news-gemini を使い、ニュースを調査して技術的な面白さを対話してください。まず各ページの目的・タイトル・出典URL・見せる画像・レイアウトIDを記した編集プロットを提示し、私の承認を得てください。承認後だけ指定URLの実画像を回収し、撮影画像のファイル実体を確認して、まずスキル記載のGitHubのraw URLからテンプレート実体を取得・検証し、取得できなければDriveまたは手動添付を依頼してください。取得できたテンプレートに沿う編集可能なPPTXを作ってください。1枚目は3月版の元表紙、2枚目は今のシンプルな目次です。画像取得不能は必ず報告してください。
+## Gemini Tasksへの依頼例
 
-## PowerPointでのClaude 5.5仕上げ
+> `weekly-it-news-gemini` スキルを使って、添付調査レポートの画像と出典を抽出し、ニュースを対話的に深掘りしてください。各ページの役割・見出し・画像URL・レイアウトIDをプロットにして、私の承認を得てから生成してください。画像は `itnews-screenshot-queue` → GAS → `itnews-assets` で取得して `view_file` で検品し、Driveの固定テンプレートを検証して `python-pptx` で編集可能なPPTXを出力してください。LibreOfficeで全ページを視覚確認し、取得できなかった画像は明示してください。
 
-Gemini製のbase.pptxをPowerPointで開き、**Copilot編集モードのモデルスイッチャーで実際に利用可能なClaudeモデル**を選択します。Claude Sonnet/Opus 5.5など表示されたモデルを選びます。Anthropicの利用可否、契約、地域、テナント設定により異なり、セッションごとに設定が戻る場合があります。
+## PowerPointでの最終仕上げ
 
-スキル itnews-powerpoint-polish を使い、**既存PPTXのページ数・順番・素材・ニュースの切り口は変えず、レイアウト/画像のクロップ/編集可能な図表/ノートだけ磨く**よう依頼します。画像が足りない場合はGeminiへの差し戻しを明示します。
+`base.pptx` を開き、利用可能なClaudeモデルを選択して [itnews-powerpoint-polish](skills/itnews-powerpoint-polish/SKILL.md) を適用します。**新しい情報収集や構成変更は行わず、レイアウト・画像のクロップ・編集可能な図表・発表者ノートだけ**を調整します。モデル名はテナント/環境の選択肢に従い記録します。
 
-## 完了基準
+## 配布・開発
 
-- 人が承認したplot.jsonとPPTXがページ単位で一致する。
-- 3月版の1ページ目（赤黒タイトル、青い日付、実アバター）を保持し、2ページ目の目次書式を変えない。
-- 実際の報道写真やWeb画面を**保存された画像ファイルからPPTXへ埋め込む**。ブラウザで見るだけ、架空画像、URLだけでは不合格。
-- 自作図・表は可能な限りネイティブで編集可能。
-- 画像・出典の使用条件を守る。事実と分析を区別する。
-- Microsoft/Gemini間の実地E2E動作は未検証であり、CI成功をもって製品機能が動いたと断定しない。
+[GitHub Actions](https://github.com/koduki/itnews-creator/actions/workflows/package.yml) の成功RunのArtifactsから外側のZIPを取得すると、`itnews-creator-gemini-task-skill-v0.9.2.zip`、`itnews-creator-powerpoint-polish-skill-v0.9.2.zip`、旧Copilot Chat互換用ZIPとChatGPTプラグイン用ZIPを入手できます。**GASの `.js` はGemini用スキルZIP内**に含まれますが、自動的にGoogle Apps Scriptプロジェクトへデプロイされるわけではありません。Python標準ライブラリの `scripts/build_packages.py` で再現可能にビルドします。
 
-旧版の詳細：[2026-03版表紙の説明](skills/weekly-it-news/references/march-cover.md) / [元の編集哲学](docs/design-philosophy.md)。
-
-## ビルド
-
-Python標準ライブラリの scripts/build_packages.py でバージョン付きZIPを4種類生成し、GitHub Actionsで構造テストと再現性を確認します。ZIPの公開と各社のスキル登録は別作業です。
-
-独自ソースはMIT。元のアバター、ユーザー提供PPTX、外部記事の写真や技術図は元の権利者に帰属し、自動的にMITの対象にはなりません。
+注：ユーザー提供の表紙・アバター、他者のニュース写真や構成図の利用条件はそれぞれの権利者に従い、独自コードのMITライセンスが自動的に適用されるものではありません。

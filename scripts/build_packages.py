@@ -35,6 +35,7 @@ def skill_files(folder: Path, expected_name: str) -> list[Path]:
         *folder.glob('templates/*.md'),
         *folder.glob('templates/*.json'),
         *folder.glob('scripts/*.py'),
+        *folder.glob('scripts/*.js'),
     ])
     assert resources, f'No supporting resources: {folder}'
     assert all(p.is_file() and not p.is_symlink() for p in resources)
