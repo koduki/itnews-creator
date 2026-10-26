@@ -33,7 +33,7 @@ def skill_files(folder: Path, expected: str) -> list[Path]:
         if not directory.exists():
             continue
         for path in sorted(directory.rglob("*")):
-            if path.is_dir():
+            if path.is_dir() or "__pycache__" in path.parts or path.suffix.lower() == ".pyc":
                 continue
             if path.is_symlink() or path.suffix.lower() not in ALLOWED:
                 raise ValueError(f"Disallowed skill resource: {path}")
