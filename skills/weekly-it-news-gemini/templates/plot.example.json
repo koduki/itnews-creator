@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "edition_date": "2026-10-25",
+  "edition_date": "2026-10-26",
   "status": "approved",
   "slides": [
     {
@@ -10,9 +10,11 @@
       "title": "Weekly IT News！",
       "purpose": "表紙",
       "on_slide": [
-        "今週の見どころ"
+        "・Meta Museが日本で解禁！ 常駐型でAIエージェントの戦いは別のステージへ",
+        "・インターネットが壊れた日。首相も宣言したPHP2Shellとは？",
+        "・勝手に証券を売買まで？ GMO/お名前.comデスクトップクラウド侵害"
       ],
-      "speaker_notes": "",
+      "speaker_notes": "番組オープニング用ノート",
       "asset_ids": []
     },
     {
@@ -22,47 +24,27 @@
       "title": "今週のトピック",
       "purpose": "目次",
       "on_slide": [
-        "ニュースA",
-        "ニュースB"
+        "・Meta Museが日本で解禁！ 常駐型でAIエージェントの戦いは別のステージへ",
+        "・インターネットが壊れた日。首相も宣言したPHP2Shellとは？",
+        "・勝手に証券を売買まで？ GMO/お名前.comデスクトップクラウド侵害"
       ],
-      "speaker_notes": "",
+      "speaker_notes": "アジェンダ紹介用ノート",
       "asset_ids": []
-    },
-    {
-      "slide_id": "s03",
-      "story_id": "news-a",
-      "layout_id": "NEWS",
-      "title": "ニュースA",
-      "purpose": "技術的な面白さ",
-      "on_slide": [
-        "根拠を確認した要点"
-      ],
-      "speaker_notes": "説明用",
-      "asset_ids": []
-    },
-    {
-      "slide_id": "s04",
-      "story_id": "news-a",
-      "layout_id": "SOURCE_IMAGE",
-      "title": "公式資料の実画面",
-      "purpose": "実物を見せる",
-      "on_slide": [
-        "何を示すか"
-      ],
-      "speaker_notes": "",
-      "asset_ids": [
-        "official-a"
-      ]
     }
   ],
   "assets": [
     {
-      "id": "official-a",
-      "source_url": null,
-      "file": null,
-      "status": "pending",
-      "usage_status": "unverified",
+      "id": "muse-japan-news",
+      "slide_id": "s04",
+      "source_url": "https://www.watch.impress.co.jp/docs/series/nishida/2150995.html",
+      "file": "downloads/muse-japan-news.png",
+      "status": "embedded",
+      "usage_status": "editorial_citation",
       "kind": "webpage_screenshot"
     }
-  ]
+  ],
+  "story_titles": {
+    "meta": "Meta Muse、日本上陸！",
+    "php": "インターネットが壊れた日"
+  }
 }

@@ -26,10 +26,10 @@ from pptx.oxml import parse_xml
 from pptx.oxml.ns import nsdecls, qn
 from pptx.util import Inches, Pt
 
-EXPECTED_TEMPLATE_SHA256 = 'f343a4fee2d802ce7ce36290d951a4a09526a451ccb16e9d41d0cb62f5ddee73'
+EXPECTED_TEMPLATE_SHA256 = 'f871047b53f839a47bb77732770f7648a4e904bc64d696e04e85d2e639778f05'
 LAYOUT_TO_TEMPLATE_INDEX = {
-    'COVER': 0, 'AGENDA': 1, 'NEWS': 2, 'SOURCE_IMAGE': 3,
-    'TECH_DIAGRAM': 4, 'COMPARE': 5, 'TWO_SOURCES': 6,
+    'COVER': 0, 'AGENDA': 1, 'NEWS_TITLE': 2, 'NEWS': 3,
+    'SOURCE_IMAGE': 4, 'TECH_DIAGRAM': 5, 'COMPARE': 6, 'TWO_SOURCES': 7,
 }
 COLOR_RED = RGBColor(0xC0, 0x00, 0x00)
 COLOR_DARK = RGBColor(0x1F, 0x1F, 0x1F)
@@ -38,7 +38,7 @@ COLOR_WHITE = RGBColor(0xFF, 0xFF, 0xFF)
 
 
 def verify_template(template_path: Path, skip_hash_check: bool = False) -> str:
-    """Check the pinned canonical 7-slide presentation and source avatar."""
+    """Check the pinned canonical 8-slide presentation and source avatar."""
     if not template_path.is_file():
         raise FileNotFoundError(f'Template PPTX not found: {template_path}')
     digest = hashlib.sha256(template_path.read_bytes()).hexdigest()
@@ -50,8 +50,11 @@ def verify_template(template_path: Path, skip_hash_check: bool = False) -> str:
         if 'ppt/media/image1.jpeg' not in zf.namelist():
             raise ValueError('Template is missing original cover avatar ppt/media/image1.jpeg')
     prs = Presentation(str(template_path))
-    if len(prs.slides) != 7:
-        raise ValueError(f'Expected 7 template slides, got {len(prs.slides)}')
+    if len(prs.slides) != 8:
+        raise ValueError(f'Expected 8 template slides, got {len(prs.slides)}')
+    for name in ('Big Number', 'News Label', 'News Title'):
+        if not any(sh.name == name for sh in prs.slides[2].shapes):
+            raise ValueError(f'NEWS_TITLE template slide missing {name}')
     return digest
 
 
@@ -135,7 +138,7 @@ def clone_template_slide(prs: Presentation, template_idx: int):
     return new
 
 
-def delete_first_n_slides(prs: Presentation, n: int = 7) -> None:
+def delete_first_n_slides(prs: Presentation, n: int = 8) -> None:
     ids = prs.slides._sldIdLst
     for el in list(ids)[:n]:
         prs.part.drop_rel(el.rId)
@@ -187,6 +190,62 @@ def set_header_and_footer(slide, data: dict, edition_date: str) -> None:
         footer = (f"Weekly IT News！ {edition_date}  •  {data.get('slide_id','').upper()} "
                   f"({data.get('layout_id','')})  •  Story: {data.get('story_id','')}")
         set_single_text(sh, footer, 10, False, COLOR_MUTED)
+
+
+def populate_news_title(slide, data: dict, number: int) -> None:
+    """Fill the new native story divider without overwriting its blue identity."""
+    label = find_shape(slide, 'News Label')
+    big = find_shape(slide, 'Big Number')
+    title = find_shape(slide, 'News Title')
+    if not all((label, big, title)):
+        raise ValueError('NEWS_TITLE native shapes missing')
+    nn = f'{number:02d}'
+    set_single_text(label, f'NEWS {nn}', 18, True, RGBColor(0x00, 0x50, 0xE6))
+    label.text_frame.paragraphs[0].runs[0].font.name = 'Arial'
+    set_single_text(big, nn, 200, True, RGBColor(0xEA, 0xF2, 0xFF))
+    big.text_frame.paragraphs[0].runs[0].font.name = 'Arial'
+    headline = str(data.get('title') or '（タイトル未設定）')
+    # Wide headline frame: use two lines for genuinely long Japanese titles.
+    # This is a lower-bounded heuristic, not a guarantee of no overflow.
+    size = 48 if len(headline) <= 18 else 41 if len(headline) <= 26 else 34 if len(headline) <= 38 else 28
+    set_single_text(title, headline, size, True, RGBColor(0x0A, 0x1A, 0x3A))
+    title.text_frame.word_wrap = True
+
+
+def expanded_story_slides(plot: dict) -> list[dict]:
+    """Generate exactly one story divider before each news block.
+
+    Explicit NEWS_TITLE slides take precedence; older approved plots without
+    dividers are upgraded deterministically. The plot remains immutable.
+    """
+    source = plot.get('slides', [])
+    story_titles = plot.get('story_titles') or {}
+    if not isinstance(story_titles, dict):
+        raise ValueError('story_titles must be a mapping of story_id to title')
+    output = []
+    last_story = None
+    news_number = 0
+    for spec in source:
+        layout = spec.get('layout_id', 'NEWS')
+        story = str(spec.get('story_id') or '').strip()
+        regular_story = story not in ('', 'front') and layout not in ('COVER', 'AGENDA')
+        if regular_story and story != last_story:
+            news_number += 1
+            if layout != 'NEWS_TITLE':
+                heading = story_titles.get(story) or spec.get('story_title') or spec.get('title') or story
+                output.append({'slide_id':f'{spec.get("slide_id", story)}-title',
+                               'story_id':story, 'layout_id':'NEWS_TITLE',
+                               'title':heading, 'on_slide':[],
+                               'speaker_notes':spec.get('story_intro_notes', ''),
+                               'asset_ids':[], '_generated_title':True,
+                               '_story_number':news_number})
+        new_spec = dict(spec)
+        if layout == 'NEWS_TITLE':
+            new_spec['_story_number'] = news_number
+        output.append(new_spec)
+        if regular_story:
+            last_story = story
+    return output
 
 
 def embed_picture_in_box(slide, img_path: Path, box_left: float, box_top: float,
@@ -281,6 +340,11 @@ def preflight_plot(plot: dict, assets_dir: Path | None = None,
             if story in closed_stories and story != 'front':
                 errors.append(f'{sid}: story_id {story} reopens after another topic')
             active_story = story
+        if layout == 'NEWS_TITLE':
+            if story in ('', 'front'):
+                errors.append(f'{sid}: NEWS_TITLE requires a real story_id')
+            elif index > 1 and specs[index-2].get('story_id') == story:
+                errors.append(f'{sid}: NEWS_TITLE must be the first slide of its story')
         if index == 1 and layout != 'COVER':
             warnings.append('First slide is not COVER')
         if index == 2 and layout != 'AGENDA':
@@ -328,7 +392,8 @@ def preflight_plot(plot: dict, assets_dir: Path | None = None,
             if asset.get('sha256') and asset['sha256'].lower() != sha:
                 errors.append(f'{sid}: SHA-256 mismatch for asset {aid}')
             raw_flags = asset.get('quality_flags') or []
-            # Treat a single string as a flag rather than a set of characters.
+            # Accept both a single string and a list; never silently drop a
+            # quality flag because a serializer chose a different JSON shape.
             if isinstance(raw_flags, str):
                 raw_flags = [raw_flags]
             if not isinstance(raw_flags, list) or any(not isinstance(x, str) for x in raw_flags):
@@ -396,20 +461,12 @@ def strip_prefix(text: str, prefixes: tuple[str, ...]) -> str:
 
 def populate_cover(slide, data: dict, edition_date: str) -> None:
     y, m, d = edition_date.split('-')
-    # The source template's six-run title auto-wraps over the blue year ribbon.
-    # Keep the original red/black two-line visual identity, but assign separate
-    # editable title lines so News! cannot obscure the date.
-    title = find_shape(slide, 'TextBox 9')
-    if title is not None:
-        title.text_frame.clear()
-        title.text_frame.word_wrap = False
-        title.left, title.top, title.width, title.height = map(Inches, [0.07, 0.10, 10.9, 1.43])
-        p = title.text_frame.paragraphs[0]
-        a = p.add_run(); a.text = 'Weekly'; a.font.size = Pt(92); a.font.bold = True; a.font.color.rgb = RGBColor(0xFF, 0, 0); a.font.name = 'Arial'
-        b = p.add_run(); b.text = ' IT'; b.font.size = Pt(92); b.font.bold = True; b.font.color.rgb = COLOR_DARK; b.font.name = 'Arial'
-        new_title = slide.shapes.add_textbox(Inches(0.07), Inches(1.43), Inches(4.85), Inches(1.28))
-        set_single_text(new_title, 'News！', 78, True, COLOR_DARK)
-        new_title.text_frame.word_wrap = False
+    # The NEW 8-slide template intentionally uses a single-line native masthead:
+    # red "Weekly" + black "IT News！". Do not reconstruct it as two lines;
+    # keep the source's run styling, shapes and avatar. Only change dates/teaser.
+    masthead = find_shape(slide, 'TextBox 9')
+    if masthead is None or 'Weekly' not in masthead.text:
+        raise ValueError('New template cover masthead is missing')
     year_frame = find_shape(slide, 'Rectangle 6')
     if year_frame is not None:
         year_frame.top = Inches(3.13)
@@ -729,9 +786,13 @@ def build_deck(template_path: Path, plot_path: Path, out_path: Path,
     if report['errors']:
         raise ValueError('PPTX preflight failed: ' + '; '.join(report['errors']))
     edition_date = plot.get('edition_date', '2026-10-26')
-    specs = plot.get('slides', [])
+    specs = expanded_story_slides(plot)
     if not specs:
         raise ValueError('plot.slides must contain at least one slide')
+    report['output_slides_count'] = len(specs)
+    report['generated_news_titles'] = sum(1 for x in specs if x.get('_generated_title'))
+    if qa_report_path:
+        write_qa_report(report, qa_report_path)
     amap = {(a.get('id') or a.get('asset_id')): a for a in plot.get('assets', []) if a.get('id') or a.get('asset_id')}
     prs = Presentation(str(template_path))
     funcs = {'COVER': populate_cover, 'AGENDA': populate_agenda, 'NEWS': populate_news,
@@ -743,18 +804,23 @@ def build_deck(template_path: Path, plot_path: Path, out_path: Path,
         slide = clone_template_slide(prs, LAYOUT_TO_TEMPLATE_INDEX[lay])
         if lay in funcs:
             funcs[lay](slide, spec, edition_date)
+        elif lay == 'NEWS_TITLE':
+            populate_news_title(slide, spec, int(spec.get('_story_number', 1)))
         elif lay == 'SOURCE_IMAGE':
             populate_source_image(slide, spec, edition_date, amap, assets_dir)
         elif lay == 'TWO_SOURCES':
             populate_two_sources(slide, spec, edition_date, amap, assets_dir)
         set_speaker_notes(slide, spec.get('speaker_notes', ''))
-        if lay != 'COVER':
-            enforce_slide_cjk_fonts(slide)  # Leave branded red/black Arial masthead intact.
+        if lay not in ('COVER', 'NEWS_TITLE'):
+            enforce_slide_cjk_fonts(slide)  # Keep cover branding and blue news-divider typography.
     delete_first_n_slides(prs)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     prs.save(str(out_path))
     return {'output_pptx': str(out_path), 'slides_count': len(prs.slides),
-            'template_sha256': template_sha, 'preflight': report}
+            'template_sha256': template_sha, 'preflight': report,
+            'news_titles_count': sum(1 for x in specs if x['layout_id'] == 'NEWS_TITLE'),
+            'slide_mapping': [{'slide_id': x.get('slide_id'), 'story_id': x.get('story_id'),
+                               'layout_id': x.get('layout_id')} for x in specs]}
 
 
 def render_qa_previews(pptx_path: Path, qa_dir: Path, scale: float = 2.0) -> list[Path]:

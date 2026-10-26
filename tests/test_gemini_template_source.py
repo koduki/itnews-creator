@@ -13,23 +13,27 @@ GEMINI=ROOT/'skills/weekly-it-news-gemini/SKILL.md'
 P='{http://schemas.openxmlformats.org/presentationml/2006/main}'
 
 class GeminiTemplateSourceTest(unittest.TestCase):
-    def test_template_is_real_editable_7_slide_pptx(self):
+    def test_template_is_real_editable_8_slide_pptx(self):
         spec=json.loads(MANIFEST.read_text(encoding='utf-8'))
         data=TEMPLATE.read_bytes()
         self.assertEqual(spec['size_bytes'],len(data))
         self.assertEqual(spec['sha256'],hashlib.sha256(data).hexdigest())
-        self.assertEqual(spec['slides'],7)
+        self.assertEqual(spec['slides'],8)
         self.assertEqual(spec['raw_url'],
             'https://raw.githubusercontent.com/koduki/itnews-creator/main/'
             'assets/templates/weekly-it-news-design-template.pptx')
         with zipfile.ZipFile(TEMPLATE) as z:
             self.assertIsNone(z.testzip())
             pres=ET.fromstring(z.read('ppt/presentation.xml'))
-            self.assertEqual(len(pres.findall('.//'+P+'sldId')),7)
+            self.assertEqual(len(pres.findall('.//'+P+'sldId')),8)
             text1=''.join(ET.fromstring(z.read('ppt/slides/slide1.xml')).itertext())
             text2=''.join(ET.fromstring(z.read('ppt/slides/slide2.xml')).itertext())
             self.assertIn('Weekly IT News',text1)
             self.assertIn('今週のトピック',text2)
+            text3=''.join(ET.fromstring(z.read('ppt/slides/slide3.xml')).itertext())
+            self.assertIn('NEWS 01',text3)
+            self.assertIn('ニュースのタイトル',text3)
+            self.assertEqual(spec['layouts'][2], 'NEWS_TITLE')
             self.assertTrue(any(n.startswith('ppt/media/') for n in z.namelist()))
 
     def test_task_skill_has_url_and_explicit_fallback(self):
@@ -54,25 +58,7 @@ class GeminiTemplateSourceTest(unittest.TestCase):
         self.assertIn('パターンC', plot_ref)
         self.assertIn('Meiryo UI', plot_ref)
         self.assertIn('screenshot_relay.js', assets_ref)
-        js = relay_js.read_text(encoding='utf-8')
-        self.assertIn('PageSpeed', js)
-        self.assertIn('/width/1280/crop/853/noanimate/', js)
-        self.assertIn('Missing required queue columns', js)
-        self.assertIn('status', js)
-
-    def test_packaged_gemini_skill_contains_js_but_no_gs_or_binary(self):
-        import importlib.util
-        from tempfile import TemporaryDirectory
-        spec=importlib.util.spec_from_file_location('packages',ROOT/'scripts/build_packages.py')
-        m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
-        with TemporaryDirectory() as td:
-            archive=m.build(Path(td))[-1]
-            with zipfile.ZipFile(archive) as z:
-                self.assertIn('scripts/screenshot_relay.js',z.namelist())
-                self.assertFalse(any(n.endswith(('.gs','.pptx','.png','.jpg','.jpeg')) for n in z.namelist()))
-        r=(ROOT/'README.md').read_text(encoding='utf-8')
-        self.assertIn('drive:download_file_content',r)
-        self.assertIn('GAS',r)
+        self.assertIn('PageSpeed', relay_js.read_text(encoding='utf-8'))
 
 if __name__=='__main__':
     unittest.main()

@@ -43,14 +43,14 @@ def sample_plot():
 class GeminiPptxGeneratorTest(unittest.TestCase):
     def test_template_integrity_and_hash_mismatch(self):
         self.assertEqual(generator.verify_template(TEMPLATE),
-                         'f343a4fee2d802ce7ce36290d951a4a09526a451ccb16e9d41d0cb62f5ddee73')
+                         'f871047b53f839a47bb77732770f7648a4e904bc64d696e04e85d2e639778f05')
         with tempfile.TemporaryDirectory() as td:
             other = Path(td) / 'other.pptx'
             other.write_bytes(TEMPLATE.read_bytes() + b'X')
             with self.assertRaisesRegex(ValueError, 'SHA-256 mismatch'):
                 generator.verify_template(other)
 
-    def test_generated_pptx_7_layouts_with_embedded_source_pixels(self):
+    def test_generated_pptx_8_layouts_and_auto_story_titles(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
             im1 = Image.new('RGB', (400, 220), 'white')
@@ -61,7 +61,9 @@ class GeminiPptxGeneratorTest(unittest.TestCase):
             p.write_text(json.dumps(sample_plot(), ensure_ascii=False), encoding='utf-8')
             out = root/'deck.pptx'
             result = generator.build_deck(TEMPLATE, p, out, assets_dir=root)
-            self.assertEqual(result['slides_count'], 7)
+            self.assertEqual(result['slides_count'], 9)
+            self.assertEqual(result['news_titles_count'], 2)
+            self.assertEqual(result['preflight']['generated_news_titles'], 2)
             with zipfile.ZipFile(out) as z:
                 self.assertIsNone(z.testzip())
                 media = [f for f in z.namelist() if f.startswith('ppt/media/')]
@@ -73,14 +75,37 @@ class GeminiPptxGeneratorTest(unittest.TestCase):
                 slide_xmls = [z.read(name) for name in z.namelist() if name.startswith('ppt/slides/slide') and name.endswith('.xml')]
                 self.assertTrue(any(b'Yu Gothic' in xml for xml in slide_xmls))
             deck = Presentation(out)
-            self.assertEqual(len(deck.slides), 7)
+            self.assertEqual(len(deck.slides), 9)
             self.assertIn('2026年', '\n'.join(sh.text for sh in deck.slides[0].shapes if sh.has_text_frame))
-            self.assertEqual(sum(sh.shape_type == 13 for sh in deck.slides[3].shapes), 1)
-            self.assertEqual(sum(sh.shape_type == 13 for sh in deck.slides[6].shapes), 2)
-            self.assertEqual(sum(sh.has_table for sh in deck.slides[5].shapes), 1)
+            self.assertEqual(sum(sh.shape_type == 13 for sh in deck.slides[4].shapes), 1)
+            self.assertEqual(sum(sh.shape_type == 13 for sh in deck.slides[8].shapes), 2)
+            self.assertEqual(sum(sh.has_table for sh in deck.slides[7].shapes), 1)
+            self.assertIn('NEWS 01', '\n'.join(sh.text for sh in deck.slides[2].shapes if sh.has_text_frame))
+            self.assertIn('ニュース検証', '\n'.join(sh.text for sh in deck.slides[2].shapes if sh.has_text_frame))
+            self.assertIn('NEWS 02', '\n'.join(sh.text for sh in deck.slides[6].shapes if sh.has_text_frame))
             self.assertIn('cover note', deck.slides[0].notes_slide.notes_text_frame.text)
             # Layout IDs are fixed, images are in the deck, and seed slides are gone.
             self.assertNotIn('ニュースA：', '\n'.join(sh.text for sh in deck.slides[1].shapes if sh.has_text_frame))
+
+    def test_explicit_news_title_is_not_duplicated(self):
+        sample = sample_plot()
+        sample['slides'].insert(2, {'slide_id':'s02-title', 'story_id':'a',
+                                    'layout_id':'NEWS_TITLE', 'title':'人が決めたニュース名'})
+        expanded = generator.expanded_story_slides(sample)
+        self.assertEqual(sum(x['layout_id']=='NEWS_TITLE' for x in expanded), 2)
+        self.assertEqual(expanded[2]['title'], '人が決めたニュース名')
+        self.assertEqual(expanded[2]['_story_number'], 1)
+        self.assertFalse(expanded[2].get('_generated_title', False))
+        self.assertEqual(expanded[6]['_story_number'], 2)
+
+    def test_story_title_mapping_does_not_replace_slide_headline(self):
+        sample = sample_plot()
+        sample['story_titles']={'a':'プロットで承認したニュースAの章題',
+                                'b':'ニュースBの章題'}
+        expanded = generator.expanded_story_slides(sample)
+        self.assertEqual(expanded[2]['title'], 'プロットで承認したニュースAの章題')
+        self.assertEqual(expanded[3]['title'], 'ニュース検証')
+        self.assertEqual(expanded[6]['title'], 'ニュースBの章題')
 
     def test_draft_status_blocks_presentation(self):
         with tempfile.TemporaryDirectory() as td:

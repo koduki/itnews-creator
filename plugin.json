@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "itnews-creator",
-  "version": "0.9.4",
-  "description": "Gemini Tasks researches and creates plot-locked evidence-rich PPTX; Claude 5.5 in Copilot for PowerPoint performs final layout polishing.",
+  "version": "0.9.5",
+  "description": "Gemini+GAS source image collection, eight-layout editable PowerPoint with per-story chapter/title pages, and Claude final polish.",
   "author": {
     "name": "koduki"
   },

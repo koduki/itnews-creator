@@ -12,7 +12,7 @@
 - Gemini Tasksがブラウザ操作可能でも、スクリーンショットがファイルとして取得できるかは別途実証が必要。
 - GeminiスキルのPythonコードは外部ネットワークアクセスを保証しない。
 - PowerPointスキルZIPへバイナリのPPTX/PNGを梱包しない。固定テンプレートはGitHubの `assets/templates/weekly-it-news-design-template.pptx` にあり、Tasksから raw URL `https://raw.githubusercontent.com/koduki/itnews-creator/main/assets/templates/weekly-it-news-design-template.pptx` を取得・ファイル検証する。取得できない場合はDrive/手動添付へフォールバックする。
-- 3月版の元表紙を厳密に再現し、今の目次形式は維持。本文はCOVER/AGENDA/NEWS/SOURCE_IMAGE/TECH_DIAGRAM/COMPARE/TWO_SOURCESの指定レイアウト。プロットのページ順とニュースの連続性は変更しない。
+- 3月版の元表紙を厳密に再現し、今の目次形式は維持。本文はCOVER/AGENDA/NEWS_TITLE/NEWS/SOURCE_IMAGE/TECH_DIAGRAM/COMPARE/TWO_SOURCESの指定レイアウト。プロットのページ順とニュースの連続性は変更しない。
 - PowerPointのClaude 5.5モデル選択はテナント・契約・管理者設定に依存する。実際に選んだモデル名をQA報告に記録する。
 - GitHubのレイアウト規定は指示文であり、pixel-perfectな生成を保証するものではない。必要なら将来決定論的なPPTX生成器を追加する。
 
@@ -50,3 +50,9 @@ python skills/weekly-it-news-gemini/scripts/build_pptx.py \
 素材の画像内容は機械的に完全判別できないので、LibreOfficeによりPDF→全ページPNG化した後、**ユーザーまたはGeminiによる目視確認**が最終ゲート。密な技術図・表や解像度不足は自動警告するが、フォントオーバーフローの完全自動判定ではない。
 
 旧PPTXの検証・生成コードを消さずに互換性のため `--strict-assets` は明示フラグとする。Geminiスキルから完成稿を生成するときは厳格モードを必須とする。従来の未取得プレースホルダーはベース稿だけで許可される。
+
+## 新テンプレート（v0.9.5）とページ数
+
+8枚のネイティブレイアウトに増え、3枚目は `NEWS_TITLE` です。Geminiが承認済み編集プロットを用意するとき、各ニュースに1枚ずつ章扉を付けることを想定してページ構成・枚数を提示します。旧7枚式プロットはPython生成器が `story_id` の最初の要素の直前に自動挿入し、明示 `NEWS_TITLE` があれば重複を避けます。スライド番号・出典の参照には最終PPTXの順序を使用し、QAレポートで `output_slides_count` と `generated_news_titles` を確認します。
+
+新章扉は青・淡い水色の固有デザインです。本文の赤見出しに一律変換してはいけません。

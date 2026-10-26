@@ -1,4 +1,4 @@
-# itnews-creator — Weekly IT News v0.9.4
+# itnews-creator — Weekly IT News v0.9.5
 
 [ライセンス: MIT](LICENSE)
 
@@ -16,7 +16,7 @@
 
 詳細な役割分担：[新アーキテクチャ](docs/architecture-gemini-claude.md)
 
-## v0.9.4 実戦フィードバック反映（バックポート内容）
+## v0.9.2〜v0.9.4 実戦フィードバック反映
 
 1. **番組らしい見出し・日本向け用語統一と「1ページ1スクショ」原則**
    - 硬い調査報告書調の見出しを避け、視聴者の興味を惹く番組タイトル調に統一。
@@ -30,29 +30,41 @@
    - 添付された調査レポート（`.docx`）から `word/media/*`（実画像・図解）と `word/_rels/document.xml.rels`（出典URL）を初回ターンで自動抽出。
    - Gemini Tasksサンドボックスの外部ブラウザ画像保存制限を回避するため、Googleスプレッドシート（`itnews-screenshot-queue`）＋Google Apps Script（`scripts/screenshot_relay.js`）＋Google Driveフォルダ（`itnews-assets`）による自動スクリーンショット撮影・回収パイプラインを標準装備（GeminiのZIP MIME検査を通過するよう `.js` 拡張子で同梱）。
 4. **固定テンプレート（`weekly-it-news-design-template.pptx`）の決定論的座標・フォント仕様の明文化**
-   - 全7レイアウトのShape座標、フォント設定（Meiryo UI）、下端 `6.55"` 上限ルール、スライド複製時のXML/リレーション引き継ぎ手順を `references/plot-and-layout.md` に明記。
+   - 全8レイアウトのShape座標、フォント設定（Meiryo UI）、下端 `6.55"` 上限ルール、スライド複製時のXML/リレーション引き継ぎ手順を `references/plot-and-layout.md` に明記。
+
+
+## v0.9.5：ニュースごとのタイトルページを追加
+
+新テンプレートは**8枚構成**です。3枚目は新しい章扉 `NEWS_TITLE`（左に青い `NEWS 01`、大きなニュース名、右に淡い番号）。ニュース本文の前にニュース単位で**1枚ずつ**挿入します。
+
+- **Geminiの承認プロット**に `story_titles`（`story_id → 番組調のニュース名`）を入れると、その章題を使用。なければ先頭ページの `story_title` / `title` が章題です。ニュース番号は登場順に01、02、03…です。
+- 旧プロット（`NEWS_TITLE` なし）は、**生成時に章扉を自動で補い**ます。`NEWS_TITLE` を明示したプロットはその指定をそのまま使い二重挿入しません。`COVER` と `AGENDA` の後、各ニュースの先頭に挿入されます。
+- 章扉の自動挿入分だけ完成PPTXは元プロットよりページが増えます（例：20ページ・3ニュース→23ページ）。承認の際には**章扉を含む予定枚数**を提示してください。
+- `NEWS_TITLE` は青・淡い水色と大きな番号の固有デザインを保持し、通常の赤い見出しや本文フッターは足しません。
+
+テンプレートの変更に合わせてSHA-256・全8レイアウト・画像素材の埋め込み・ニュースごとの章扉の連続性を検証します。
 
 ## 配布とセットアップ
 
 [GitHub Actions — Build skill packages](https://github.com/koduki/itnews-creator/actions/workflows/package.yml) で成功した最新実行のArtifactsをダウンロードし、外側のZIPだけを展開します。
 
-- **Gemini Tasks用**：itnews-creator-gemini-task-skill-v0.9.4.zip。Geminiアプリの「スキル」へアップロードしてGemini Tasksから呼び出します。
-- **PowerPoint用**：itnews-creator-powerpoint-polish-skill-v0.9.4.zip。PowerPointのCopilotで「スキルの管理」から追加します。
-- **旧Copilot Chat用**：itnews-creator-copilot-skill-v0.9.4.zip。互換性用であり、新しい標準ワークフローには使いません。
-- **ChatGPT用**：itnews-creator-chatgpt-plugin-v0.9.4.zip。Microsoft 365やGeminiには登録しません。
+- **Gemini Tasks用**：itnews-creator-gemini-task-skill-v0.9.5.zip。Geminiアプリの「スキル」へアップロードしてGemini Tasksから呼び出します。
+- **PowerPoint用**：itnews-creator-powerpoint-polish-skill-v0.9.5.zip。PowerPointのCopilotで「スキルの管理」から追加します。
+- **旧Copilot Chat用**：itnews-creator-copilot-skill-v0.9.5.zip。互換性用であり、新しい標準ワークフローには使いません。
+- **ChatGPT用**：itnews-creator-chatgpt-plugin-v0.9.5.zip。Microsoft 365やGeminiには登録しません。
 
 **重要：テンプレートの正本はGitHub、Gemini Tasksへの実ファイル提供はGoogle Driveまたは添付です。** 実機ではVMからGitHubのraw URLのPPTXバイナリを直接ダウンロードできませんでした。毎回の直接取得を標準手順にしません。
 
-- [Gitで管理する7枚テンプレート](assets/templates/weekly-it-news-design-template.pptx) / [ハッシュとバージョン](assets/templates/template-manifest.json)
+- [Gitで管理する8枚テンプレート](assets/templates/weekly-it-news-design-template.pptx) / [ハッシュとバージョン](assets/templates/template-manifest.json)
 - **実際の取得順**：①`user_uploaded_files/` 内の添付、② Google Driveの `weekly-it-news-design-template.pptx` を `drive:search_files` → `drive:download_file_content` でVMの `downloads/` に取得
-- 取得後SHA-256 `f343a4fee2d802ce7ce36290d951a4a09526a451ccb16e9d41d0cb62f5ddee73` と7枚構成を検証
+- 取得後SHA-256 `f871047b53f839a47bb77732770f7648a4e904bc64d696e04e85d2e639778f05` と8枚構成を検証
 - [3月版の元表紙](assets/cover/weekly-it-news-cover-20260315.pptx) / [元アバター](assets/cover/avatar-20260315.jpg) を保持
 
 画像はGAS中継のスプレッドシート `itnews-screenshot-queue` → Driveフォルダ `itnews-assets` → `drive:download_file_content` でVMに回収します。スクショのPNGが実在してもCloudflare認証画面やCookie同意が写り込む場合があるため、**画像を開いて内容を検品してから**PPTXに使用します。PowerPoint仕上げスキルZIPへテンプレートのバイナリを同梱する必要はありません。
 
 ## Gemini Tasksへの依頼
 
-Geminiのスキル weekly-it-news-gemini を使い、ニュースを調査して技術的な面白さを対話してください。まず各ページの目的・タイトル・出典URL・見せる画像・レイアウトIDを記した編集プロットを提示し、私の承認を得てください。承認後だけ指定URLの実画像を回収し、撮影画像のファイル実体を確認して、Driveまたは添付からテンプレート実体を取得・SHA-256検証してください。GitHubのraw URLからの直接取得は前提にしないでください。取得できたテンプレートに沿う編集可能なPPTXを作ってください。1枚目は3月版の元表紙、2枚目は今のシンプルな目次です。画像取得不能は必ず報告してください。
+Geminiのスキル weekly-it-news-gemini を使い、ニュースを調査して技術的な面白さを対話してください。まず各ページの目的・タイトル・出典URL・見せる画像・レイアウトIDを記した編集プロットを提示し、私の承認を得てください。承認後だけ指定URLの実画像を回収し、撮影画像のファイル実体を確認して、Driveまたは添付からテンプレート実体を取得・SHA-256検証してください。GitHubのraw URLからの直接取得は前提にしないでください。取得できたテンプレートに沿う編集可能なPPTXを作ってください。1枚目は新テンプレートの1行赤黒タイトルと元アバター、2枚目は今のシンプルな目次、各ニュースの先頭には青系の専用 `NEWS_TITLE` を1枚ずつ追加してください。画像取得不能は必ず報告してください。
 
 ## PowerPointでのClaude 5.5仕上げ
 
@@ -62,8 +74,8 @@ Gemini製のbase.pptxをPowerPointで開き、**Copilot編集モードのモデ�
 
 ## 完了基準
 
-- 人が承認したplot.jsonとPPTXがページ単位で一致する。
-- 3月版の1ページ目（赤黒タイトル、青い日付、実アバター）を保持し、2ページ目の目次書式を変えない。
+- 人が承認したplot.jsonの内容・順番とPPTXが一致する。自動追加の`NEWS_TITLE`を含む実ページ数をQAで照合する。
+- 更新版の1ページ目（赤黒1行タイトル、青い日付、実アバター）を保持し、2ページ目の目次書式を変えない。
 - 実際の報道写真やWeb画面を**保存された画像ファイルからPPTXへ埋め込む**。ブラウザで見るだけ、架空画像、URLだけでは不合格。
 - 自作図・表は可能な限りネイティブで編集可能。
 - 画像・出典の使用条件を守る。事実と分析を区別する。
@@ -76,7 +88,7 @@ Gemini製のbase.pptxをPowerPointで開き、**Copilot編集モードのモデ�
 Python標準ライブラリの scripts/build_packages.py でバージョン付きZIPを4種類生成し、GitHub Actionsで構造テストと再現性を確認します。ZIPの公開と各社のスキル登録は別作業です。
 
 独自ソースはMIT。元のアバター、ユーザー提供PPTX、外部記事の写真や技術図は元の権利者に帰属し、自動的にMITの対象にはなりません。
-## Gemini Tasks内の決定論的PPTX生成（v0.9.4）
+## Gemini Tasks内の決定論的PPTX生成（v0.9.5）
 
 GASで取得した画像を `downloads/` へ保存し、承認済み `plot.json` を渡して、同梱するPython生成器を実行します。
 
@@ -87,10 +99,10 @@ python skills/weekly-it-news-gemini/scripts/build_pptx.py \
   --out weekly-it-news-base.pptx --render-qa-dir qa
 ```
 
-実体がGitの7枚テンプレートと一致するかSHA-256検証し、ネイティブ図形・比較表・DOCX画像素材・ノートの制作に対応します。画面表示のCookie同意やCloudflare検証が写ったスクショは生成前の素材検品で差し戻します。7枚テンプレートの表紙に存在するタイトル/日付の重なりを補正する処理を含みます。
+実体がGitの8枚テンプレートと一致するかSHA-256検証し、ネイティブ図形・比較表・DOCX画像素材・ノートの制作に対応します。画面表示のCookie同意やCloudflare検証が写ったスクショは生成前の素材検品で差し戻します。8枚テンプレートの表紙の日付表示が崩れないよう補正し、新テンプレートの一行マストヘッドを維持する処理を含みます。
 
 
-## v0.9.4：完成稿の品質ゲート
+## v0.9.5：完成稿の品質ゲート
 
 2026-10-26の20枚デッキで、GAS取得成功の画像にCookie同意画面やCloudflare検証画面が混入したため、**「画像ファイルがある」だけでは完成扱いしません**。Geminiが回収した実画像を一枚ずつ表示し、問題がない場合のみ `assets-manifest.json` の `review_status: approved` と `review_notes` に明記してください。問題があれば `quality_flags`（`bot_challenge`, `cookie_overlay`, `ad_dominant`, `wrong_article`, `unreadable`, `needs_crop` 等）を付けて差し戻します。
 

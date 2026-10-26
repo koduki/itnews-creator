@@ -9,3 +9,6 @@ Gemini Tasksが制作したbase.pptx、ユーザー承認済みplot.json、素�
 PowerPointのカスタムスキルZIPはPNG/PPTXなどのバイナリが非対応なので、固定テンプレートや画像はGitから別添か、生成PPTXへ埋め込んだ形で渡す。
 
 PowerPoint編集モードのモデル選択から使えるClaude 5.5を選ぶ。Claude Sonnet 5.5やOpus 5.5が表示されない場合は使えるモデルを明示して必要な対応を確認する。
+## 2026-10-26以降の8レイアウト／章扉
+
+NEWS_TITLE は新テンプレート3枚目にあるニュース区切り。各 story_id の先頭に1枚ずつ入り、NEWS 01、NEWS 02…の青いラベルと淡い番号のネイティブデザインを保持する。完成PPTXでは自動追加された章扉を含むので、plot.jsonの入力 slides 配列の要素数よりページが多いこと自体は不整合ではない。`preflight.json` の `output_slides_count` と実PPTX枚数を比較し、章扉を消さずに仕上げる。

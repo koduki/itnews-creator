@@ -28,26 +28,33 @@ description: Gemini Tasksで技術ニュースを調査・対話し、承認済�
    - 解説の模式図（`TECH_DIAGRAM`）・比較表（`COMPARE`）は編集可能なPowerPointネイティブ図形・テーブルで作成し、数値・矢印の根拠を検証。
    - 添付資料に高品質な構成図画像がある場合でも、1枚の画像に情報を詰め込みすぎず、必要に応じて「システム構成と侵害箇所の図解ページ」と「波及経路（なぜ他社・証券会社まで影響したか）の図解ページ」に分割する。
 7. **固定テンプレートの取得と検証**
-   - Gitの3月版の表紙・アバターを使い、2ページ目は現行の簡潔な目次、本文は固定レイアウト `COVER` / `AGENDA` / `NEWS` / `SOURCE_IMAGE` / `TECH_DIAGRAM` / `COMPARE` / `TWO_SOURCES`。
+   - Gitの3月版の表紙・アバターを使い、2ページ目は現行の簡潔な目次、本文は固定レイアウト `COVER` / `AGENDA` / `NEWS_TITLE` / `NEWS` / `SOURCE_IMAGE` / `TECH_DIAGRAM` / `COMPARE` / `TWO_SOURCES`。
    - PowerPointテンプレートはスキルZIPに入れず、**実機で動いたGoogle Drive／ユーザー添付の経路を優先**して実体バイナリを取得し、SHA-256と内部構造を検証する。GitHubは正本・配布場所でありGemini VMの直接取得先ではない。
-8. **PPTX生成（1プロット＝1スライド）**
+8. **PPTX生成（各ニュースの章扉を自動追加）**
    - `scripts/build_pptx.py` を使用し、承認済みの `plot.json` とDriveから取得したテンプレートPPTX、ローカル素材画像から決定論的に作成する。完成版では下記の**品質ゲート付きコマンド**を使う。
-   - 指定のテンプレートを基に、本物の編集可能なPPTXを生成。プロット1ページ＝PPTX1スライド。画像はPPTX中に実体として埋め込み、WordやPDFに代替しない。
+   - 指定のテンプレートを基に、本物の編集可能なPPTXを生成。承認済みプロットの内容ページ1枚＝PPTX1スライドに加え、**各 `story_id` のニュースの先頭に `NEWS_TITLE` を1枚追加**。画像はPPTX中に実体として埋め込み、WordやPDFに代替しない。
 9. **視覚QAと最終納品**
    - PPTXをLibreOffice＋`pypdfium2`等で全ページ画像化して開き直し、ページ順、出典、実画像、スライド枚数、元アバター、文字はみ出し・重なり、編集可能性を検査。できなかった検査は未実施と記載。
+
+
+### ニュースごとのタイトルページ `NEWS_TITLE`（新8枚テンプレートの3枚目）
+
+- 表紙 `COVER` → 目次 `AGENDA` の次に、ニュースごとに **`NEWS_TITLE` 章扉1枚 → `NEWS`・画像・比較・図の連続ページ** とする。章扉は `NEWS 01`（青いラベル）、右の巨大な薄青数字とニュース名の固有デザイン。本文スライドの赤い見出しを流用しない。
+- 章扉を `plot.json` に明示するなら、ニュース最初の要素を `layout_id: "NEWS_TITLE"` にし、`title` に短いニュース名を記載。**自動挿入を重複させない**。旧プロットに章扉が無ければ `build_pptx.py` が `story_id` の変化を見て自動生成。`story_titles` マッピングを与えると章扉タイトルを本文スライドとは別に指定できる。
+- 承認時点で自動追加ページもカウントし、ページ構成に章扉を明示してから承認する。章扉は実ニュースごとに1枚、`front`（表紙・目次）は対象外。タイトルページに不要な出典や細字を追加しない。
 
 ## 固定テンプレートの取得（PPTX生成に先立つ必須チェック）
 
 - 正本: https://raw.githubusercontent.com/koduki/itnews-creator/main/assets/templates/weekly-it-news-design-template.pptx
 - リポジトリ参照: https://github.com/koduki/itnews-creator/blob/main/assets/templates/weekly-it-news-design-template.pptx
-- 現行リビジョンのSHA-256: `f343a4fee2d802ce7ce36290d951a4a09526a451ccb16e9d41d0cb62f5ddee73`（将来更新時は `assets/templates/template-manifest.json` の値に従う）
+- 現行リビジョンのSHA-256: `f871047b53f839a47bb77732770f7648a4e904bc64d696e04e85d2e639778f05`（将来更新時は `assets/templates/template-manifest.json` の値に従う）
 
 **スキル内Pythonによるrequests/curlで取得できることは前提にしない。**
 1. まずGoogle Drive内に同期済みの `weekly-it-news-design-template.pptx` があれば `drive:search_files` → `drive:download_file_content` でVMへダウンロードし、SHA-256を検証する。
 2. 取得できない場合は①Google Driveに同期済みの同ファイルを「Driveから追加」、②ユーザーに1回だけファイルアップロードを依頼し、次回以降のためにGoogle Driveへも保存しておく。
-3. ファイルの実バイトを取得できたときだけローカルでPPTX（ZIP）として開き、7つの見本スライド、スライド1の元アバター（`ppt/media/image1.jpeg`）と日付枠、スライド2の目次を確認する。**別デザインのテンプレートを勝手に作らず、取得不能を明示する。**
+3. ファイルの実バイトを取得できたときだけローカルでPPTX（ZIP）として開き、8つの見本スライド、スライド1の元アバター（`ppt/media/image1.jpeg`）と日付枠、スライド2の目次を確認する。**別デザインのテンプレートを勝手に作らず、取得不能を明示する。**
 
-## 品質ゲート（v0.9.4）
+## 品質ゲート（v0.9.5）
 
 **ユーザー向け完成稿には `--strict-assets --assets-manifest assets-manifest.json --qa-report qa/preflight.json` を必ず付ける。** ベース稿で不足画像を見えるプレースホルダーとして残したいときだけ `--strict-assets` なしで実行し、`qa/preflight.json` の未達と手作業を明記する。欠落のあるベース稿を完成版と呼ばない。
 
