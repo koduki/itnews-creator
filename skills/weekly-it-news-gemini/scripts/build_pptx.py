@@ -327,8 +327,14 @@ def preflight_plot(plot: dict, assets_dir: Path | None = None,
             sha = hashlib.sha256(path.read_bytes()).hexdigest()
             if asset.get('sha256') and asset['sha256'].lower() != sha:
                 errors.append(f'{sid}: SHA-256 mismatch for asset {aid}')
-            issue_flags = set(asset.get('quality_flags') or [])
-            bad = issue_flags & BAD_VISUAL_FLAGS
+            raw_flags = asset.get('quality_flags') or []
+            # Treat a single string as a flag rather than a set of characters.
+            if isinstance(raw_flags, str):
+                raw_flags = [raw_flags]
+            if not isinstance(raw_flags, list) or any(not isinstance(x, str) for x in raw_flags):
+                errors.append(f'{sid}: invalid quality_flags for {aid}')
+                raw_flags = []
+            bad = set(raw_flags) & BAD_VISUAL_FLAGS
             if bad:
                 (errors if strict_assets else warnings).append(
                     f'{sid}: rejected screenshot {aid}, quality_flags={sorted(bad)}')
