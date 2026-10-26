@@ -1,7 +1,7 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "edition_date": "2026-10-26",
-  "status": "approved",
+  "status": "draft",
   "slides": [
     {
       "slide_id": "s01",
@@ -10,9 +10,7 @@
       "title": "Weekly IT News！",
       "purpose": "表紙",
       "on_slide": [
-        "・Meta Museが日本で解禁！ 常駐型でAIエージェントの戦いは別のステージへ",
-        "・インターネットが壊れた日。首相も宣言したPHP2Shellとは？",
-        "・勝手に証券を売買まで？ GMO/お名前.comデスクトップクラウド侵害"
+        "・ニュースA：何が起きた？"
       ],
       "speaker_notes": "番組オープニング用ノート",
       "asset_ids": []
@@ -24,27 +22,38 @@
       "title": "今週のトピック",
       "purpose": "目次",
       "on_slide": [
-        "・Meta Museが日本で解禁！ 常駐型でAIエージェントの戦いは別のステージへ",
-        "・インターネットが壊れた日。首相も宣言したPHP2Shellとは？",
-        "・勝手に証券を売買まで？ GMO/お名前.comデスクトップクラウド侵害"
+        "・ニュースA：何が起きた？"
       ],
       "speaker_notes": "アジェンダ紹介用ノート",
       "asset_ids": []
-    }
-  ],
-  "assets": [
+    },
     {
-      "id": "muse-japan-news",
+      "slide_id": "s03",
+      "story_id": "news-a",
+      "layout_id": "NEWS_TITLE",
+      "title": "ニュースA：何が起きた？",
+      "purpose": "ニュースの章扉",
+      "on_slide": [],
+      "speaker_notes": "導入の一言",
+      "asset_ids": []
+    },
+    {
       "slide_id": "s04",
-      "source_url": "https://www.watch.impress.co.jp/docs/series/nishida/2150995.html",
-      "file": "downloads/muse-japan-news.png",
-      "status": "embedded",
-      "usage_status": "editorial_citation",
-      "kind": "webpage_screenshot"
+      "story_id": "news-a",
+      "layout_id": "NEWS",
+      "title": "ニュースAの背景と技術的ポイント",
+      "purpose": "技術の意味を説明",
+      "on_slide": [
+        "導入：確認済みの事実をここに書く",
+        "技術的なポイントを説明する",
+        "出典：実在する一次資料のURLに差し替える"
+      ],
+      "speaker_notes": "出典と事実・考察を分ける",
+      "asset_ids": []
     }
   ],
+  "assets": [],
   "story_titles": {
-    "meta": "Meta Muse、日本上陸！",
-    "php": "インターネットが壊れた日"
+    "news-a": "ニュースA：何が起きた？"
   }
 }
