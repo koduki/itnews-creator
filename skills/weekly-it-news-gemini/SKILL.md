@@ -29,10 +29,9 @@ description: Gemini Tasksで技術ニュースを調査・対話し、承認済�
    - 添付資料に高品質な構成図画像がある場合でも、1枚の画像に情報を詰め込みすぎず、必要に応じて「システム構成と侵害箇所の図解ページ」と「波及経路（なぜ他社・証券会社まで影響したか）の図解ページ」に分割する。
 7. **固定テンプレートの取得と検証**
    - Gitの3月版の表紙・アバターを使い、2ページ目は現行の簡潔な目次、本文は固定レイアウト `COVER` / `AGENDA` / `NEWS` / `SOURCE_IMAGE` / `TECH_DIAGRAM` / `COMPARE` / `TWO_SOURCES`。
-   - PowerPointテンプレートはスキルZIPに入れず、GitHubの公開URL・Google Drive・ユーザー添付のいずれかから実体バイナリを取得し、SHA-256と内部構造を検証する。
+   - PowerPointテンプレートはスキルZIPに入れず、**実機で動いたGoogle Drive／ユーザー添付の経路を優先**して実体バイナリを取得し、SHA-256と内部構造を検証する。GitHubは正本・配布場所でありGemini VMの直接取得先ではない。
 8. **PPTX生成（1プロット＝1スライド）**
-   - `scripts/build_pptx.py` を使用し、承認済みの `plot.json` とDriveから取得したテンプレートPPTX、ローカル素材画像から決定論的に作成する。実行例：
-     `python scripts/build_pptx.py --template downloads/weekly-it-news-design-template.pptx --plot plot.json --assets-dir downloads/ --out weekly-it-news-base.pptx --render-qa-dir qa/`
+   - `scripts/build_pptx.py` を使用し、承認済みの `plot.json` とDriveから取得したテンプレートPPTX、ローカル素材画像から決定論的に作成する。完成版では下記の**品質ゲート付きコマンド**を使う。
    - 指定のテンプレートを基に、本物の編集可能なPPTXを生成。プロット1ページ＝PPTX1スライド。画像はPPTX中に実体として埋め込み、WordやPDFに代替しない。
 9. **視覚QAと最終納品**
    - PPTXをLibreOffice＋`pypdfium2`等で全ページ画像化して開き直し、ページ順、出典、実画像、スライド枚数、元アバター、文字はみ出し・重なり、編集可能性を検査。できなかった検査は未実施と記載。
@@ -47,6 +46,28 @@ description: Gemini Tasksで技術ニュースを調査・対話し、承認済�
 1. まずGoogle Drive内に同期済みの `weekly-it-news-design-template.pptx` があれば `drive:search_files` → `drive:download_file_content` でVMへダウンロードし、SHA-256を検証する。
 2. 取得できない場合は①Google Driveに同期済みの同ファイルを「Driveから追加」、②ユーザーに1回だけファイルアップロードを依頼し、次回以降のためにGoogle Driveへも保存しておく。
 3. ファイルの実バイトを取得できたときだけローカルでPPTX（ZIP）として開き、7つの見本スライド、スライド1の元アバター（`ppt/media/image1.jpeg`）と日付枠、スライド2の目次を確認する。**別デザインのテンプレートを勝手に作らず、取得不能を明示する。**
+
+## 品質ゲート（v0.9.4）
+
+**ユーザー向け完成稿には `--strict-assets --assets-manifest assets-manifest.json --qa-report qa/preflight.json` を必ず付ける。** ベース稿で不足画像を見えるプレースホルダーとして残したいときだけ `--strict-assets` なしで実行し、`qa/preflight.json` の未達と手作業を明記する。欠落のあるベース稿を完成版と呼ばない。
+
+1. GAS の `captured` は「PNGが保存できた」状態であり、内容に合う証拠が撮れたという意味ではない。Driveから回収後、Geminiの `view_file` 等で画像の**実ピクセルを全件確認**する。Cloudflare画面、Cookie同意モーダル、広告が主役、別記事、読めない画像は `quality_flags` に `bot_challenge` / `cookie_overlay` / `ad_dominant` / `wrong_article` / `unreadable` / `needs_crop` を記録して再取得する。
+2. 問題のない実画像のみ、`assets-manifest.json` の各素材に `review_status: "approved"`、具体的な `review_notes`、`source_url`（DOCX由来なら `source_docx`）、任意の `sha256` を記録する。GAS実行だけで `review_status` を自動承認してはいけない。
+3. `scripts/build_pptx.py` はプロットの `story_id` 連続性・スライドID重複・比較表の列数を確認する。Strictでは画像欠落・出典食い違い・レビュー未了・`quality_flags` のある素材を**生成前に拒否**。失敗時も `qa/preflight.json` に理由を残す。
+4. レイアウトが混み合っている比較表・技術図・解像度不足の画像は警告される。**警告がゼロでも視覚QAが終わったわけではない**。LibreOfficeで全ページを画像化し、はみ出し・重なり・記事の正しさを人が最終確認する。
+
+厳格生成例：
+
+```bash
+python scripts/build_pptx.py \
+  --template downloads/weekly-it-news-design-template.pptx \
+  --plot plot.json --assets-dir downloads/ \
+  --assets-manifest assets-manifest.json --strict-assets \
+  --qa-report qa/preflight.json --render-qa-dir qa/ \
+  --out weekly-it-news-base.pptx
+```
+
+`assets-manifest.json` はリポジトリの `templates/assets-manifest.example.json` を参考にする（最初から approved にしない）。
 
 ## 最終成果物
 - `weekly-it-news-YYYY-MM-DD-base.pptx`（Google Driveへのアップロード＋Canvas/ファイル提示）

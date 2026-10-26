@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0",
+  "assets": [
+    {
+      "asset_id": "news-example-01",
+      "slide_ids": [
+        "s04"
+      ],
+      "kind": "webpage_screenshot",
+      "source_url": "https://example.com/news",
+      "file": "downloads/news-example-01.png",
+      "status": "captured",
+      "review_status": "pending",
+      "review_notes": "",
+      "quality_flags": [],
+      "sha256": null,
+      "usage_status": "unverified",
+      "license_terms": "要確認"
+    }
+  ]
+}

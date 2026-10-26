@@ -219,6 +219,171 @@ def resolve_asset_file(asset_id: str, assets_map: dict[str, dict], assets_dir: P
     return next((c for c in candidates if c.is_file()), None)
 
 
+
+# Metadata is an audit trail, not automatic image recognition. A PNG of a
+# Cloudflare challenge is a valid PNG but NOT valid evidence for a news article.
+BAD_VISUAL_FLAGS = {
+    'bot_challenge', 'cookie_overlay', 'ad_dominant', 'wrong_article',
+    'unreadable', 'missing_article', 'needs_crop', 'unrelated',
+}
+
+
+def preflight_plot(plot: dict, assets_dir: Path | None = None,
+                   strict_assets: bool = False) -> dict:
+    """Check storyboard integrity and asset state BEFORE creating a PPTX.
+
+    In strict mode, an image can be embedded only after a visual review of its
+    actual pixels. No algorithm here pretends to identify cookie banners or
+    Cloudflare challenges from pixels; the reviewer records quality_flags.
+    """
+    errors: list[str] = []
+    warnings: list[str] = []
+    inspected: list[dict] = []
+    specs = plot.get('slides')
+    if not isinstance(specs, list) or not specs:
+        errors.append('plot.slides must contain at least one slide')
+        specs = []
+    assets_list = plot.get('assets', [])
+    if not isinstance(assets_list, list):
+        errors.append('plot.assets must be a list')
+        assets_list = []
+    amap: dict[str, dict] = {}
+    for asset in assets_list:
+        if not isinstance(asset, dict):
+            errors.append('Invalid asset record (expected object)')
+            continue
+        aid = asset.get('id') or asset.get('asset_id')
+        if not isinstance(aid, str) or not aid.strip():
+            errors.append('Asset missing id/asset_id')
+        elif aid in amap:
+            errors.append(f'Duplicate asset_id: {aid}')
+        else:
+            amap[aid] = asset
+
+    seen_slides: set[str] = set()
+    closed_stories: set[str] = set()
+    active_story = ''
+    for index, spec in enumerate(specs, 1):
+        if not isinstance(spec, dict):
+            errors.append(f'Slide {index} must be a JSON object')
+            continue
+        sid = spec.get('slide_id') or f'#{index}'
+        if sid in seen_slides:
+            errors.append(f'Duplicate slide_id: {sid}')
+        seen_slides.add(sid)
+        layout = spec.get('layout_id', 'NEWS')
+        if layout not in LAYOUT_TO_TEMPLATE_INDEX:
+            errors.append(f'{sid}: unsupported layout_id {layout}')
+        story = str(spec.get('story_id', '')).strip()
+        if story != active_story:
+            if active_story and active_story != 'front':
+                closed_stories.add(active_story)
+            if story in closed_stories and story != 'front':
+                errors.append(f'{sid}: story_id {story} reopens after another topic')
+            active_story = story
+        if index == 1 and layout != 'COVER':
+            warnings.append('First slide is not COVER')
+        if index == 2 and layout != 'AGENDA':
+            warnings.append('Second slide is not AGENDA')
+        ids = spec.get('asset_ids', [])
+        if not isinstance(ids, list):
+            errors.append(f'{sid}: asset_ids must be a list')
+            continue
+        expected = {'SOURCE_IMAGE': 1, 'TWO_SOURCES': 2}.get(layout, 0)
+        if expected and len(ids) != expected:
+            msg = f'{sid}: {layout} requires {expected} asset_id(s), got {len(ids)}'
+            (errors if strict_assets else warnings).append(msg)
+        if layout == 'COMPARE':
+            headers, rows, _, _ = parse_compare_rows(spec)
+            if not headers or not rows or any(len(row) != len(headers) for row in rows):
+                errors.append(f'{sid}: invalid COMPARE table headers/rows')
+            elif len(rows) >= 5 or any(len(str(v)) > 150 for row in rows for v in row):
+                warnings.append(f'{sid}: dense COMPARE table requires projection-scale review')
+        if layout == 'TECH_DIAGRAM' and sum(len(str(v)) for v in spec.get('on_slide', [])) > 460:
+            warnings.append(f'{sid}: dense TECH_DIAGRAM may overflow its 3 native boxes')
+        for aid in ids[:expected or len(ids)]:
+            if not isinstance(aid, str) or not aid:
+                errors.append(f'{sid}: empty/invalid asset_id')
+                continue
+            asset = amap.get(aid)
+            if asset is None:
+                (errors if strict_assets else warnings).append(f'{sid}: undeclared asset {aid}')
+                continue
+            path = resolve_asset_file(aid, amap, assets_dir)
+            if path is None:
+                (errors if strict_assets else warnings).append(f'{sid}: missing file for asset {aid}')
+                continue
+            try:
+                with Image.open(path) as img:
+                    dims = img.size
+                    img.verify()
+                if dims[0] < 1 or dims[1] < 1:
+                    raise ValueError('zero dimension')
+            except Exception as exc:
+                errors.append(f'{sid}: corrupt/not an image for asset {aid}: {exc}')
+                continue
+            if path.suffix.lower() not in ('.png', '.jpeg', '.jpg'):
+                errors.append(f'{sid}: unsupported image format for {aid}: {path.suffix}')
+            sha = hashlib.sha256(path.read_bytes()).hexdigest()
+            if asset.get('sha256') and asset['sha256'].lower() != sha:
+                errors.append(f'{sid}: SHA-256 mismatch for asset {aid}')
+            issue_flags = set(asset.get('quality_flags') or [])
+            bad = issue_flags & BAD_VISUAL_FLAGS
+            if bad:
+                (errors if strict_assets else warnings).append(
+                    f'{sid}: rejected screenshot {aid}, quality_flags={sorted(bad)}')
+            if asset.get('status') in ('pending', 'unavailable', 'rejected', 'failed'):
+                (errors if strict_assets else warnings).append(
+                    f'{sid}: asset {aid} status={asset["status"]}')
+            if strict_assets:
+                if asset.get('review_status') != 'approved':
+                    errors.append(f'{sid}: asset {aid} has no explicit visual approval')
+                if not str(asset.get('review_notes') or '').strip():
+                    errors.append(f'{sid}: asset {aid} missing visual review_notes')
+                if not (asset.get('source_url') or asset.get('source_docx')):
+                    errors.append(f'{sid}: asset {aid} missing source_url/source_docx')
+            if min(dims) < 500:
+                warnings.append(f'{sid}: low resolution image {aid}: {dims[0]}x{dims[1]}')
+            inspected.append({'slide_id': sid, 'asset_id': aid, 'file': str(path),
+                              'sha256': sha, 'dimensions': list(dims),
+                              'review_status': asset.get('review_status', 'unreviewed')})
+    return {'passed': not errors, 'strict_assets': strict_assets,
+            'errors': errors, 'warnings': list(dict.fromkeys(warnings)),
+            'inspected_assets': inspected,
+            'slides_count': len(specs), 'assets_inspected': len(inspected),
+            'visual_qa': 'must manually inspect all slide previews; not auto-certified'}
+
+
+def merge_asset_manifest(plot: dict, manifest_path: Path) -> dict:
+    """Merge the Drive/GAS inspection manifest with plot assets by immutable id.
+
+    The manifest supplies review status, final downloaded file and hash. When
+    both sides name a source URL they must agree; a replacement article must be
+    explicitly approved in plot.json rather than silently substituting it.
+    """
+    raw = json.loads(manifest_path.read_text(encoding='utf-8'))
+    rows = raw if isinstance(raw, list) else raw.get('assets', [])
+    if not isinstance(rows, list):
+        raise ValueError('assets-manifest.json must contain an assets list')
+    clone = copy.deepcopy(plot)
+    by_id = {(a.get('id') or a.get('asset_id')): a for a in clone.get('assets', [])}
+    for asset in rows:
+        aid = asset.get('id') or asset.get('asset_id')
+        if not aid:
+            raise ValueError('assets-manifest.json contains entry without asset_id')
+        original = by_id.get(aid, {})
+        if original.get('source_url') and asset.get('source_url') and original['source_url'] != asset['source_url']:
+            raise ValueError(f'Asset {aid}: source_url differs from approved plot (reapproval required)')
+        by_id[aid] = {**original, **asset, 'id': aid}
+    clone['assets'] = list(by_id.values())
+    return clone
+
+
+def write_qa_report(report: dict, destination: Path) -> None:
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+
+
 def strip_prefix(text: str, prefixes: tuple[str, ...]) -> str:
     return next((text[len(p):].strip() for p in prefixes if text.startswith(p)), text)
 
@@ -543,11 +708,20 @@ def set_speaker_notes(slide, notes_text: str) -> None:
 
 
 def build_deck(template_path: Path, plot_path: Path, out_path: Path,
-               assets_dir: Path | None = None, skip_hash_check: bool = False) -> dict:
+               assets_dir: Path | None = None, skip_hash_check: bool = False,
+               strict_assets: bool = False, qa_report_path: Path | None = None,
+               assets_manifest_path: Path | None = None) -> dict:
     template_sha = verify_template(template_path, skip_hash_check)
     plot = json.loads(plot_path.read_text(encoding='utf-8'))
     if plot.get('status') != 'approved':
         raise ValueError(f"Plot status must be 'approved' before generating PPTX (got {plot.get('status')!r})")
+    if assets_manifest_path is not None:
+        plot = merge_asset_manifest(plot, assets_manifest_path)
+    report = preflight_plot(plot, assets_dir, strict_assets)
+    if qa_report_path:
+        write_qa_report(report, qa_report_path)
+    if report['errors']:
+        raise ValueError('PPTX preflight failed: ' + '; '.join(report['errors']))
     edition_date = plot.get('edition_date', '2026-10-26')
     specs = plot.get('slides', [])
     if not specs:
@@ -573,7 +747,8 @@ def build_deck(template_path: Path, plot_path: Path, out_path: Path,
     delete_first_n_slides(prs)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     prs.save(str(out_path))
-    return {'output_pptx': str(out_path), 'slides_count': len(prs.slides), 'template_sha256': template_sha}
+    return {'output_pptx': str(out_path), 'slides_count': len(prs.slides),
+            'template_sha256': template_sha, 'preflight': report}
 
 
 def render_qa_previews(pptx_path: Path, qa_dir: Path, scale: float = 2.0) -> list[Path]:
@@ -600,8 +775,14 @@ def main() -> None:
     parser.add_argument('--assets-dir', type=Path)
     parser.add_argument('--render-qa-dir', type=Path)
     parser.add_argument('--skip-hash-check', action='store_true')
+    parser.add_argument('--strict-assets', action='store_true',
+                        help='Block missing/unreviewed/wrong evidence before generating')
+    parser.add_argument('--qa-report', type=Path, help='Write machine-readable preflight JSON')
+    parser.add_argument('--assets-manifest', type=Path,
+                        help='Drive/GAS assets-manifest.json with visual review metadata')
     args = parser.parse_args()
-    result = build_deck(args.template, args.plot, args.out, args.assets_dir, args.skip_hash_check)
+    result = build_deck(args.template, args.plot, args.out, args.assets_dir,
+                        args.skip_hash_check, args.strict_assets, args.qa_report, args.assets_manifest)
     print(f"Generated {result['output_pptx']} ({result['slides_count']} slides)")
     if args.render_qa_dir:
         files = render_qa_previews(args.out, args.render_qa_dir)

@@ -1,4 +1,4 @@
-# itnews-creator — Weekly IT News v0.9.3
+# itnews-creator — Weekly IT News v0.9.4
 
 [ライセンス: MIT](LICENSE)
 
@@ -16,7 +16,7 @@
 
 詳細な役割分担：[新アーキテクチャ](docs/architecture-gemini-claude.md)
 
-## v0.9.3 実戦フィードバック反映（バックポート内容）
+## v0.9.4 実戦フィードバック反映（バックポート内容）
 
 1. **番組らしい見出し・日本向け用語統一と「1ページ1スクショ」原則**
    - 硬い調査報告書調の見出しを避け、視聴者の興味を惹く番組タイトル調に統一。
@@ -36,10 +36,10 @@
 
 [GitHub Actions — Build skill packages](https://github.com/koduki/itnews-creator/actions/workflows/package.yml) で成功した最新実行のArtifactsをダウンロードし、外側のZIPだけを展開します。
 
-- **Gemini Tasks用**：itnews-creator-gemini-task-skill-v0.9.3.zip。Geminiアプリの「スキル」へアップロードしてGemini Tasksから呼び出します。
-- **PowerPoint用**：itnews-creator-powerpoint-polish-skill-v0.9.3.zip。PowerPointのCopilotで「スキルの管理」から追加します。
-- **旧Copilot Chat用**：itnews-creator-copilot-skill-v0.9.3.zip。互換性用であり、新しい標準ワークフローには使いません。
-- **ChatGPT用**：itnews-creator-chatgpt-plugin-v0.9.3.zip。Microsoft 365やGeminiには登録しません。
+- **Gemini Tasks用**：itnews-creator-gemini-task-skill-v0.9.4.zip。Geminiアプリの「スキル」へアップロードしてGemini Tasksから呼び出します。
+- **PowerPoint用**：itnews-creator-powerpoint-polish-skill-v0.9.4.zip。PowerPointのCopilotで「スキルの管理」から追加します。
+- **旧Copilot Chat用**：itnews-creator-copilot-skill-v0.9.4.zip。互換性用であり、新しい標準ワークフローには使いません。
+- **ChatGPT用**：itnews-creator-chatgpt-plugin-v0.9.4.zip。Microsoft 365やGeminiには登録しません。
 
 **重要：テンプレートの正本はGitHub、Gemini Tasksへの実ファイル提供はGoogle Driveまたは添付です。** 実機ではVMからGitHubのraw URLのPPTXバイナリを直接ダウンロードできませんでした。毎回の直接取得を標準手順にしません。
 
@@ -76,7 +76,7 @@ Gemini製のbase.pptxをPowerPointで開き、**Copilot編集モードのモデ�
 Python標準ライブラリの scripts/build_packages.py でバージョン付きZIPを4種類生成し、GitHub Actionsで構造テストと再現性を確認します。ZIPの公開と各社のスキル登録は別作業です。
 
 独自ソースはMIT。元のアバター、ユーザー提供PPTX、外部記事の写真や技術図は元の権利者に帰属し、自動的にMITの対象にはなりません。
-## Gemini Tasks内の決定論的PPTX生成（v0.9.3）
+## Gemini Tasks内の決定論的PPTX生成（v0.9.4）
 
 GASで取得した画像を `downloads/` へ保存し、承認済み `plot.json` を渡して、同梱するPython生成器を実行します。
 
@@ -88,3 +88,22 @@ python skills/weekly-it-news-gemini/scripts/build_pptx.py \
 ```
 
 実体がGitの7枚テンプレートと一致するかSHA-256検証し、ネイティブ図形・比較表・DOCX画像素材・ノートの制作に対応します。画面表示のCookie同意やCloudflare検証が写ったスクショは生成前の素材検品で差し戻します。7枚テンプレートの表紙に存在するタイトル/日付の重なりを補正する処理を含みます。
+
+
+## v0.9.4：完成稿の品質ゲート
+
+2026-10-26の20枚デッキで、GAS取得成功の画像にCookie同意画面やCloudflare検証画面が混入したため、**「画像ファイルがある」だけでは完成扱いしません**。Geminiが回収した実画像を一枚ずつ表示し、問題がない場合のみ `assets-manifest.json` の `review_status: approved` と `review_notes` に明記してください。問題があれば `quality_flags`（`bot_challenge`, `cookie_overlay`, `ad_dominant`, `wrong_article`, `unreadable`, `needs_crop` 等）を付けて差し戻します。
+
+```bash
+python skills/weekly-it-news-gemini/scripts/build_pptx.py \
+  --template downloads/weekly-it-news-design-template.pptx \
+  --plot plot.json --assets-dir downloads \
+  --assets-manifest assets-manifest.json --strict-assets \
+  --qa-report qa/preflight.json --render-qa-dir qa \
+  --out weekly-it-news-base.pptx
+```
+
+品質チェックは、画像の有無・画像ハッシュ・検品状態・承認プロットのニュース連続性・比較表の列数を生成前に検証します。未承認や未取得はエラーとなり、理由をJSONに保存します。**Cloudflare画像等の内容そのものの自動画像認識ではありません。** Gemini/人間による実画像確認と、全ページの投影時目視確認が必要です。ベース稿の未取得素材をプレースホルダーで残したいときだけ `--strict-assets` を省略し、未完了と明記してください。
+
+- [素材マニフェストの雛形](skills/weekly-it-news-gemini/templates/assets-manifest.example.json)（初期状態は `pending`）
+- [品質ゲートの回帰テスト](tests/test_gemini_quality_gate.py)

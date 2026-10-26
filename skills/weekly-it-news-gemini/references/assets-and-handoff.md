@@ -18,13 +18,11 @@ Gemini TasksのサンドボックスVMは外部Webページの直接ブラウザ
    - スプレッドシートにバインドされたGAS（`scripts/screenshot_relay.js`）が1分周期トリガー（または手動メニュー「📸 IT News スクショ取得 ＞ ▶ pending行を今すぐ一括撮影」）で `status == 'pending'` の行を検知。
    - **第1経路**: Google PageSpeed Insights API (v5, `strategy=desktop`) の `full-page-screenshot` / `final-screenshot` からBase64 PNGを抽出。
    - **第2経路**: スクリプトプロパティ `SCREENSHOT_API_TEMPLATE`（ScreenshotOne / Urlbox等）が設定されていれば使用。
-   - **第3経路**: 公開スクリーンショット中継（`image.thum.io`、1280px幅 × 853pxクロップ）へフォールバック。
+   - **第3経路**: 公開スクリーンショット中継（`image.thum.io` 1280x800 PNG）へフォールバック。
    - Google Driveフォルダ `itnews-assets`（Folder ID: `1gha0VJobU6ffTlMm5_ypVOck70cIH4pD`）に `<asset_id>.png` を保存し、シートの `status` を `captured`、`drive_file_id` を記録する。
 3. **Gemini Tasksによる回収とPPTX埋め込み**:
    - PPTX生成前に `drive:search_files`（`parentId = '1gha0VJobU6ffTlMm5_ypVOck70cIH4pD'`）を実行し、保存されたPNGがあれば `drive:download_file_content` でローカルVMにダウンロードしてPPTXの `SOURCE_IMAGE` / `TWO_SOURCES` フレームへアスペクト比を維持して実体埋め込みする。
    - まだGASが未実行で画像が存在しない場合は、勝手にAI生成画像で埋めたりせず、テンプレートのグレープレースホルダー枠に対象記事名・URL・`asset_id` を明記し、`assets-manifest.json` に `status: "unavailable"` として記録する。
-
-   - **撮影ファイルを `view_file` で目視QA**：`captured` でもCloudflareのBot確認やCookieモーダル、本文非表示の場合は採用しない。`assets-manifest.json` に `needs_review` と取得方法・不具合を記録し、Impress Watch / ITmedia等の利用可能な別の報道に差し替えるか、要手動対応にする。記事への認証トークン入りURLや社内サイトは外部スクリーンショットAPIに送信しない。
 
 ## 3. マニフェスト管理と最終納品
 
@@ -35,3 +33,15 @@ Gemini TasksのサンドボックスVMは外部Webページの直接ブラウザ
 - ユーザー承認済み `plot.json` と `plot.md`（`status: "approved"`）
 - `assets-manifest.json` と実際に保存・埋め込んだ画像
 - 実施済みQA（LibreOffice＋`pypdfium2` による全ページレンダリング目視検査結果）、未取得画像、確認できなかった項目
+
+## 4. 品質ゲート — 実ピクセル確認と承認済み素材
+
+画像取得成功（GASの `captured`）と発表資料への使用可否は別。**各PNGを `view_file` で表示し、記事見出しや必要な内容が遮蔽されていないかを必ず確認**する。特に2026-10-26の20枚版ではNVIDIAのCookie画面とAxiosのCloudflare認証画面が混入した。後者は記事の根拠として使えない。
+
+`assets-manifest.json` の素材ごとに次を記録する：
+- `review_status`: 最初は `pending`、内容確認後だけ `approved`。
+- `review_notes`: 本文/写真が確認できるか、広告・Cookie・Bot検証が隠していないかの具体的な記録。
+- `quality_flags`: 問題があれば `bot_challenge`, `cookie_overlay`, `ad_dominant`, `wrong_article`, `unreadable`, `needs_crop`, `unrelated` 等。問題があれば画像は差し替え・再取得し、承認しない。
+- `sha256`: 実際に保存した画像ファイルのハッシュ（任意だが推奨）。再取得で画像が変わったら再検品する。
+
+厳格モード `--assets-manifest assets-manifest.json --strict-assets --qa-report qa/preflight.json` は未承認・欠落・画面不良と明記された画像を差し止め、`story_id` の分断や表の列不一致も検出する。**内容そのものの自動画像認識ではなく、検品記録に対する検証**であるため、警告なしでもLibreOffice/PowerPointで全ページの視覚QAを実施する。例：`templates/assets-manifest.example.json`。
