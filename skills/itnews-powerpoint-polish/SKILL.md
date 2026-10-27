@@ -1,24 +1,33 @@
 ---
 name: itnews-powerpoint-polish
-description: Gemini Tasksで作られた既存Weekly IT News PPTXをPowerPointのClaudeでテンプレートの意図を保ち仕上げる。
+description: Gemini Tasksで生成されたWeekly IT Newsの既存PowerPointを、Copilot in PowerPointでClaudeモデルを用いて構成を守りながら仕上げる。
 ---
 
 # Weekly IT News — PowerPoint最終調整
 
-Gemini生成済みの**existing .pptx**を開き、利用可能なClaudeモデルで仕上げる。調査・キュレーション・PPTX初稿はGeminiが担当し、ここでは再構成しない。使用できたモデル名を記録する。
+**Gemini Tasks製のexisting .pptxを開いてから編集する。** ニュース調査、企画、スクショ収集、最初のPPTX生成はGemini側が担当。Do not restart news selection.
 
-## 最優先ルール：テンプレートを再設計しない
+## モデル選択
+実際に利用可能なClaudeモデル（可能であればClaude 5.5）を編集モードで選択する。モデルが使えない場合は使用したことにせず、実際に表示されたモデルを記録する。
 
-- **GitHub管理の8枚PPTXテンプレートが唯一の視覚的正本**。既存スライドの色・罫線・フォント・余白はそのままに、読みにくい箇所だけ局所修正する。
-- 表紙は原本の専用デザイン。AGENDA、各ニュースのNEWS_TITLE、NEWS、SOURCE_IMAGE、TECH_DIAGRAM、COMPARE、TWO_SOURCESは**原本で決められたそれぞれのスタイル**を維持する。本文が青なのに過去の赤系スタイルへ戻さない。
-- NEWS_TITLEの章扉はニュース単位で1枚。青ラベル・濃紺タイトル・淡い番号を保持し、削除・追加・並べ替えをしない。
-- 承認済みプロットのニュース順序、引用、画像、技術的な主張、発表者の考察を変更しない。出典画像をAI生成画像で代替しない。ネイティブ表／図をラスタ化しない。
+## 保持するもの
+- 承認済み`plot.json`のニュース構成、ニュース順序、事実・考察、出典、実画像。改稿が必要ならGeminiへ差し戻す。
+- 元の8枚PPTXテンプレートを正本とし、COVERだけ赤黒タイトル・青い日付枠・アバターを保持。**AGENDAと本文を含む表紙以外は青基調**（青いタイトル・区切り線、濃紺の本文、淡青の表・図形）。各ニュース前の`NEWS_TITLE`もそのまま保持する。
+- 本文8レイアウトの`NEWS`／`SOURCE_IMAGE`／`TECH_DIAGRAM`／`COMPARE`／`TWO_SOURCES`と編集可能な図形・表。
+- 章扉はGemini生成器によって自動追加される場合がある。`plot.json`のslides要素数と実PPTXの枚数が違うだけでは削除しない。
 
-## 仕上げとQA
+## 編集工程
+1. Gemini生成済みPPTXをコピーし、必要なら`plot.json`／`assets-manifest.json`／`qa/preflight.json`を参照。
+2. 全ページで文字の衝突・はみ出し、表紙の日付、NEWS番号、画像のクロップ、図の矢印、表の単位と可読性を確認。
+3. ニュースの順番・技術的主張・出典と写真を変更せず、余白・文字・編集可能な図表・発表者ノートを局所的に仕上げる。
+4. Cloudflare／Cookieモーダルなどの不良画像が残ればGeminiへ差し戻す。見かけだけ隠すことはしない。
+5. 編集後の全ページを再確認し、`final.pptx`と変更箇所・未完了項目・使用モデルを報告。未完了ならFINALと呼ばない。
 
-1. base.pptxをコピーして保存。必要ならplot.json／assets-manifest.json／qa/preflight.jsonを確認。
-2. 全ページで表紙の日付枠、文字の衝突、タイトル折り返し、表の可読性、画像の内容・クロップ、出典を点検。
-3. テンプレートの色と形を維持して文字配置・行間・図形接続・比較表を最小限修正。内容や素材の変更はGeminiへの差し戻しとする。
-4. 修正後全ページを見直し、`final.pptx`と変更箇所・使用モデル・未確認項目を報告。Cookie／Cloudflareが残る場合は完成扱いにしない。
+## 参照
+- references/gemini-claude-handoff.md：Geminiとの引き継ぎ
+- references/review-rubric.md：優先修正と合格判定
+- references/visual-repair.md：ネイティブ図表・画像・文字組
+- templates/review-report.md：成果報告書
 
-参考：`references/gemini-claude-handoff.md`、`references/review-rubric.md`、`references/visual-repair.md`、`templates/review-report.md`。
+## 依頼例
+Geminiで生成したbase.pptxを開いています。章扉NEWS_TITLE、ニュース順序、元の写真と出典、発表者の考察を変えずに、文字・余白・画像・技術図と比較表を最終調整してください。確認できなかった項目と実際に選んだモデル名も報告してください。

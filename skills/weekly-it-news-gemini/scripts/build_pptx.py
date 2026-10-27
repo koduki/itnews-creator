@@ -20,7 +20,7 @@ from xml.etree import ElementTree as ET
 
 from PIL import Image
 from pptx import Presentation
-from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
+from pptx.enum.text import PP_ALIGN
 from pptx.oxml import parse_xml
 from pptx.oxml.ns import nsdecls, qn
 from pptx.util import Inches, Pt
@@ -30,7 +30,6 @@ LAYOUT_TO_TEMPLATE_INDEX = {
     'COVER': 0, 'AGENDA': 1, 'NEWS_TITLE': 2, 'NEWS': 3,
     'SOURCE_IMAGE': 4, 'TECH_DIAGRAM': 5, 'COMPARE': 6, 'TWO_SOURCES': 7,
 }
-
 
 def verify_template(template_path: Path, skip_hash_check: bool = False) -> str:
     """Check the pinned canonical 8-slide presentation and source avatar."""
@@ -76,26 +75,28 @@ def extract_docx_assets(docx_paths: list[Path], out_dir: Path) -> list[dict]:
 
 
 def set_cjk_font(run_or_para, font_name: str = 'Yu Gothic') -> None:
-    """Only add CJK fallback; NEVER override template colors/Latin font."""
+    """Only set the East-Asian fallback. Never overwrite template Latin/CS fonts or colors."""
     el = run_or_para._r.get_or_add_rPr() if hasattr(run_or_para, '_r') else run_or_para._p.get_or_add_pPr()
     if el.tag.endswith('pPr'):
-        default = el.find(qn('a:defRPr'))
-        if default is None:
-            default = parse_xml(f'<a:defRPr {nsdecls("a")}/>')
-            el.append(default)
-        el = default
-    if el.find(qn('a:ea')) is None:
-        el.append(parse_xml(f'<a:ea {nsdecls("a")} typeface="{font_name}"/>'))
-
+        def_rpr = el.find(qn('a:defRPr'))
+        if def_rpr is None:
+            def_rpr = parse_xml(f'<a:defRPr {nsdecls("a")}/>')
+            el.append(def_rpr)
+        el = def_rpr
+    child = el.find(qn('a:ea'))
+    if child is None:
+        child = parse_xml(f'<a:ea {nsdecls("a")} typeface="{font_name}"/>')
+        el.append(child)
+    # Existing a:ea and a:latin (e.g. masthead fonts) are deliberately left intact.
 
 def enforce_slide_cjk_fonts(slide, font_name: str = 'Yu Gothic') -> None:
-    """Keep all template typography except missing East-Asian font declarations."""
+    """Preserve typography defined in the PPTX template, filling only missing CJK fallback."""
     for shape in slide.shapes:
-        frames = [shape.text_frame] if shape.has_text_frame else []
+        text_frames = [shape.text_frame] if shape.has_text_frame else []
         if shape.has_table:
-            frames.extend(cell.text_frame for row in shape.table.rows for cell in row.cells)
-        for frame in frames:
-            for para in frame.paragraphs:
+            text_frames.extend(cell.text_frame for row in shape.table.rows for cell in row.cells)
+        for tf in text_frames:
+            for para in tf.paragraphs:
                 set_cjk_font(para, font_name)
                 for run in para.runs:
                     set_cjk_font(run, font_name)
@@ -145,105 +146,100 @@ def remove_shape(slide, name: str) -> None:
         elem.getparent().remove(elem)
 
 
-def compute_title_pt(title: str) -> float:
-    """Heuristic starting font size; visual QA must still inspect wrapping."""
+def compute_title_pt(title: str) -> float | None:
+    """Keep the template's native 30pt when possible; only shrink unusually long headings."""
     n = len(title)
-    return 18.0 if n >= 45 else 19.5 if n >= 39 else 22.0 if n >= 33 else 25.0
+    return 18.0 if n >= 45 else 20.0 if n >= 39 else 23.0 if n >= 33 else 26.0 if n >= 23 else None
+
+def _replace_paragraph_text(para, text: str, pt: float | None = None,
+                            bold: bool | None = None) -> None:
+    """Retain paragraph and run styling (a:defRPr / colors / fonts) from the template."""
+    runs = list(para.runs)
+    if runs:
+        main = runs[0]
+        main.text = str(text)
+        for other in runs[1:]:
+            other._r.getparent().remove(other._r)
+    else:
+        main = para.add_run()
+        main.text = str(text)
+    if pt is not None:
+        main.font.size = Pt(pt)
+    if bold is not None:
+        main.font.bold = bold
+    set_cjk_font(para)
+    set_cjk_font(main)
 
 
 def set_single_text(shape, text: str, pt: float | None = None,
                     bold: bool | None = None, align: PP_ALIGN | None = None) -> None:
-    """Edit the EXISTING template run, preserving its color and paragraph style.
-
-    Many template slides store text color in a:pPr/a:defRPr. The former
-    text_frame.clear()+add_run() removed that definition and made titles red.
-    """
+    """Replace text but preserve the template's native fill, font colors and placement."""
     if shape is None or not hasattr(shape, 'text_frame'):
         return
     tf = shape.text_frame
-    tf.word_wrap = True
+    # Keep its first <a:p> and pPr rather than tf.clear(), which discards
+    # the native blue <a:defRPr> style used throughout the eight-slide template.
+    while len(tf.paragraphs) > 1:
+        node = tf.paragraphs[-1]._p
+        node.getparent().remove(node)
     para = tf.paragraphs[0]
-    for extra in list(tf.paragraphs)[1:]:
-        tf._txBody.remove(extra._p)
-    if para.runs:
-        run = para.runs[0]
-        for extra in list(para.runs)[1:]:
-            para._p.remove(extra._r)
-    else:
-        run = para.add_run()
-    run.text = str(text)
-    if pt is not None:
-        run.font.size = Pt(pt)
-    if bold is not None:
-        run.font.bold = bold
     if align is not None:
         para.alignment = align
-    set_cjk_font(run)
+    _replace_paragraph_text(para, str(text), pt=pt, bold=bold)
 
 
-def set_list_text(shape, lines, pt: float | None = None,
-                  bold: bool | None = None, space_after_pt: float | None = None,
-                  bullets: bool = False) -> None:
-    """Duplicate one template paragraph's XML styling for each supplied line."""
+def set_template_lines(shape, lines, *, font_size: float | None = None,
+                       space_after: float | None = None, bullets: bool = False) -> None:
+    """Populate a template text frame; clone styled paragraphs instead of recreating them."""
     if shape is None:
         return
     tf = shape.text_frame
+    original = [copy.deepcopy(para._p) for para in tf.paragraphs]
+    if not original:
+        raise ValueError(f'Expected a styled text paragraph in {shape.name}')
+    content = [str(x) for x in lines] or ['']
+    while len(tf.paragraphs) < len(content):
+        proto = original[min(len(tf.paragraphs), len(original)-1)]
+        tf._txBody.append(copy.deepcopy(proto))
+    while len(tf.paragraphs) > len(content):
+        node = tf.paragraphs[-1]._p
+        node.getparent().remove(node)
     tf.word_wrap = True
-    template_paragraph = copy.deepcopy(tf.paragraphs[0]._p)
-    for old in list(tf._txBody.p_lst):
-        tf._txBody.remove(old)
-    for line in (list(lines) or ['']):
-        para_xml = copy.deepcopy(template_paragraph)
-        runs = list(para_xml.findall(qn('a:r')))
-        if not runs:
-            raise ValueError(f'Missing sample text run in template: {shape.name}')
-        for extra in runs[1:]:
-            para_xml.remove(extra)
-        el = runs[0].find(qn('a:t'))
-        if el is None:
-            el = parse_xml(f'<a:t {nsdecls("a")}/>')
-            runs[0].append(el)
-        value = str(line)
-        el.text = value if not bullets or value.startswith('・') else '・' + value
-        tf._txBody.append(para_xml)
-        para = tf.paragraphs[-1]
-        if space_after_pt is not None:
-            para.space_after = Pt(space_after_pt)
-        run = para.runs[0]
-        if pt is not None:
-            run.font.size = Pt(pt)
-        if bold is not None:
-            run.font.bold = bold
-        set_cjk_font(run)
-
+    for i, line in enumerate(content):
+        if bullets and line and not line.startswith('・'):
+            line = '・' + line
+        para = tf.paragraphs[i]
+        if space_after is not None:
+            para.space_after = Pt(space_after)
+        _replace_paragraph_text(para, line, pt=font_size)
 
 def set_header_and_footer(slide, data: dict, edition_date: str) -> None:
-    """Title text is the only header slot: the template has no footer textbox."""
+    """The template is the design authority. Update its title, not its colors/geometry."""
     sh = find_shape(slide, 'TextBox 1')
-    if sh is not None:
-        # Keep the template's blue, native x/y and underlying divider line.
-        sh.height = max(sh.height, Inches(0.72))
-        set_single_text(sh, data.get('title', ''), compute_title_pt(data.get('title', '')), True)
+    if sh:
+        title = str(data.get('title', ''))
+        set_single_text(sh, title, compute_title_pt(title))
+    # TextBox 3 is optional in user-supplied templates. Never create a footer
+    # or move a template element to enforce legacy coordinates.
+    sh = find_shape(slide, 'TextBox 3')
+    if sh:
+        footer = f"Weekly IT News！ {edition_date}  •  {data.get('slide_id','').upper()}"
+        set_single_text(sh, footer)
 
 def populate_news_title(slide, data: dict, number: int) -> None:
-    """Fill the new native story divider without overwriting its blue identity."""
+    """Maintain the NEWS_TITLE shapes and blue/navy typography from the actual template."""
     label = find_shape(slide, 'News Label')
     big = find_shape(slide, 'Big Number')
     title = find_shape(slide, 'News Title')
     if not all((label, big, title)):
         raise ValueError('NEWS_TITLE native shapes missing')
     nn = f'{number:02d}'
-    set_single_text(label, f'NEWS {nn}', 18, True)
-    label.text_frame.paragraphs[0].runs[0].font.name = 'Arial'
-    set_single_text(big, nn, 200, True)
-    big.text_frame.paragraphs[0].runs[0].font.name = 'Arial'
+    set_single_text(label, f'NEWS {nn}')
+    set_single_text(big, nn)
     headline = str(data.get('title') or '（タイトル未設定）')
-    # Wide headline frame: use two lines for genuinely long Japanese titles.
-    # This is a lower-bounded heuristic, not a guarantee of no overflow.
-    size = 48 if len(headline) <= 18 else 41 if len(headline) <= 26 else 34 if len(headline) <= 38 else 28
-    set_single_text(title, headline, size, True)
+    size = None if len(headline) <= 18 else 41 if len(headline) <= 26 else 34 if len(headline) <= 38 else 28
+    set_single_text(title, headline, size)
     title.text_frame.word_wrap = True
-
 
 def expanded_story_slides(plot: dict) -> list[dict]:
     """Generate exactly one story divider before each news block.
@@ -494,42 +490,26 @@ def strip_prefix(text: str, prefixes: tuple[str, ...]) -> str:
 
 def populate_cover(slide, data: dict, edition_date: str) -> None:
     y, m, d = edition_date.split('-')
-    # The NEW 8-slide template intentionally uses a single-line native masthead:
-    # red "Weekly" + black "IT News！". Do not reconstruct it as two lines;
-    # keep the source's run styling, shapes and avatar. Only change dates/teaser.
+    # Cover exception: preserve its authentic red/black masthead and avatar.
     masthead = find_shape(slide, 'TextBox 9')
     if masthead is None or 'Weekly' not in masthead.text:
-        raise ValueError('New template cover masthead is missing')
-    year_frame = find_shape(slide, 'Rectangle 6')
-    if year_frame is not None:
-        year_frame.top = Inches(3.13)
-    # Use the source cover's original native shape placements, fills and text
-    # colors. Changing the month/day to WHITE caused unreadable cover dates in
-    # a field-generated deck because those labels are on a white background.
-    r5 = find_shape(slide, 'Rectangle 5')
-    if r5 is not None:
-        r5.top = Inches(3.13)
-        set_single_text(r5, f'{y}年', 21, True, PP_ALIGN.LEFT)
-    r1 = find_shape(slide, 'Rectangle 1')
-    if r1 is not None:
-        r1.top = Inches(3.83)
-        set_single_text(r1, f'{int(m):02d}月', 46, True, PP_ALIGN.RIGHT)
-    tb4 = find_shape(slide, 'TextBox 4')
-    if tb4 is not None:
-        tb4.top = Inches(4.48)
-        set_single_text(tb4, f'{int(d):02d}', 108, False, PP_ALIGN.LEFT)
-    tb13 = find_shape(slide, 'TextBox 13')
-    if tb13 is not None:
-        set_list_text(tb13, data.get('on_slide', []), pt=19, bold=True, space_after_pt=10, bullets=True)
-
+        raise ValueError('Template cover masthead is missing')
+    # Adjust date positions ONLY to avoid collision with the original masthead.
+    for name, top in (('Rectangle 6',3.13),('Rectangle 5',3.13),
+                      ('Rectangle 1',3.83),('TextBox 4',4.48)):
+        sh = find_shape(slide, name)
+        if sh:
+            sh.top = Inches(top)
+    set_single_text(find_shape(slide, 'Rectangle 5'), f'{y}年', 21)
+    set_single_text(find_shape(slide, 'Rectangle 1'), f'{int(m):02d}月', 46)
+    set_single_text(find_shape(slide, 'TextBox 4'), f'{int(d):02d}', 108)
+    set_template_lines(find_shape(slide, 'TextBox 13'), data.get('on_slide', []),
+                       font_size=19, space_after=10, bullets=True)
 
 def populate_agenda(slide, data: dict, edition_date: str) -> None:
     set_header_and_footer(slide, data, edition_date)
-    sh = find_shape(slide, 'TextBox 4')
-    if sh:
-        sh.left, sh.top, sh.width, sh.height = map(Inches, [0.88, 1.65, 11.50, 4.70])
-        set_list_text(sh, data.get('on_slide', []), pt=24, space_after_pt=22, bullets=True)
-
+    set_template_lines(find_shape(slide, 'TextBox 4'), data.get('on_slide', []),
+                       font_size=24, space_after=22, bullets=True)
 
 def populate_news(slide, data: dict, edition_date: str) -> None:
     set_header_and_footer(slide, data, edition_date)
@@ -546,55 +526,44 @@ def populate_news(slide, data: dict, edition_date: str) -> None:
         intro = strip_prefix(bullets.pop(0), ('導入：', '・'))
     if not source and data.get('source_urls'):
         source = '出典：' + ' / '.join(data['source_urls'][:3])
-    sh = find_shape(slide, 'TextBox 4')
-    if sh:
-        sh.left, sh.top, sh.width, sh.height = map(Inches, [0.84, 1.32, 11.60, 0.85])
-        set_single_text(sh, intro, 19, True)
-    sh = find_shape(slide, 'TextBox 5')
-    if sh:
-        sh.left, sh.top, sh.width, sh.height = map(Inches, [0.89, 2.30, 11.50, 3.95])
-        set_list_text(sh, bullets, pt=17.5, space_after_pt=12, bullets=True)
-    sh = find_shape(slide, 'TextBox 6')
-    if sh:
-        sh.left, sh.top, sh.width, sh.height = map(Inches, [0.89, 6.48, 11.40, 0.45])
-        set_single_text(sh, source, 11)
+    set_single_text(find_shape(slide, 'TextBox 4'), intro, 19)
+    set_template_lines(find_shape(slide, 'TextBox 5'), bullets, font_size=17.5,
+                       space_after=12, bullets=True)
+    set_single_text(find_shape(slide, 'TextBox 6'), source, 11)
+
+def _embed_in_template_frame(slide, path: Path, rectangle_name: str):
+    """Use the native frame shape's geometry; avoid hard-coded coordinates."""
+    frame = find_shape(slide, rectangle_name)
+    if frame is None:
+        raise ValueError(f'Missing image frame: {rectangle_name}')
+    pad = Inches(0.08)
+    embed_picture_in_box(slide, path,
+        (frame.left+pad)/Inches(1), (frame.top+pad)/Inches(1),
+        (frame.width-2*pad)/Inches(1), (frame.height-2*pad)/Inches(1))
 
 
 def populate_source_image(slide, data: dict, edition_date: str,
                           assets_map: dict[str, dict], assets_dir: Path | None) -> None:
     set_header_and_footer(slide, data, edition_date)
     lines = list(data.get('on_slide', []))
-    img_desc = lines[0] if lines else ''
-    point = lines[1] if len(lines) >= 2 else img_desc
+    desc = lines[0] if lines else ''
+    point = lines[1] if len(lines) >= 2 else desc
     source = next((line for line in lines if line.startswith('出典：')), '')
     if not source and data.get('source_urls'):
         source = '出典：' + ' / '.join(data['source_urls'][:2])
-    sh = find_shape(slide, 'Rectangle 4')
-    if sh:
-        sh.left, sh.top, sh.width, sh.height = map(Inches, [0.78, 1.35, 11.74, 4.25])
-    sh = find_shape(slide, 'TextBox 6')
-    if sh:
-        sh.left, sh.top, sh.width, sh.height = map(Inches, [0.80, 5.72, 11.80, 0.82])
-        set_single_text(sh, point, 15.5, True)
-    sh = find_shape(slide, 'TextBox 7')
-    if sh:
-        sh.left, sh.top, sh.width, sh.height = map(Inches, [0.80, 6.62, 11.80, 0.38])
-        set_single_text(sh, source, 11)
+    set_single_text(find_shape(slide, 'TextBox 6'), point, 15.5)
+    set_single_text(find_shape(slide, 'TextBox 7'), source, 11)
     asset_id = next(iter(data.get('asset_ids', [])), '')
     path = resolve_asset_file(asset_id, assets_map, assets_dir) if asset_id else None
     if path:
         remove_shape(slide, 'TextBox 5')
-        embed_picture_in_box(slide, path, 0.84, 1.41, 11.62, 4.13)
+        _embed_in_template_frame(slide, path, 'Rectangle 4')
     else:
-        sh = find_shape(slide, 'TextBox 5')
-        if sh:
-            sh.left, sh.top, sh.width, sh.height = map(Inches, [1.55, 2.55, 10.3, 2.0])
-            urls = data.get('source_urls', [])
-            url = urls[0] if urls else 'URL未設定'
-            placeholder = (f'【記事スクリーンショット枠：{asset_id or "pending"}】\n'
-                           f'{img_desc}\nURL: {url}\n※画像ファイル未取得（差替用）')
-            set_single_text(sh, placeholder, 15, True, PP_ALIGN.CENTER)
-
+        urls = data.get('source_urls', [])
+        url = urls[0] if urls else 'URL未設定'
+        placeholder = (f'【記事スクリーンショット枠：{asset_id or "pending"}】\n'
+                       f'{desc}\nURL: {url}\n※画像ファイル未取得（差替用）')
+        set_single_text(find_shape(slide, 'TextBox 5'), placeholder, 15)
 
 def populate_tech_diagram(slide, data: dict, edition_date: str) -> None:
     set_header_and_footer(slide, data, edition_date)
@@ -604,20 +573,18 @@ def populate_tech_diagram(slide, data: dict, edition_date: str) -> None:
     if len(blocks) < 3 and len(lines) >= 4:
         blocks = lines[1:4]
     bottom = lines[-1] if len(lines) >= 5 else ''
-    sh = find_shape(slide, 'TextBox 4')
-    if sh:
-        sh.left, sh.top, sh.width, sh.height = map(Inches, [0.80, 1.30, 11.60, 0.68])
-        set_single_text(sh, lead, 17, True)
-    rect_names = ('Rectangle 5', 'Rectangle 7', 'Rectangle 9')
-    text_names = ('TextBox 6', 'TextBox 8', 'TextBox 10')
+    set_single_text(find_shape(slide, 'TextBox 4'), lead, 17)
+    frames = ('Rectangle 5', 'Rectangle 7', 'Rectangle 9')
+    boxes = ('TextBox 6', 'TextBox 8', 'TextBox 10')
     for i in range(3):
-        rect = find_shape(slide, rect_names[i])
-        if rect:
-            rect.left, rect.top, rect.width, rect.height = map(Inches, [0.75+4.20*i, 2.15, 3.40, 3.95])
-        txt = find_shape(slide, text_names[i])
-        if not txt:
-            continue
-        txt.left, txt.top, txt.width, txt.height = map(Inches, [0.89+4.20*i, 2.31, 3.12, 3.63])
+        rect = find_shape(slide, frames[i])
+        txt = find_shape(slide, boxes[i])
+        if txt is None or rect is None:
+            raise ValueError(f'Missing TECH_DIAGRAM native template shapes: {frames[i]} / {boxes[i]}')
+        # Expand the text within the actual native box instead of moving/repainting it.
+        inset = Inches(0.14)
+        txt.left, txt.top = rect.left + inset, rect.top + inset
+        txt.width, txt.height = rect.width - 2*inset, rect.height - 2*inset
         raw = blocks[i] if i < len(blocks) else ''
         heading, body = raw, ''
         if ' — ' in raw:
@@ -627,41 +594,14 @@ def populate_tech_diagram(slide, data: dict, edition_date: str) -> None:
             m = re.match(r'^ブロック\d+（(.+?)）：(.*)$', raw)
             if m:
                 heading, body = m.group(1), m.group(2)
-        tf = txt.text_frame
-        template_ppr = copy.deepcopy(tf.paragraphs[0]._p.pPr)
-        tf.clear()
-        tf.word_wrap = True
-        p = tf.paragraphs[0]
-        if template_ppr is not None:
-            p._p.insert(0, copy.deepcopy(template_ppr))
-        p.space_after = Pt(8)
-        r = p.add_run()
-        r.text = f'{"①②③"[i]} {heading}' if not heading.startswith(('①', '②', '③', '層')) else heading
-        r.font.size = Pt(17.5)
-        r.font.bold = True
-        set_cjk_font(r)
-        if body:
-            segments = [s.strip() for s in re.split(r'(?<=[。】])\s*|(?<=、)(?=①|②|③|④)', body) if s.strip()]
-            for segment in segments:
-                p = tf.add_paragraph()
-                if template_ppr is not None:
-                    p._p.insert(0, copy.deepcopy(template_ppr))
-                p.space_after = Pt(6)
-                r = p.add_run()
-                r.text = segment if segment.startswith(('【', '・')) else f'・{segment}'
-                r.font.size = Pt(14.5)
-                r.font.bold = segment.startswith('【')
-                set_cjk_font(r)
-    for name, x in (('TextBox 11', 4.22), ('TextBox 12', 8.42)):
-        sh = find_shape(slide, name)
-        if sh:
-            sh.left, sh.top, sh.width, sh.height = map(Inches, [x, 3.80, 0.65, 0.50])
-            set_single_text(sh, '→', 28, True, PP_ALIGN.CENTER)
-    sh = find_shape(slide, 'TextBox 13')
-    if sh:
-        sh.left, sh.top, sh.width, sh.height = map(Inches, [0.78, 6.32, 11.60, 0.55])
-        set_single_text(sh, bottom, 12, True)
-
+        title = f'{"①②③"[i]} {heading}' if not heading.startswith(('①','②','③','層')) else heading
+        segments = [x.strip() for x in re.split(r'(?<=[。】])\s*|(?<=、)(?=①|②|③|④)', body) if x.strip()]
+        set_template_lines(txt, [title] + [s if s.startswith(('【','・')) else '・'+s for s in segments],
+                           font_size=14.5 if len(raw) > 90 else 16, space_after=5)
+    # Native template arrow styling (blue) is retained.
+    set_single_text(find_shape(slide, 'TextBox 11'), '→')
+    set_single_text(find_shape(slide, 'TextBox 12'), '→')
+    set_single_text(find_shape(slide, 'TextBox 13'), bottom, 12)
 
 def parse_compare_rows(data: dict) -> tuple[list[str], list[list[str]], str, str]:
     lines = list(data.get('on_slide', []))
@@ -701,82 +641,81 @@ def parse_compare_rows(data: dict) -> tuple[list[str], list[list[str]], str, str
 
 
 def populate_compare(slide, data: dict, edition_date: str) -> None:
+    """Resize/copy the template's editable blue table; do not generate a red replacement."""
     set_header_and_footer(slide, data, edition_date)
     headers, rows, lead, source = parse_compare_rows(data)
-    sh = find_shape(slide, 'TextBox 4')
-    if sh:
-        sh.left, sh.top, sh.width, sh.height = map(Inches, [0.82, 1.25, 11.60, 0.55])
-        set_single_text(sh, lead, 16, True)
-    sh = find_shape(slide, 'TextBox 6')
-    if sh:
-        sh.left, sh.top, sh.width, sh.height = map(Inches, [0.86, 6.40, 11.30, 0.45])
-        set_single_text(sh, source, 11.5)
-    # Native table geometry, blue header and text colors come from the PPTX.
-    # Clone a sample cell's XML, not a hard-coded red header/theme.
-    source_shape = next((sh for sh in slide.shapes if sh.has_table), None)
-    if source_shape is None:
-        raise ValueError('COMPARE template missing a native table')
-    source_table = source_shape.table
-    original_rows, original_cols = len(source_table.rows), len(source_table.columns)
-    left, top, width = source_shape.left, source_shape.top, source_shape.width
-    height = max(source_shape.height, Inches(4.30) if len(rows) >= 5 else source_shape.height)
-    remove_element = source_shape._element
-    remove_element.getparent().remove(remove_element)
+    set_single_text(find_shape(slide, 'TextBox 4'), lead, 16)
+    set_single_text(find_shape(slide, 'TextBox 6'), source, 11.5)
+    tables = [sh for sh in slide.shapes if sh.has_table]
+    if len(tables) != 1:
+        raise ValueError('COMPARE requires exactly one styled template table')
     if not headers or not rows:
         return
-    nrows, ncols = len(rows) + 1, len(headers)
-    shape = slide.shapes.add_table(nrows, ncols, left, top, width, height)
-    tbl = shape.table
-    if ncols == original_cols:
-        weights = [col.width / source_shape.width for col in source_table.columns]
-    elif ncols == 4:
-        weights = [0.19, 0.20, 0.20, 0.41]
-    else:
-        weights = [1 / ncols] * ncols
-    for col, weight in zip(tbl.columns, weights):
-        col.width = int(width * weight)
-    header_pt = 14 if nrows >= 6 else 15
-    body_pt = 12.5 if nrows >= 6 else 13
-    for i in range(nrows):
+    sh = tables[0]
+    table = sh.table
+    xml_table = table._tbl
+    grid = xml_table.tblGrid
+    original_grid = list(grid)
+    row_elems = list(xml_table.tr_lst)
+    head_proto = copy.deepcopy(row_elems[0])
+    body_proto = copy.deepcopy(row_elems[1] if len(row_elems) > 1 else row_elems[0])
+    ncols = len(headers)
+    nrows = len(rows) + 1
+    # Grow columns with cloned native cell properties (pale blue + blue text).
+    while len(grid) < ncols:
+        grid.append(copy.deepcopy(original_grid[-1]))
+    while len(grid) > ncols:
+        grid.remove(grid[-1])
+    # Original 3-col table uses its own proportions; 4-col tables give more
+    # space to the final descriptive column while retaining all native colors.
+    weights = ([float(x.w) for x in original_grid[:ncols]] if ncols == len(original_grid)
+               else [0.20,0.20,0.20,0.40] if ncols == 4
+               else [1]*ncols)
+    total = sh.width
+    for col, weight in zip(table.columns, weights):
+        col.width = int(total * weight / sum(weights))
+    while len(xml_table.tr_lst) < nrows:
+        xml_table.append(copy.deepcopy(body_proto))
+    while len(xml_table.tr_lst) > nrows:
+        xml_table.remove(xml_table.tr_lst[-1])
+    for idx, tr in enumerate(xml_table.tr_lst):
+        proto = head_proto if idx == 0 else body_proto
+        cells = tr.tc_lst
+        while len(cells) < ncols:
+            tr.append(copy.deepcopy(proto.tc_lst[-1]))
+            cells = tr.tc_lst
+        while len(cells) > ncols:
+            tr.remove(cells[-1])
+            cells = tr.tc_lst
+    # Fit the table between its native top and source note, with no overlap.
+    note = find_shape(slide, 'TextBox 6')
+    available = int((note.top - Inches(0.18) - sh.top) if note is not None else sh.height)
+    target_height = min(available, max(sh.height, Inches(0.63*nrows)))
+    height_per_row = int(target_height / nrows)
+    for row in table.rows:
+        row.height = height_per_row
+    for j, val in enumerate(headers):
+        set_single_text(table.cell(0,j), val, 14 if nrows >= 6 else None)
+    for i,row_vals in enumerate(rows,1):
         for j in range(ncols):
-            source_cell = source_table.cell(min(i, original_rows - 1), min(j, original_cols - 1))
-            target_cell = tbl.cell(i, j)
-            for child in list(target_cell._tc):
-                target_cell._tc.remove(child)
-            for child in source_cell._tc:
-                target_cell._tc.append(copy.deepcopy(child))
-            target_cell.vertical_anchor = MSO_ANCHOR.MIDDLE
-            value = headers[j] if i == 0 else (rows[i - 1][j] if j < len(rows[i - 1]) else '')
-            set_single_text(target_cell, value, header_pt if i == 0 else body_pt,
-                            True if i == 0 else j == 0, PP_ALIGN.CENTER if i == 0 else PP_ALIGN.LEFT)
+            set_single_text(table.cell(i,j), row_vals[j] if j<len(row_vals) else '',
+                            12.5 if nrows >= 6 else None)
 
 def populate_two_sources(slide, data: dict, edition_date: str,
                          assets_map: dict[str, dict], assets_dir: Path | None) -> None:
     set_header_and_footer(slide, data, edition_date)
     lines = data.get('on_slide', [])
-    for name, x in (('Rectangle 4', 0.75), ('Rectangle 5', 6.80)):
-        sh = find_shape(slide, name)
-        if sh:
-            sh.left, sh.top, sh.width, sh.height = map(Inches, [x, 1.45, 5.77, 4.45])
-    for name, x, text in (('TextBox 8', 0.80, lines[0] if lines else ''),
-                          ('TextBox 9', 6.88, lines[1] if len(lines)>1 else '')):
-        sh = find_shape(slide, name)
-        if sh:
-            sh.left, sh.top, sh.width, sh.height = map(Inches, [x, 5.98, 5.65, 0.85])
-            set_single_text(sh, text, 13.5, True)
+    set_single_text(find_shape(slide, 'TextBox 8'), lines[0] if lines else '', 13.5)
+    set_single_text(find_shape(slide, 'TextBox 9'), lines[1] if len(lines)>1 else '', 13.5)
     ids = data.get('asset_ids', [])
-    boxes = [(0, 'TextBox 6', 0.83, 1.55, 5.61, 4.25),
-             (1, 'TextBox 7', 6.88, 1.55, 5.61, 4.25)]
-    for idx, ph, x, y, w, h in boxes:
+    for idx, ph, frame in [(0,'TextBox 6','Rectangle 4'),(1,'TextBox 7','Rectangle 5')]:
         aid = ids[idx] if idx < len(ids) else ''
         path = resolve_asset_file(aid, assets_map, assets_dir) if aid else None
         if path:
             remove_shape(slide, ph)
-            embed_picture_in_box(slide, path, x, y, w, h)
+            _embed_in_template_frame(slide, path, frame)
         else:
-            set_single_text(find_shape(slide, ph), f'【画像未取得：{aid or "pending"}】',
-                            14, True, PP_ALIGN.CENTER)
-
+            set_single_text(find_shape(slide, ph), f'【画像未取得：{aid or "pending"}】', 14)
 
 def set_speaker_notes(slide, notes_text: str) -> None:
     if notes_text:
