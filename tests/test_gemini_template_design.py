@@ -52,6 +52,9 @@ class TemplateDesignTest(unittest.TestCase):
             out=directory/'generated.pptx'
             result=render.build_deck(TEMPLATE,data,out,assets_dir=directory)
             self.assertEqual(result['slides_count'],8)  # one generated NEWS_TITLE
+            self.assertEqual(result['preflight']['template_style_audit'], 'PASS')
+            self.assertEqual(len(result['preflight']['generator_sha256']), 64)
+            self.assertEqual(result['preflight']['template_sha256'], render.EXPECTED_TEMPLATE_SHA256)
             prs=Presentation(out)
             self.assertEqual(len(prs.slides),8)
             for index in (1,3,4,5,6,7):
@@ -73,6 +76,26 @@ class TemplateDesignTest(unittest.TestCase):
             self.assertEqual((actual.left,actual.top,actual.width,actual.height),
                              (src_title.left,src_title.top,src_title.width,src_title.height))
             self.assertIn('Weekly',next(x for x in prs.slides[0].shapes if x.name=='TextBox 9').text)
+
+    def test_runtime_audit_rejects_template_style_override(self):
+        """The generator must fail even if the offending color exists elsewhere."""
+        from pptx.dml.color import RGBColor
+        template = Presentation(TEMPLATE)
+        generated = render.clone_template_slide(template, 3)
+        spec = [{'slide_id': 'color-check', 'layout_id': 'NEWS'}]
+        render.audit_template_styles(template, spec)  # untouched template clone
+
+        title = next(sh for sh in generated.shapes if sh.name == 'TextBox 1')
+        para = title.text_frame.paragraphs[0]
+        run = para.runs[0] if para.runs else para.add_run()
+        run.font.color.rgb = RGBColor(0xC0, 0x00, 0x00)
+        with self.assertRaisesRegex(ValueError, 'template style'):
+            render.audit_template_styles(template, spec)
+
+        run.font.color.rgb = RGBColor(0x0A, 0x1A, 0x3A)
+        # Navy is already used elsewhere on NEWS slides, but the headline is blue.
+        with self.assertRaisesRegex(ValueError, 'template style changed in TextBox 1'):
+            render.audit_template_styles(template, spec)
 
     def test_template_contract_prevents_old_red_rules(self):
         contract=(ROOT/'skills/weekly-it-news-gemini/references/plot-and-layout.md').read_text()
