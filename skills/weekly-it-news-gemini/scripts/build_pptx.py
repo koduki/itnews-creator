@@ -52,6 +52,53 @@ def verify_template(template_path: Path, skip_hash_check: bool = False) -> str:
     return digest
 
 
+def _native_color_tokens(shape) -> set[str]:
+    """Explicit OOXML color declarations only; bitmap pixels are not a design palette."""
+    tags = {qn('a:srgbClr'), qn('a:schemeClr'), qn('a:sysClr'), qn('a:prstClr')}
+    found = set()
+    for el in shape._element.iter():
+        if el.tag in tags:
+            value = el.get('val')
+            if value:
+                found.add(f'{el.tag.rsplit("}", 1)[-1]}:{value.upper()}')
+    return found
+
+
+def audit_template_styles(prs: Presentation, specs: list[dict], template_slides: int = 8) -> None:
+    """Fail closed if a generated slide introduces non-template native colors.
+
+    Compare with each original example slide, not a separately authored RGB palette.
+    Important headline shapes also require the same native color set, preventing
+    their recoloring to a hue already used by a different shape.
+    """
+    for index, spec in enumerate(specs):
+        layout = spec['layout_id']
+        if layout == 'COVER':
+            continue  # The original cover is intentionally a different color family.
+        reference = prs.slides[LAYOUT_TO_TEMPLATE_INDEX[layout]]
+        slide = prs.slides[template_slides + index]
+
+        def native_shapes(part):
+            return [shape for shape in part.shapes if shape.shape_type != 13]
+
+        permitted = set().union(*(_native_color_tokens(sh) for sh in native_shapes(reference)))
+        present = set().union(*(_native_color_tokens(sh) for sh in native_shapes(slide)))
+        new_colors = sorted(present - permitted)
+        if new_colors:
+            raise ValueError(f'{spec.get("slide_id", index)} [{layout}]: '
+                             f'template style violation; introduced colors: {new_colors}')
+
+        critical = ('News Label', 'Big Number', 'News Title') if layout == 'NEWS_TITLE' else ('TextBox 1',)
+        for name in critical:
+            before, after = find_shape(reference, name), find_shape(slide, name)
+            if before is None or after is None:
+                raise ValueError(f'{spec.get("slide_id", index)} [{layout}]: '
+                                 f'template style shape is missing: {name}')
+            if _native_color_tokens(before) != _native_color_tokens(after):
+                raise ValueError(f'{spec.get("slide_id", index)} [{layout}]: '
+                                 f'template style changed in {name}')
+
+
 def extract_docx_assets(docx_paths: list[Path], out_dir: Path) -> list[dict]:
     """Extract all embedded PNG/JPEG and document-level hyperlinks from DOCX."""
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -494,22 +541,15 @@ def populate_cover(slide, data: dict, edition_date: str) -> None:
     masthead = find_shape(slide, 'TextBox 9')
     if masthead is None or 'Weekly' not in masthead.text:
         raise ValueError('Template cover masthead is missing')
-    # Adjust date positions ONLY to avoid collision with the original masthead.
-    for name, top in (('Rectangle 6',3.13),('Rectangle 5',3.13),
-                      ('Rectangle 1',3.83),('TextBox 4',4.48)):
-        sh = find_shape(slide, name)
-        if sh:
-            sh.top = Inches(top)
-    set_single_text(find_shape(slide, 'Rectangle 5'), f'{y}年', 21)
-    set_single_text(find_shape(slide, 'Rectangle 1'), f'{int(m):02d}月', 46)
-    set_single_text(find_shape(slide, 'TextBox 4'), f'{int(d):02d}', 108)
-    set_template_lines(find_shape(slide, 'TextBox 13'), data.get('on_slide', []),
-                       font_size=19, space_after=10, bullets=True)
+    # Do not move date boxes or override cover font sizes; these belong to the template.
+    set_single_text(find_shape(slide, 'Rectangle 5'), f'{y}年')
+    set_single_text(find_shape(slide, 'Rectangle 1'), f'{int(m):02d}月')
+    set_single_text(find_shape(slide, 'TextBox 4'), f'{int(d):02d}')
+    set_template_lines(find_shape(slide, 'TextBox 13'), data.get('on_slide', []), bullets=True)
 
 def populate_agenda(slide, data: dict, edition_date: str) -> None:
     set_header_and_footer(slide, data, edition_date)
-    set_template_lines(find_shape(slide, 'TextBox 4'), data.get('on_slide', []),
-                       font_size=24, space_after=22, bullets=True)
+    set_template_lines(find_shape(slide, 'TextBox 4'), data.get('on_slide', []), bullets=True)
 
 def populate_news(slide, data: dict, edition_date: str) -> None:
     set_header_and_footer(slide, data, edition_date)
@@ -526,10 +566,9 @@ def populate_news(slide, data: dict, edition_date: str) -> None:
         intro = strip_prefix(bullets.pop(0), ('導入：', '・'))
     if not source and data.get('source_urls'):
         source = '出典：' + ' / '.join(data['source_urls'][:3])
-    set_single_text(find_shape(slide, 'TextBox 4'), intro, 19)
-    set_template_lines(find_shape(slide, 'TextBox 5'), bullets, font_size=17.5,
-                       space_after=12, bullets=True)
-    set_single_text(find_shape(slide, 'TextBox 6'), source, 11)
+    set_single_text(find_shape(slide, 'TextBox 4'), intro)
+    set_template_lines(find_shape(slide, 'TextBox 5'), bullets, bullets=True)
+    set_single_text(find_shape(slide, 'TextBox 6'), source)
 
 def _embed_in_template_frame(slide, path: Path, rectangle_name: str):
     """Use the native frame shape's geometry; avoid hard-coded coordinates."""
@@ -551,8 +590,8 @@ def populate_source_image(slide, data: dict, edition_date: str,
     source = next((line for line in lines if line.startswith('出典：')), '')
     if not source and data.get('source_urls'):
         source = '出典：' + ' / '.join(data['source_urls'][:2])
-    set_single_text(find_shape(slide, 'TextBox 6'), point, 15.5)
-    set_single_text(find_shape(slide, 'TextBox 7'), source, 11)
+    set_single_text(find_shape(slide, 'TextBox 6'), point)
+    set_single_text(find_shape(slide, 'TextBox 7'), source)
     asset_id = next(iter(data.get('asset_ids', [])), '')
     path = resolve_asset_file(asset_id, assets_map, assets_dir) if asset_id else None
     if path:
@@ -563,7 +602,7 @@ def populate_source_image(slide, data: dict, edition_date: str,
         url = urls[0] if urls else 'URL未設定'
         placeholder = (f'【記事スクリーンショット枠：{asset_id or "pending"}】\n'
                        f'{desc}\nURL: {url}\n※画像ファイル未取得（差替用）')
-        set_single_text(find_shape(slide, 'TextBox 5'), placeholder, 15)
+        set_single_text(find_shape(slide, 'TextBox 5'), placeholder)
 
 def populate_tech_diagram(slide, data: dict, edition_date: str) -> None:
     set_header_and_footer(slide, data, edition_date)
@@ -573,7 +612,7 @@ def populate_tech_diagram(slide, data: dict, edition_date: str) -> None:
     if len(blocks) < 3 and len(lines) >= 4:
         blocks = lines[1:4]
     bottom = lines[-1] if len(lines) >= 5 else ''
-    set_single_text(find_shape(slide, 'TextBox 4'), lead, 17)
+    set_single_text(find_shape(slide, 'TextBox 4'), lead)
     frames = ('Rectangle 5', 'Rectangle 7', 'Rectangle 9')
     boxes = ('TextBox 6', 'TextBox 8', 'TextBox 10')
     for i in range(3):
@@ -581,10 +620,7 @@ def populate_tech_diagram(slide, data: dict, edition_date: str) -> None:
         txt = find_shape(slide, boxes[i])
         if txt is None or rect is None:
             raise ValueError(f'Missing TECH_DIAGRAM native template shapes: {frames[i]} / {boxes[i]}')
-        # Expand the text within the actual native box instead of moving/repainting it.
-        inset = Inches(0.14)
-        txt.left, txt.top = rect.left + inset, rect.top + inset
-        txt.width, txt.height = rect.width - 2*inset, rect.height - 2*inset
+        # Preserve the native text frame geometry; content fit is handled by QA.
         raw = blocks[i] if i < len(blocks) else ''
         heading, body = raw, ''
         if ' — ' in raw:
@@ -597,11 +633,11 @@ def populate_tech_diagram(slide, data: dict, edition_date: str) -> None:
         title = f'{"①②③"[i]} {heading}' if not heading.startswith(('①','②','③','層')) else heading
         segments = [x.strip() for x in re.split(r'(?<=[。】])\s*|(?<=、)(?=①|②|③|④)', body) if x.strip()]
         set_template_lines(txt, [title] + [s if s.startswith(('【','・')) else '・'+s for s in segments],
-                           font_size=14.5 if len(raw) > 90 else 16, space_after=5)
+                           font_size=14.5 if len(raw) > 90 else None)
     # Native template arrow styling (blue) is retained.
     set_single_text(find_shape(slide, 'TextBox 11'), '→')
     set_single_text(find_shape(slide, 'TextBox 12'), '→')
-    set_single_text(find_shape(slide, 'TextBox 13'), bottom, 12)
+    set_single_text(find_shape(slide, 'TextBox 13'), bottom)
 
 def parse_compare_rows(data: dict) -> tuple[list[str], list[list[str]], str, str]:
     lines = list(data.get('on_slide', []))
@@ -644,8 +680,8 @@ def populate_compare(slide, data: dict, edition_date: str) -> None:
     """Resize/copy the template's editable blue table; do not generate a red replacement."""
     set_header_and_footer(slide, data, edition_date)
     headers, rows, lead, source = parse_compare_rows(data)
-    set_single_text(find_shape(slide, 'TextBox 4'), lead, 16)
-    set_single_text(find_shape(slide, 'TextBox 6'), source, 11.5)
+    set_single_text(find_shape(slide, 'TextBox 4'), lead)
+    set_single_text(find_shape(slide, 'TextBox 6'), source)
     tables = [sh for sh in slide.shapes if sh.has_table]
     if len(tables) != 1:
         raise ValueError('COMPARE requires exactly one styled template table')
@@ -705,8 +741,8 @@ def populate_two_sources(slide, data: dict, edition_date: str,
                          assets_map: dict[str, dict], assets_dir: Path | None) -> None:
     set_header_and_footer(slide, data, edition_date)
     lines = data.get('on_slide', [])
-    set_single_text(find_shape(slide, 'TextBox 8'), lines[0] if lines else '', 13.5)
-    set_single_text(find_shape(slide, 'TextBox 9'), lines[1] if len(lines)>1 else '', 13.5)
+    set_single_text(find_shape(slide, 'TextBox 8'), lines[0] if lines else '')
+    set_single_text(find_shape(slide, 'TextBox 9'), lines[1] if len(lines)>1 else '')
     ids = data.get('asset_ids', [])
     for idx, ph, frame in [(0,'TextBox 6','Rectangle 4'),(1,'TextBox 7','Rectangle 5')]:
         aid = ids[idx] if idx < len(ids) else ''
@@ -715,7 +751,7 @@ def populate_two_sources(slide, data: dict, edition_date: str,
             remove_shape(slide, ph)
             _embed_in_template_frame(slide, path, frame)
         else:
-            set_single_text(find_shape(slide, ph), f'【画像未取得：{aid or "pending"}】', 14)
+            set_single_text(find_shape(slide, ph), f'【画像未取得：{aid or "pending"}】')
 
 def set_speaker_notes(slide, notes_text: str) -> None:
     if notes_text:
@@ -733,6 +769,9 @@ def build_deck(template_path: Path, plot_path: Path, out_path: Path,
     if assets_manifest_path is not None:
         plot = merge_asset_manifest(plot, assets_manifest_path)
     report = preflight_plot(plot, assets_dir, strict_assets)
+    report['template_sha256'] = template_sha
+    report['generator_sha256'] = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
+    report['template_style_audit'] = 'NOT_RUN'
     if qa_report_path:
         write_qa_report(report, qa_report_path)
     if report['errors']:
@@ -765,6 +804,17 @@ def build_deck(template_path: Path, plot_path: Path, out_path: Path,
         set_speaker_notes(slide, spec.get('speaker_notes', ''))
         if lay not in ('COVER', 'NEWS_TITLE'):
             enforce_slide_cjk_fonts(slide)  # Keep cover branding and blue news-divider typography.
+    try:
+        audit_template_styles(prs, specs)
+    except ValueError as exc:
+        report['template_style_audit'] = 'FAIL'
+        report['errors'].append(str(exc))
+        if qa_report_path:
+            write_qa_report(report, qa_report_path)
+        raise
+    report['template_style_audit'] = 'PASS'
+    if qa_report_path:
+        write_qa_report(report, qa_report_path)
     delete_first_n_slides(prs)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     prs.save(str(out_path))
