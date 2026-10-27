@@ -28,7 +28,7 @@
 2. `weekly-it-news-gemini` でニュースの候補、技術的な面白さ、ページ構成をユーザーと議論し、承認済み`plot.json`を作る。承認前にPPTXを生成しません。
 3. 添付DOCXの `word/media/*` と出典リンク、またはスキル同梱`scripts/screenshot_relay.js`を使うSheet＋GAS中継で、実際の記事画像をDriveに保存。キュー名は`itnews-screenshot-queue`、保存先は`itnews-assets`。**GAS v0.10.1** は途中停止したジョブの復旧、429時のクールダウン、再試行、画像バイト列・寸法の検証、旧画像を失わないDrive差し替えに対応。
 4. 画像を開いて検品し、Cloudflare／Cookie同意／広告・別記事等が混入したものは差し戻す。取得済みと検品承認済みは別状態。`assets-manifest.json`に出典・利用条件・検品記録を保持する。
-5. `COVER`→`AGENDA`→ニュース別の`NEWS_TITLE`（青い`NEWS 01`など）→`NEWS`／`SOURCE_IMAGE`／`TECH_DIAGRAM`／`COMPARE`／`TWO_SOURCES`を生成。章扉を自動挿入するが、プロットで明示されていれば重複させません。
+5. `COVER`→`AGENDA`→ニュース別の`NEWS_TITLE`→`NEWS`／`SOURCE_IMAGE`／`TECH_DIAGRAM`／`COMPARE`／`TWO_SOURCES`を生成。**8枚のPPTXテンプレートが配色・文字組・図形・余白の唯一の正本**です。表紙の専用スタイルと本文の青基調を別々に維持し、旧生成器の赤い本文見出しや赤い比較表を再適用しません。章扉を自動挿入する場合も重複させません。
 6. 完成版は **`--strict-assets`** で画像不足・未承認の素材を生成前に拒否し、LibreOffice/PDF→PNGで全ページを検品します。
 
 ~~~bash

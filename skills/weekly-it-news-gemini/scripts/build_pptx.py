@@ -20,7 +20,6 @@ from xml.etree import ElementTree as ET
 
 from PIL import Image
 from pptx import Presentation
-from pptx.dml.color import RGBColor
 from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
 from pptx.oxml import parse_xml
 from pptx.oxml.ns import nsdecls, qn
@@ -31,10 +30,6 @@ LAYOUT_TO_TEMPLATE_INDEX = {
     'COVER': 0, 'AGENDA': 1, 'NEWS_TITLE': 2, 'NEWS': 3,
     'SOURCE_IMAGE': 4, 'TECH_DIAGRAM': 5, 'COMPARE': 6, 'TWO_SOURCES': 7,
 }
-COLOR_RED = RGBColor(0xC0, 0x00, 0x00)
-COLOR_DARK = RGBColor(0x1F, 0x1F, 0x1F)
-COLOR_MUTED = RGBColor(0x59, 0x59, 0x59)
-COLOR_WHITE = RGBColor(0xFF, 0xFF, 0xFF)
 
 
 def verify_template(template_path: Path, skip_hash_check: bool = False) -> str:
@@ -81,35 +76,29 @@ def extract_docx_assets(docx_paths: list[Path], out_dir: Path) -> list[dict]:
 
 
 def set_cjk_font(run_or_para, font_name: str = 'Yu Gothic') -> None:
-    """Write explicit Latin/East-Asian/complex font declarations for LO/PPTX."""
+    """Only add CJK fallback; NEVER override template colors/Latin font."""
     el = run_or_para._r.get_or_add_rPr() if hasattr(run_or_para, '_r') else run_or_para._p.get_or_add_pPr()
     if el.tag.endswith('pPr'):
-        def_rpr = el.find(qn('a:defRPr'))
-        if def_rpr is None:
-            def_rpr = parse_xml(f'<a:defRPr {nsdecls("a")}/>')
-            el.append(def_rpr)
-        el = def_rpr
-    for tag in ('a:latin', 'a:ea', 'a:cs'):
-        child = el.find(qn(tag))
-        if child is None:
-            child = parse_xml(f'<{tag} {nsdecls("a")} typeface="{font_name}"/>')
-            el.append(child)
-        else:
-            child.set('typeface', font_name)
+        default = el.find(qn('a:defRPr'))
+        if default is None:
+            default = parse_xml(f'<a:defRPr {nsdecls("a")}/>')
+            el.append(default)
+        el = default
+    if el.find(qn('a:ea')) is None:
+        el.append(parse_xml(f'<a:ea {nsdecls("a")} typeface="{font_name}"/>'))
 
 
 def enforce_slide_cjk_fonts(slide, font_name: str = 'Yu Gothic') -> None:
+    """Keep all template typography except missing East-Asian font declarations."""
     for shape in slide.shapes:
-        text_frames = [shape.text_frame] if shape.has_text_frame else []
+        frames = [shape.text_frame] if shape.has_text_frame else []
         if shape.has_table:
-            text_frames.extend(cell.text_frame for row in shape.table.rows for cell in row.cells)
-        for tf in text_frames:
-            for para in tf.paragraphs:
+            frames.extend(cell.text_frame for row in shape.table.rows for cell in row.cells)
+        for frame in frames:
+            for para in frame.paragraphs:
                 set_cjk_font(para, font_name)
                 for run in para.runs:
-                    run.font.name = font_name
                     set_cjk_font(run, font_name)
-
 
 def clone_template_slide(prs: Presentation, template_idx: int):
     """Copy native shapes and remap related media IDs, including the cover avatar."""
@@ -162,35 +151,79 @@ def compute_title_pt(title: str) -> float:
     return 18.0 if n >= 45 else 19.5 if n >= 39 else 22.0 if n >= 33 else 25.0
 
 
-def set_single_text(shape, text: str, pt: float, bold: bool = False,
-                    color: RGBColor = COLOR_DARK, align: PP_ALIGN = PP_ALIGN.LEFT) -> None:
+def set_single_text(shape, text: str, pt: float | None = None,
+                    bold: bool | None = None, align: PP_ALIGN | None = None) -> None:
+    """Edit the EXISTING template run, preserving its color and paragraph style.
+
+    Many template slides store text color in a:pPr/a:defRPr. The former
+    text_frame.clear()+add_run() removed that definition and made titles red.
+    """
     if shape is None or not hasattr(shape, 'text_frame'):
         return
     tf = shape.text_frame
-    tf.clear()
     tf.word_wrap = True
-    p = tf.paragraphs[0]
-    p.alignment = align
-    run = p.add_run()
+    para = tf.paragraphs[0]
+    for extra in list(tf.paragraphs)[1:]:
+        tf._txBody.remove(extra._p)
+    if para.runs:
+        run = para.runs[0]
+        for extra in list(para.runs)[1:]:
+            para._p.remove(extra._r)
+    else:
+        run = para.add_run()
     run.text = str(text)
-    run.font.size = Pt(pt)
-    run.font.bold = bold
-    run.font.color.rgb = color
+    if pt is not None:
+        run.font.size = Pt(pt)
+    if bold is not None:
+        run.font.bold = bold
+    if align is not None:
+        para.alignment = align
     set_cjk_font(run)
 
 
-def set_header_and_footer(slide, data: dict, edition_date: str) -> None:
-    sh = find_shape(slide, 'TextBox 1')
-    if sh:
-        sh.left, sh.top, sh.width, sh.height = map(Inches, [0.62, 0.32, 12.15, 0.72])
-        set_single_text(sh, data.get('title', ''), compute_title_pt(data.get('title', '')), True, COLOR_RED)
-    sh = find_shape(slide, 'TextBox 3')
-    if sh:
-        sh.left, sh.top, sh.width, sh.height = map(Inches, [0.62, 7.10, 11.80, 0.22])
-        footer = (f"Weekly IT News！ {edition_date}  •  {data.get('slide_id','').upper()} "
-                  f"({data.get('layout_id','')})  •  Story: {data.get('story_id','')}")
-        set_single_text(sh, footer, 10, False, COLOR_MUTED)
+def set_list_text(shape, lines, pt: float | None = None,
+                  bold: bool | None = None, space_after_pt: float | None = None,
+                  bullets: bool = False) -> None:
+    """Duplicate one template paragraph's XML styling for each supplied line."""
+    if shape is None:
+        return
+    tf = shape.text_frame
+    tf.word_wrap = True
+    template_paragraph = copy.deepcopy(tf.paragraphs[0]._p)
+    for old in list(tf._txBody.p_lst):
+        tf._txBody.remove(old)
+    for line in (list(lines) or ['']):
+        para_xml = copy.deepcopy(template_paragraph)
+        runs = list(para_xml.findall(qn('a:r')))
+        if not runs:
+            raise ValueError(f'Missing sample text run in template: {shape.name}')
+        for extra in runs[1:]:
+            para_xml.remove(extra)
+        el = runs[0].find(qn('a:t'))
+        if el is None:
+            el = parse_xml(f'<a:t {nsdecls("a")}/>')
+            runs[0].append(el)
+        value = str(line)
+        el.text = value if not bullets or value.startswith('・') else '・' + value
+        tf._txBody.append(para_xml)
+        para = tf.paragraphs[-1]
+        if space_after_pt is not None:
+            para.space_after = Pt(space_after_pt)
+        run = para.runs[0]
+        if pt is not None:
+            run.font.size = Pt(pt)
+        if bold is not None:
+            run.font.bold = bold
+        set_cjk_font(run)
 
+
+def set_header_and_footer(slide, data: dict, edition_date: str) -> None:
+    """Title text is the only header slot: the template has no footer textbox."""
+    sh = find_shape(slide, 'TextBox 1')
+    if sh is not None:
+        # Keep the template's blue, native x/y and underlying divider line.
+        sh.height = max(sh.height, Inches(0.72))
+        set_single_text(sh, data.get('title', ''), compute_title_pt(data.get('title', '')), True)
 
 def populate_news_title(slide, data: dict, number: int) -> None:
     """Fill the new native story divider without overwriting its blue identity."""
@@ -200,15 +233,15 @@ def populate_news_title(slide, data: dict, number: int) -> None:
     if not all((label, big, title)):
         raise ValueError('NEWS_TITLE native shapes missing')
     nn = f'{number:02d}'
-    set_single_text(label, f'NEWS {nn}', 18, True, RGBColor(0x00, 0x50, 0xE6))
+    set_single_text(label, f'NEWS {nn}', 18, True)
     label.text_frame.paragraphs[0].runs[0].font.name = 'Arial'
-    set_single_text(big, nn, 200, True, RGBColor(0xEA, 0xF2, 0xFF))
+    set_single_text(big, nn, 200, True)
     big.text_frame.paragraphs[0].runs[0].font.name = 'Arial'
     headline = str(data.get('title') or '（タイトル未設定）')
     # Wide headline frame: use two lines for genuinely long Japanese titles.
     # This is a lower-bounded heuristic, not a guarantee of no overflow.
     size = 48 if len(headline) <= 18 else 41 if len(headline) <= 26 else 34 if len(headline) <= 38 else 28
-    set_single_text(title, headline, size, True, RGBColor(0x0A, 0x1A, 0x3A))
+    set_single_text(title, headline, size, True)
     title.text_frame.word_wrap = True
 
 
@@ -476,29 +509,18 @@ def populate_cover(slide, data: dict, edition_date: str) -> None:
     r5 = find_shape(slide, 'Rectangle 5')
     if r5 is not None:
         r5.top = Inches(3.13)
-        set_single_text(r5, f'{y}年', 21, True, COLOR_WHITE, PP_ALIGN.LEFT)
+        set_single_text(r5, f'{y}年', 21, True, PP_ALIGN.LEFT)
     r1 = find_shape(slide, 'Rectangle 1')
     if r1 is not None:
         r1.top = Inches(3.83)
-        set_single_text(r1, f'{int(m):02d}月', 46, True, COLOR_DARK, PP_ALIGN.RIGHT)
+        set_single_text(r1, f'{int(m):02d}月', 46, True, PP_ALIGN.RIGHT)
     tb4 = find_shape(slide, 'TextBox 4')
     if tb4 is not None:
         tb4.top = Inches(4.48)
-        set_single_text(tb4, f'{int(d):02d}', 108, False, COLOR_DARK, PP_ALIGN.LEFT)
+        set_single_text(tb4, f'{int(d):02d}', 108, False, PP_ALIGN.LEFT)
     tb13 = find_shape(slide, 'TextBox 13')
     if tb13 is not None:
-        tf = tb13.text_frame
-        tf.clear()
-        tf.word_wrap = True
-        for i, line in enumerate(data.get('on_slide', [])):
-            p = tf.paragraphs[0] if i == 0 else tf.add_paragraph()
-            p.space_after = Pt(10)
-            run = p.add_run()
-            run.text = line if line.startswith('・') else f'・{line}'
-            run.font.size = Pt(19)
-            run.font.bold = True
-            run.font.color.rgb = COLOR_DARK
-            set_cjk_font(run)
+        set_list_text(tb13, data.get('on_slide', []), pt=19, bold=True, space_after_pt=10, bullets=True)
 
 
 def populate_agenda(slide, data: dict, edition_date: str) -> None:
@@ -506,18 +528,7 @@ def populate_agenda(slide, data: dict, edition_date: str) -> None:
     sh = find_shape(slide, 'TextBox 4')
     if sh:
         sh.left, sh.top, sh.width, sh.height = map(Inches, [0.88, 1.65, 11.50, 4.70])
-        tf = sh.text_frame
-        tf.clear()
-        tf.word_wrap = True
-        for i, line in enumerate(data.get('on_slide', [])):
-            p = tf.paragraphs[0] if i == 0 else tf.add_paragraph()
-            p.space_after = Pt(22)
-            r = p.add_run()
-            r.text = line if line.startswith('・') else f'・{line}'
-            r.font.size = Pt(24)
-            r.font.bold = True
-            r.font.color.rgb = COLOR_DARK
-            set_cjk_font(r)
+        set_list_text(sh, data.get('on_slide', []), pt=24, space_after_pt=22, bullets=True)
 
 
 def populate_news(slide, data: dict, edition_date: str) -> None:
@@ -542,21 +553,11 @@ def populate_news(slide, data: dict, edition_date: str) -> None:
     sh = find_shape(slide, 'TextBox 5')
     if sh:
         sh.left, sh.top, sh.width, sh.height = map(Inches, [0.89, 2.30, 11.50, 3.95])
-        tf = sh.text_frame
-        tf.clear()
-        tf.word_wrap = True
-        for i, line in enumerate(bullets):
-            p = tf.paragraphs[0] if i == 0 else tf.add_paragraph()
-            p.space_after = Pt(12)
-            r = p.add_run()
-            r.text = line if line.startswith('・') else f'・{line}'
-            r.font.size = Pt(17.5)
-            r.font.color.rgb = COLOR_DARK
-            set_cjk_font(r)
+        set_list_text(sh, bullets, pt=17.5, space_after_pt=12, bullets=True)
     sh = find_shape(slide, 'TextBox 6')
     if sh:
         sh.left, sh.top, sh.width, sh.height = map(Inches, [0.89, 6.48, 11.40, 0.45])
-        set_single_text(sh, source, 11, color=COLOR_MUTED)
+        set_single_text(sh, source, 11)
 
 
 def populate_source_image(slide, data: dict, edition_date: str,
@@ -578,7 +579,7 @@ def populate_source_image(slide, data: dict, edition_date: str,
     sh = find_shape(slide, 'TextBox 7')
     if sh:
         sh.left, sh.top, sh.width, sh.height = map(Inches, [0.80, 6.62, 11.80, 0.38])
-        set_single_text(sh, source, 11, color=COLOR_MUTED)
+        set_single_text(sh, source, 11)
     asset_id = next(iter(data.get('asset_ids', [])), '')
     path = resolve_asset_file(asset_id, assets_map, assets_dir) if asset_id else None
     if path:
@@ -592,7 +593,7 @@ def populate_source_image(slide, data: dict, edition_date: str,
             url = urls[0] if urls else 'URL未設定'
             placeholder = (f'【記事スクリーンショット枠：{asset_id or "pending"}】\n'
                            f'{img_desc}\nURL: {url}\n※画像ファイル未取得（差替用）')
-            set_single_text(sh, placeholder, 15, True, COLOR_MUTED, PP_ALIGN.CENTER)
+            set_single_text(sh, placeholder, 15, True, PP_ALIGN.CENTER)
 
 
 def populate_tech_diagram(slide, data: dict, edition_date: str) -> None:
@@ -627,36 +628,39 @@ def populate_tech_diagram(slide, data: dict, edition_date: str) -> None:
             if m:
                 heading, body = m.group(1), m.group(2)
         tf = txt.text_frame
+        template_ppr = copy.deepcopy(tf.paragraphs[0]._p.pPr)
         tf.clear()
         tf.word_wrap = True
         p = tf.paragraphs[0]
+        if template_ppr is not None:
+            p._p.insert(0, copy.deepcopy(template_ppr))
         p.space_after = Pt(8)
         r = p.add_run()
         r.text = f'{"①②③"[i]} {heading}' if not heading.startswith(('①', '②', '③', '層')) else heading
         r.font.size = Pt(17.5)
         r.font.bold = True
-        r.font.color.rgb = COLOR_RED
         set_cjk_font(r)
         if body:
             segments = [s.strip() for s in re.split(r'(?<=[。】])\s*|(?<=、)(?=①|②|③|④)', body) if s.strip()]
             for segment in segments:
                 p = tf.add_paragraph()
+                if template_ppr is not None:
+                    p._p.insert(0, copy.deepcopy(template_ppr))
                 p.space_after = Pt(6)
                 r = p.add_run()
                 r.text = segment if segment.startswith(('【', '・')) else f'・{segment}'
                 r.font.size = Pt(14.5)
                 r.font.bold = segment.startswith('【')
-                r.font.color.rgb = COLOR_DARK
-                set_cjk_font(r)
+                        set_cjk_font(r)
     for name, x in (('TextBox 11', 4.22), ('TextBox 12', 8.42)):
         sh = find_shape(slide, name)
         if sh:
             sh.left, sh.top, sh.width, sh.height = map(Inches, [x, 3.80, 0.65, 0.50])
-            set_single_text(sh, '→', 28, True, COLOR_RED, PP_ALIGN.CENTER)
+            set_single_text(sh, '→', 28, True, PP_ALIGN.CENTER)
     sh = find_shape(slide, 'TextBox 13')
     if sh:
         sh.left, sh.top, sh.width, sh.height = map(Inches, [0.78, 6.32, 11.60, 0.55])
-        set_single_text(sh, bottom, 12, True, COLOR_MUTED)
+        set_single_text(sh, bottom, 12, True)
 
 
 def parse_compare_rows(data: dict) -> tuple[list[str], list[list[str]], str, str]:
@@ -706,36 +710,45 @@ def populate_compare(slide, data: dict, edition_date: str) -> None:
     sh = find_shape(slide, 'TextBox 6')
     if sh:
         sh.left, sh.top, sh.width, sh.height = map(Inches, [0.86, 6.40, 11.30, 0.45])
-        set_single_text(sh, source, 11.5, color=COLOR_MUTED)
-    for shape in list(slide.shapes):
-        if shape.has_table:
-            elem = shape._element
-            elem.getparent().remove(elem)
+        set_single_text(sh, source, 11.5)
+    # Native table geometry, blue header and text colors come from the PPTX.
+    # Clone a sample cell's XML, not a hard-coded red header/theme.
+    source_shape = next((sh for sh in slide.shapes if sh.has_table), None)
+    if source_shape is None:
+        raise ValueError('COMPARE template missing a native table')
+    source_table = source_shape.table
+    original_rows, original_cols = len(source_table.rows), len(source_table.columns)
+    left, top, width = source_shape.left, source_shape.top, source_shape.width
+    height = max(source_shape.height, Inches(4.30) if len(rows) >= 5 else source_shape.height)
+    remove_element = source_shape._element
+    remove_element.getparent().remove(remove_element)
     if not headers or not rows:
         return
-    nrows, ncols = len(rows)+1, len(headers)
-    shape = slide.shapes.add_table(nrows, ncols, Inches(0.75), Inches(1.90), Inches(11.70), Inches(4.30))
+    nrows, ncols = len(rows) + 1, len(headers)
+    shape = slide.shapes.add_table(nrows, ncols, left, top, width, height)
     tbl = shape.table
-    widths = [2.25, 2.35, 2.35, 4.75] if ncols == 4 else [2.5, 4.6, 4.6] if ncols == 3 else [11.7/ncols]*ncols
-    for j, w in enumerate(widths):
-        tbl.columns[j].width = Inches(w)
-    head_pt = 14 if nrows >= 6 else 15
+    if ncols == original_cols:
+        weights = [col.width / source_shape.width for col in source_table.columns]
+    elif ncols == 4:
+        weights = [0.19, 0.20, 0.20, 0.41]
+    else:
+        weights = [1 / ncols] * ncols
+    for col, weight in zip(tbl.columns, weights):
+        col.width = int(width * weight)
+    header_pt = 14 if nrows >= 6 else 15
     body_pt = 12.5 if nrows >= 6 else 13
-    for j, text in enumerate(headers):
-        cell = tbl.cell(0, j)
-        cell.vertical_anchor = MSO_ANCHOR.MIDDLE
-        cell.fill.solid()
-        cell.fill.fore_color.rgb = COLOR_RED
-        set_single_text(cell, text, head_pt, True, COLOR_WHITE, PP_ALIGN.CENTER)
-    for i, row in enumerate(rows, 1):
-        bg = RGBColor(0xF9, 0xF9, 0xF9) if i % 2 else COLOR_WHITE
+    for i in range(nrows):
         for j in range(ncols):
-            cell = tbl.cell(i, j)
-            cell.vertical_anchor = MSO_ANCHOR.MIDDLE
-            cell.fill.solid()
-            cell.fill.fore_color.rgb = bg
-            set_single_text(cell, row[j] if j < len(row) else '', body_pt, j == 0, COLOR_DARK)
-
+            source_cell = source_table.cell(min(i, original_rows - 1), min(j, original_cols - 1))
+            target_cell = tbl.cell(i, j)
+            for child in list(target_cell._tc):
+                target_cell._tc.remove(child)
+            for child in source_cell._tc:
+                target_cell._tc.append(copy.deepcopy(child))
+            target_cell.vertical_anchor = MSO_ANCHOR.MIDDLE
+            value = headers[j] if i == 0 else (rows[i - 1][j] if j < len(rows[i - 1]) else '')
+            set_single_text(target_cell, value, header_pt if i == 0 else body_pt,
+                            True if i == 0 else j == 0, PP_ALIGN.CENTER if i == 0 else PP_ALIGN.LEFT)
 
 def populate_two_sources(slide, data: dict, edition_date: str,
                          assets_map: dict[str, dict], assets_dir: Path | None) -> None:
@@ -762,7 +775,7 @@ def populate_two_sources(slide, data: dict, edition_date: str,
             embed_picture_in_box(slide, path, x, y, w, h)
         else:
             set_single_text(find_shape(slide, ph), f'【画像未取得：{aid or "pending"}】',
-                            14, True, COLOR_MUTED, PP_ALIGN.CENTER)
+                            14, True, PP_ALIGN.CENTER)
 
 
 def set_speaker_notes(slide, notes_text: str) -> None:

@@ -107,6 +107,52 @@ class GeminiPptxGeneratorTest(unittest.TestCase):
         self.assertEqual(expanded[3]['title'], 'ニュース検証')
         self.assertEqual(expanded[6]['title'], 'ニュースBの章題')
 
+    def test_template_colors_survive_generation(self):
+        """Cover has its own identity; all other slides must inherit blue/navy."""
+        from pptx.dml.color import RGBColor
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            p = root / 'plot.json'
+            p.write_text(json.dumps(sample_plot(), ensure_ascii=False), encoding='utf-8')
+            output = root / 'deck.pptx'
+            generator.build_deck(TEMPLATE, p, output, assets_dir=root)
+            result = Presentation(output)
+            template = Presentation(TEMPLATE)
+
+            def named(slide, name):
+                return next(shape for shape in slide.shapes if shape.name == name)
+
+            def inherited_color(shape):
+                para = shape.text_frame.paragraphs[0]._p
+                defaults = para.findall('.//' + '{http://schemas.openxmlformats.org/drawingml/2006/main}defRPr')
+                self.assertTrue(defaults, shape.name)
+                colors = defaults[0].findall('.//' + '{http://schemas.openxmlformats.org/drawingml/2006/main}srgbClr')
+                self.assertTrue(colors, shape.name)
+                return colors[0].get('val')
+
+            native_blue = inherited_color(named(template.slides[3], 'TextBox 1'))
+            self.assertEqual(native_blue, '0050E6')
+            for i in [1, 3, 4, 5, 7, 8]:
+                self.assertEqual(inherited_color(named(result.slides[i], 'TextBox 1')), native_blue)
+
+            # Core body text and diagram labels inherit the template's navy.
+            self.assertEqual(inherited_color(named(result.slides[3], 'TextBox 4')), '0A1A3A')
+            self.assertEqual(inherited_color(named(result.slides[5], 'TextBox 6')), '0A1A3A')
+            self.assertEqual(inherited_color(named(result.slides[5], 'TextBox 11')), native_blue)
+
+            # Created COMPARE table inherits the sample table, NOT a new red header.
+            table = next(sh.table for sh in result.slides[7].shapes if sh.has_table)
+            self.assertEqual(table.cell(0, 0).fill.fore_color.rgb, RGBColor(0xEA, 0xF2, 0xFF))
+            header_color = table.cell(0, 0).text_frame.paragraphs[0]._p.findall(
+                './/' + '{http://schemas.openxmlformats.org/drawingml/2006/main}srgbClr')
+            self.assertIn(native_blue, [c.get('val') for c in header_color])
+
+            # Exception: red remains on the COVER only, where the template uses it.
+            with zipfile.ZipFile(output) as z:
+                for index in range(2, len(result.slides) + 1):
+                    xml = z.read(f'ppt/slides/slide{index}.xml').decode('utf-8')
+                    self.assertNotIn('C00000', xml, f'Unexpected legacy red on slide {index}')
+
     def test_draft_status_blocks_presentation(self):
         with tempfile.TemporaryDirectory() as td:
             p=Path(td)/'plot.json'
