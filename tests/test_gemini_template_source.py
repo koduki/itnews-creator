@@ -50,10 +50,10 @@ class GeminiTemplateSourceTest(unittest.TestCase):
         assets_ref = (ROOT / 'skills/weekly-it-news-gemini/references/assets-and-handoff.md').read_text(encoding='utf-8')
         relay_js = ROOT / 'skills/weekly-it-news-gemini/scripts/screenshot_relay.js'
         self.assertTrue(relay_js.is_file())
-        self.assertIn('唯一の視覚仕様', s)
+        self.assertIn('デザインの唯一の正本', s)
         self.assertIn('1ページ1スクショ', s)
         self.assertIn('itnews-screenshot-queue', s)
-        self.assertIn('テンプレートが優先', plot_ref)
+        self.assertIn('デザインの唯一の正本', plot_ref)
         self.assertIn('色', plot_ref)
         self.assertIn('screenshot_relay.js', assets_ref)
         self.assertIn('PageSpeed', relay_js.read_text(encoding='utf-8'))

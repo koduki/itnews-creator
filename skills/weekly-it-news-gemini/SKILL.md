@@ -58,7 +58,7 @@ description: Gemini Tasksで技術ニュースを調査・対話し、承認済�
 
 1. GAS の `captured` は「PNGが保存できた」状態であり、内容に合う証拠が撮れたという意味ではない。Driveから回収後、Geminiの `view_file` 等で画像の**実ピクセルを全件確認**する。Cloudflare画面、Cookie同意モーダル、広告が主役、別記事、読めない画像は `quality_flags` に `bot_challenge` / `cookie_overlay` / `ad_dominant` / `wrong_article` / `unreadable` / `needs_crop` を記録して再取得する。
 2. 問題のない実画像のみ、`assets-manifest.json` の各素材に `review_status: "approved"`、具体的な `review_notes`、`source_url`（DOCX由来なら `source_docx`）、任意の `sha256` を記録する。GAS実行だけで `review_status` を自動承認してはいけない。
-3. `scripts/build_pptx.py` はプロットの `story_id` 連続性・スライドID重複・比較表の列数とテンプレート青基調の継承を確認する。Strictでは画像欠落・出典食い違い・レビュー未了・`quality_flags` のある素材を**生成前に拒否**。失敗時も `qa/preflight.json` に理由を残す。
+3. `scripts/build_pptx.py` はプロットの `story_id` 連続性・スライドID重複・比較表の列数を確認し、テンプレート書式を継承して出力する。配色は同梱の回帰テストと生成後の目視QAで検査する。Strictでは画像欠落・出典食い違い・レビュー未了・`quality_flags` のある素材を**生成前に拒否**。失敗時も `qa/preflight.json` に理由を残す。
 4. レイアウトが混み合っている比較表・技術図・解像度不足の画像は警告される。**警告がゼロでも視覚QAが終わったわけではない**。LibreOfficeで全ページを画像化し、はみ出し・重なり・記事の正しさを人が最終確認する。
 
 厳格生成例：
