@@ -651,7 +651,7 @@ def populate_tech_diagram(slide, data: dict, edition_date: str) -> None:
                 r.text = segment if segment.startswith(('【', '・')) else f'・{segment}'
                 r.font.size = Pt(14.5)
                 r.font.bold = segment.startswith('【')
-                        set_cjk_font(r)
+                set_cjk_font(r)
     for name, x in (('TextBox 11', 4.22), ('TextBox 12', 8.42)):
         sh = find_shape(slide, name)
         if sh:
