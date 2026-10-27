@@ -148,10 +148,11 @@ class GeminiPptxGeneratorTest(unittest.TestCase):
             self.assertIn(native_blue, [c.get('val') for c in header_color])
 
             # Exception: red remains on the COVER only, where the template uses it.
-            with zipfile.ZipFile(output) as z:
-                for index in range(2, len(result.slides) + 1):
-                    xml = z.read(f'ppt/slides/slide{index}.xml').decode('utf-8')
-                    self.assertNotIn('C00000', xml, f'Unexpected legacy red on slide {index}')
+            for index in range(2, len(result.slides) + 1):
+                # OOXML slide part names are not renumbered when seed slides
+                # are deleted (e.g. the output begins with slide9.xml).
+                xml = result.slides[index - 1]._element.xml
+                self.assertNotIn('C00000', xml, f'Unexpected legacy red on slide {index}')
 
     def test_draft_status_blocks_presentation(self):
         with tempfile.TemporaryDirectory() as td:
